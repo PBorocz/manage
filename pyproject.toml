@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "manage"
+version = "0.0.0"
+description = "'Manage' environment for poetry-based projects (at least mine)"
+authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
+license = "MIT"
+readme = "README.org"
+packages = [{include = "manage"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.28.2"
+python-dotenv = "^0.21.1"
+tomli = "^2.0.1"
+pyyaml = "^6.0"
+
+[tool.poetry.group.dev.dependencies]
+pysnooper = "^1.1.1"
+python-language-server = "^0.36.2"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
