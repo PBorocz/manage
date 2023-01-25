@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manage"
-version = "0.0.0"
+version = "0.0.2"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
@@ -13,6 +13,7 @@ requests = "^2.28.2"
 python-dotenv = "^0.21.1"
 tomli = "^2.0.1"
 pyyaml = "^6.0"
+rich = "^13.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pysnooper = "^1.1.1"

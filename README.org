@@ -1,0 +1,10 @@
+* Manage
+  Inspired by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his Organize project, my /manage/ package automates as many common operations for poetry & org-based package management.
+** Approach
+   Two salient features:
+   - Plugins are somewhat possible by adding operations to the manage/operations directory (they'll be picked up automatically).
+   - The exact steps necessary to achieve a ~target~ are specified in a local "manage.yaml" file that is specific to your project.
+** Release History
+*** Unreleased
+*** v0.0.2 - 2023-01-25
+    - Initial packaging.
