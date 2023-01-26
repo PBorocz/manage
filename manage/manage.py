@@ -53,15 +53,16 @@ from dotenv import load_dotenv
 
 try:
     from rich import print
+    from rich.console import Console
+    input = Console().input
     HAVE_RICH = True
 except ImportError:
-    print("Sorry, no Rich")
     HAVE_RICH = False
 
 load_dotenv(verbose=True)
 
 UNRELEASED_HEADER = "*** Unreleased"
-PATH_README = Path(__file__).resolve().parent / "README.org"
+PATH_README = Path.cwd() / "README.org"
 
 VERSION = None  # Will be set to current value on startup and *may* be changed as part of processing.
 
@@ -69,11 +70,17 @@ VERSION = None  # Will be set to current value on startup and *may* be changed a
 ################################################################################
 # Utility methods, not meant for direct calling from manage.yaml.
 ################################################################################
+def _color(color: str) -> Optional[str]:
+    """Utility method to either return a markup color if possible or skip colors entirely."""
+    if HAVE_RICH:
+        return f"[{color}]"
+    return ""
+
+
 def _ask_confirm(text: str) -> bool:
     """Ask for confirmation, returns True if "yes" answer, False otherwise"""
     while True:
-        color = "[cyan]" if HAVE_RICH else ""
-        answer = input(f"\n{color}{text} [y/N]: ").lower()
+        answer = input(f"\n{_color('#fffc00')}{text} \[y/N] ").lower()
         if answer in ("n", "no", ""):
             return False
         elif answer in ("y", "yes"):
@@ -88,25 +95,25 @@ def __flag(char: str, msg: Optional[str]) -> None:
 
 def _success(msg: Optional[str] = None) -> None:
     """Render/print a success message."""
-    color = "[green]" if HAVE_RICH else ""
-    __flag(f"{color}✔", msg)
+    __flag(f"{_color('green')}✔", msg)
 
 
 def _failure(msg: Optional[str] = None) -> None:
     """Render/print a failure message."""
-    color = "[red]" if HAVE_RICH else ""
-    __flag(f"{color}✖", msg)
+    __flag(f"{_color('red')}✖", msg)
 
 
-def _running(command: str) -> None:
-    """Render/print the beginning of a command execution."""
-    color = "[blue]" if HAVE_RICH else ""
-    print(f"{color}Running '{command}'... ", flush=True, end="")
+def _fmt(message: str, overhead: int = 0, color: str = 'blue') -> str:
+    """Pad the message string to width (net of overhead) and in the specified color (if possible)."""
+    padding = 60 - overhead - len(message)
+    return f"{_color(color)}{message}{'.' * padding}"
 
 
 def _run(step: Optional[dict], command: str) -> tuple[bool, str]:
-    """Run the command for the specified step, capturing output and signalling success/failure."""
-    _running(command)
+    """Run the command for the specified (albeit optional) step, capturing output and signalling success/failure."""
+    msg = _fmt(f"Running [italic]{command}[/italic]", overhead=-17)
+    print(msg, flush=True, end="")
+
     result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
         # Command failed, are we allowed to have errors?
@@ -124,7 +131,8 @@ def _run(step: Optional[dict], command: str) -> tuple[bool, str]:
 
 def _get_package_from_pyproject() -> Optional[str]:
     """Read the pyproject.toml file to return the name of the current package we're working with."""
-    print("Getting package from pyproject.toml...", end="", flush=True)
+    msg = _fmt("Getting package from pyproject.toml", color='blue')
+    print(msg, end="", flush=True)
     with open(Path("./pyproject.toml"), "rb") as fh_:
         pyproject = load(fh_)
     if packages := pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
@@ -133,7 +141,7 @@ def _get_package_from_pyproject() -> Optional[str]:
             #        (even though multiple are allowed)
             package_include = packages[0]
             package = package_include.get("include")
-            _success(f"{package=}")
+            _success()
             return package
         except IndexError:
             ...
@@ -142,13 +150,15 @@ def _get_package_from_pyproject() -> Optional[str]:
 
 
 def _read_configuration() -> dict:
-    print("Reading configuration (manage.yaml)...", flush=True, end="")
+    msg = _fmt("Reading configuration from manage.yaml", color='blue')
+    print(msg, flush=True, end="")
     with open("manage.yaml", 'r') as stream:
         configuration = yaml.safe_load(stream)
     _success()
 
     # Make sure all the the methods and steps are defined and available:
-    print("Checking configuration...", flush=True, end="")
+    msg = _fmt("Checking configuration", color='blue')
+    print(msg, flush=True, end="")
     invalid_method_references = list()
     invalid_step_references = list()
     for target in sorted(list(configuration.keys())):
@@ -215,17 +225,18 @@ def update_readme(step) -> bool:
     if step.get("confirm", False):
         msg = f"Ok to update README.org's 'Unreleased' header to v{VERSION}?"
         if not _ask_confirm(msg):
-            print("OK. Nothing done (but pyproject and __init__ may still be on new version.")
+            print("OK. Nothing done (but pyproject.toml may still be on new version)")
             return False
 
     # Read and update the Changelog section embedded our README.org with the
     # new version (leaving another "Unreleased" header for future work)
-    _running(f"Running update to README.org: '{UNRELEASED_HEADER}'...")
     readme = PATH_README.read_text()
     if UNRELEASED_HEADER not in readme:
         _failure(f"Sorry, couldn't find a header consisting of '{UNRELEASED_HEADER}' in README.org!")
         return False
 
+    msg = _fmt("Running update to README.org: '{UNRELEASED_HEADER}'", color='blue')
+    print(msg, flush=True, end="")
     header_release = f"*** v{VERSION} - {datetime.now().strftime('%Y-%m-%d')}"
     readme = readme.replace(UNRELEASED_HEADER, UNRELEASED_HEADER + "\n" + header_release)
     PATH_README.write_text(readme)
@@ -238,7 +249,7 @@ def git_commit_version_files(step) -> bool:
     msg = "Ok to commit changes to pyproject.toml and README.org?"
     if step.get("confirm", False):
         if not _ask_confirm(msg):
-            print(f"OK. To rollback, set version back to {VERSION} re-commit locally.")
+            print(f"OK. To rollback, you may have to set version back to {VERSION} re-commit locally.")
             return False
     if not _run(step, "git add pyproject.toml README.org")[0]:
         return False
@@ -331,7 +342,7 @@ def git_create_release(step: dict) -> bool:
 ################################################################################
 # Primary control methods
 ################################################################################
-def _dispatch(configuration: dict, package: str, target: str) -> None:
+def _dispatch(package: str, configuration: dict, target: str) -> None:
     """Iterate (ie. execute) each step in the selected target's configuration for the specified package."""
 
     for step in configuration.get(target).get("steps"):
@@ -350,6 +361,11 @@ def _dispatch(configuration: dict, package: str, target: str) -> None:
 
 def main():
     """Requisite docstring."""
+
+    # Confirm we're working from the README/root level of our project
+    if not PATH_README.exists():
+        print("Sorry, we need run this from the same direction that your README.org file sits.")
+        sys.exit(1)
 
     # Read configuration and package we're working on
     packge = _get_package_from_pyproject()
@@ -375,20 +391,24 @@ def main():
         parser.print_help()
         sys.exit(0)
 
-    # Is the target requested valid?
+    # Validate requested target
     if args.target.casefold() not in config:
         print(f"Sorry, {args.target} is not a valid target, please check against manage.yaml.")
-        sys.exit(0)
+        sys.exit(1)
 
     # Although we might update it as part of our steps, in case we don't, get the current value as of now
     global VERSION
     VERSION = _run(None, "poetry version --short")[-1]
 
     _dispatch(packge, config, args.target)
+    print(f"\n{_color('green')}Done!")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (KeyboardInterrupt, EOFError):
+        sys.exit(0)
 
 
 ################################################################################
@@ -396,7 +416,7 @@ if __name__ == "__main__":
 ################################################################################
 # def _get_changes_from_readme(version: str) -> str:
 #     """Mini state-machine to find the changelog lines associated with the version specified."""
-#     _running(f"Running query of README.org for changes obo {VERSION}...")
+#     _running(f"Running query of README.org for changes obo {VERSION}")
 #     in_version = False
 #     changes = list()
 #     for line in PATH_README.read_text().split("\n"):
