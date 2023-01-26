@@ -6,6 +6,7 @@
    - The exact steps necessary to achieve a ~target~ are specified in a local "manage.yaml" file that is specific to your project.
 ** Release History
 *** Unreleased
+*** v0.0.4 - 2023-01-25
 *** v0.0.3 - 2023-01-25
 *** v0.0.2 - 2023-01-25
     - Initial packaging.
