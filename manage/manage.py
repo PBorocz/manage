@@ -176,7 +176,7 @@ def poetry_bump_version_patch(step) -> bool:
 
     # Update our version in pyproject.toml
     _, result = _run(step, "poetry version patch")
-    _, VERSION = result.split()
+    VERSION = result.split()[-1]
     assert version == VERSION
     return True
 
