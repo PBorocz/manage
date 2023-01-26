@@ -1,11 +1,3 @@
-[clean]
-name = "Bump Version"
-description = "Bump the version number a single patch level and commit locally"
-
-  [[clean.steps]]
-  method = "clean"
-  confirm = true
-
 [version]
 name = "Bump Version"
 description = "Bump the version number a single patch level and commit locally"
@@ -33,3 +25,11 @@ description = "Build our distribution(s)."
   [[build.steps]]
   method = "build"
   echo_stdout = true
+
+[clean]
+name = "Clean"
+description = "Clean out our temp files and ALL previous builds."
+
+  [[clean.steps]]
+  method = "clean"
+  confirm = true

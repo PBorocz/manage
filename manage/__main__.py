@@ -7,36 +7,36 @@ from rich import print
 
 from dispatch import dispatch
 from setup import setup
-from utilities import run
+from utilities import smart_join
 
 load_dotenv(verbose=True)
 
-# Run our own setup steps, reading/validating the recipe file and getting some core environment information etc.
+# Run our own setup steps, reading/validating the recipe file and getting some core environment information etc. If there are
+# any issues, setup will sys.exit(1) after providing feedback as to what's wrong.
 configuration, recipes = setup()
+recipes_raw = sorted([key for key in recipes.keys() if not key.startswith("__")])
+recipes_console = [f"[italic]{key}[/]" for key in recipes_raw]
 
 # Handle arg(s)
-keys = [key for key in recipes.keys() if not key.startswith("__")]
-targets_available = ', '.join(sorted(keys))
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "target",
+    "recipe",
     type=str,
-    help=f"Please specify a target to run from: {targets_available}",
+    help=f"Please specify a recipe to run, available now are: {smart_join(recipes_raw)}",
     nargs="?",
     default=None
 )
 args = parser.parse_args()
-if not vars(args) or not args.target:
+if not vars(args) or not args.recipe:
     parser.print_help()
     sys.exit(0)
 
-# Validate requested target
-if args.target.casefold() not in recipes:
-    print(f"Sorry, {args.target} is not a valid target, please check against manage.toml.")
+# Validate requested recipe (allowing for "system" recipe(s) built-in)
+if args.recipe.casefold() not in recipes:
+    print(f"Sorry, [red]{args.recipe}[/] is not a valid recipe, must be one of {smart_join(recipes_console)}.")
     sys.exit(1)
 
 try:
-    dispatch(configuration, recipes, args.target)
-    print("\n[green]Done!")
+    dispatch(configuration, recipes, args.recipe)
 except (KeyboardInterrupt, EOFError):
     sys.exit(0)

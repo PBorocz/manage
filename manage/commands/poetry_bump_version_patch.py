@@ -8,8 +8,6 @@ from utilities import ask_confirm, run
 
 def main(configuration: Configuration, step: dict) -> bool:
     """Use poetry to do a "patch" level version bump to pyproject.toml"""
-    # FIXME Can we parse pyproject.toml to find the "packages" line to find the name of our project
-    # instead of hard-coding it below?
 
     # Use poetry to get what our next version should be:
     success, result = run(step, "poetry version patch --dry-run")

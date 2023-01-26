@@ -6,9 +6,12 @@ from typing import Optional
 from rich import print
 from rich.console import Console
 
-from models import Configuration
-
 TERMINAL_WIDTH = 70
+
+
+def smart_join(lst: list[str]) -> str:
+    """Essentially ', ' but with nicer formatting."""
+    return ', '.join(lst[:-1]) + " or " + lst[-1]
 
 
 def ask_confirm(text: str) -> bool:
@@ -56,23 +59,3 @@ def run(step: Optional[dict], command: str) -> tuple[bool, str]:
         print(result.stdout.decode().strip())
 
     return True, result.stdout.decode().strip()
-
-
-def dispatch(configuration: Configuration, recipes: dict, target: str) -> None:
-    """Iterate (ie. execute) each step in the selected target's recipes for the specified package."""
-
-    for step in recipes.get(target).get("steps"):
-        assert "step" in step or "method" in step, f"Sorry, one of '{target}'s steps is missing 'step' or 'method'."
-
-        # This step could be either a request to invoke a particular method OR a request to run another step
-        if "step" in step:
-            # Run another step
-            dispatch(step.get("step"), recipes)
-
-        elif "method" in step:
-            # Lookup and run the method associated with the step:
-            method_name = step.get("method")
-            method = recipes.get("__step_callables__").get(method_name)
-            if method is None:
-                raise RuntimeError(f"Sorry, unable to find method: '{method_name}'")
-            method(step)

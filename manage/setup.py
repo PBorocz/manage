@@ -10,6 +10,9 @@ from rich import print
 from models import Configuration
 from utilities import fmt, run, success, failure
 
+UNRELEASED_HEADER = "*** Unreleased"
+PATH_README = Path.cwd() / "README.org"
+
 
 def setup() -> tuple[Configuration, dict]:
     """Setup method, return steps/commands, current package name and recipe book."""
@@ -25,47 +28,87 @@ def setup() -> tuple[Configuration, dict]:
         sys.exit(1)
 
     # Read configuration and package we're working on
-    package = _get_package_from_pyproject()
-    if package is None:
+    configuration = _get_package_version_from_pyproject()
+    if configuration is None:
         sys.exit(1)
 
-    recipes = _read_recipes(step_methods)
+    recipes = _gather_recipes(step_methods)
     if recipes is None:
         sys.exit(1)
 
     recipes["__step_callables__"] = step_methods
 
-    # Although we might update it as part of our steps, in case we don't, get the current version as of now:
-    configuration = Configuration(
-        _version=run(None, "poetry version --short")[-1],
-        package=package,
-    )
+    # Validate that version numbers are consistent between pyproject.toml and README's change history.
+    if not _validate_existing_version_numbers(configuration):
+        sys.exit(1)
 
     return configuration, recipes
 
 
-def _get_package_from_pyproject() -> Optional[str]:
-    """Read the pyproject.toml file to return the name of the current package we're working with."""
-    msg = fmt("Reading package name (pyproject.toml)", color='blue')
+def __get_last_release_from_readme() -> str:
+    """Mini state-machine to find last "release" in our changelog embedded within our README."""
+    take_next_release = False
+    for line in PATH_README.read_text().split("\n"):
+        if line.startswith(UNRELEASED_HEADER):
+            take_next_release = True
+            continue
+        if take_next_release and line.startswith("*** "):  # eg "*** vX.Y.Z - <aDate>"
+            tag = line.split()[1]
+            version = tag[1:]
+            return version
+    return None
+
+
+def _validate_existing_version_numbers(configuration: Configuration) -> bool:
+    """Check that the last released version in README is consistent with canonical version in pyproject.toml"""
+    msg = fmt("Checking consistency of versions (pyproject.toml & README.org)", color='blue')
+    print(msg, end="", flush=True)
+    last_release_version = __get_last_release_from_readme()
+    if last_release_version != configuration._version:
+        failure()
+        print(f"[red]Warning, pyproject.toml has version: {configuration._version} while last release in README is {last_release_version}!")
+        return False
+
+    success()
+    return True
+
+
+def _get_package_version_from_pyproject() -> Configuration:
+    """Read the pyproject.toml file to return current package and version we're working with."""
+    msg = fmt("Reading package & version (pyproject.toml)", color='blue')
     print(msg, end="", flush=True)
     with open(Path("./pyproject.toml"), "rb") as fh_:
         pyproject = load(fh_)
+
+    # Lookup the package which "should" represent the current package we're working on:
+    package = None
     if packages := pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
         try:
             # FIXME: For now, we support the first entry in tool.poetry.packages
             #        (even though multiple are allowed)
             package_include = packages[0]
             package = package_include.get("include")
-            success()
-            return package
         except IndexError:
             ...
+
+    # Similarly, get our current version:
+    version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
+
+    if package and version:
+        success()
+        return Configuration(_version=version, package=package)
+
+    if package is None:
+        print("[red]Sorry, unable to find a valid 'packages' entry under [tool.poetry] in pyproject.toml!")
+    if version is None:
+        print("[red]Sorry, unable to find a valid version entry under [tool.poetry] in pyproject.toml")
+
     failure()
     return None
 
 
 def _gather_available_steps() -> dict[str, Callable]:
-    msg = fmt("Reading available steps", color='blue')
+    msg = fmt("Reading recipe steps available", color='blue')
     print(msg, flush=True, end="")
     return_ = dict()
     for pth in Path("manage/commands").glob('*.py'):
@@ -82,7 +125,8 @@ def _gather_available_steps() -> dict[str, Callable]:
     return return_
 
 
-def _read_recipes(steps_available: list[Callable]) -> dict:
+def _gather_recipes(steps_available: list[Callable]) -> dict:
+    """Gather all recipes current available in our recipes file, including "system" ones we add here!"""
     msg = fmt("Reading recipes (manage.toml)", color='blue')
     print(msg, flush=True, end="")
     try:
@@ -94,7 +138,7 @@ def _read_recipes(steps_available: list[Callable]) -> dict:
         sys.exit(1)
     success()
 
-    # Make sure all the the methods and steps are defined and available:
+    # Make sure all the the methods and steps from our recipes are defined and available:
     msg = fmt("Validating recipes", color='blue')
     print(msg, flush=True, end="")
     invalid_method_references = list()
@@ -123,4 +167,12 @@ def _read_recipes(steps_available: list[Callable]) -> dict:
         return None
 
     success()
+
+    # Add in any "system" recipes
+    recipes["check"] = dict(
+        name="Check configuration",
+        description="Only executes setup and configuration/validation steps",
+        steps=[dict(method=None, built_in=True),]
+    )
+
     return recipes

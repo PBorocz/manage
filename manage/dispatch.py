@@ -1,11 +1,15 @@
-"""Core dispatch method that runs the primary processing loop."""
+"""Core processing loop to dispatch steps or methods for the selected recipe."""
 from models import Configuration
 
 
-def dispatch(configuration: Configuration, recipes: dict, target: str) -> None:
-    """Iterate (ie. execute) each step in the selected target's recipes for the specified package."""
-    for step in recipes.get(target).get("steps"):
-        assert "step" in step or "method" in step, f"Sorry, one of '{target}'s steps is missing 'step' or 'method'."
+def dispatch(configuration: Configuration, recipes: dict, recipe: str) -> None:
+    """Iterate, ie. execute, each step defined for the recipe specified."""
+
+    # Check for special "no-op" recipes (for now, just "check")
+    if recipe.casefold() in ("check"):
+        return  # We've already run setup which does all of our validations
+
+    for step in recipes.get(recipe).get("steps"):
 
         # This step could be either a request to invoke a particular method OR a request to run another step
         if "method" in step:
