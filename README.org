@@ -30,6 +30,12 @@
    - Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
    - Convert configuration over to pydantic for validation and documentation.
    - Add a command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
+   - Add a command-line parameter for verbosity (-v, -vv, -vvv?)
+     - -v:
+       - print absolute paths associated with readme and pyproject.
+       - print package name and version found, how many recipes encountered etc.
+     - -vv:
+       - add explicit output of commands, e.g. how many recipes
    - Add tests!
 ** Release History
 *** Unreleased

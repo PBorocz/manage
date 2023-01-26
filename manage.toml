@@ -1,10 +1,7 @@
+################################################################################
 [version]
 name = "Bump Version"
-description = "Bump the version number a single patch level and commit locally"
-
-  [[version.steps]]
-  step = "clean"
-  confirm = true
+description = "Bump the version number to the next /patch/ level and commit locally"
 
   [[version.steps]]
   method = "poetry_bump_version_patch"
@@ -18,6 +15,7 @@ description = "Bump the version number a single patch level and commit locally"
   method = "git_commit_version_files"
   confirm = true
 
+################################################################################
 [build]
 name = "Build"
 description = "Build our distribution(s)."
@@ -26,6 +24,7 @@ description = "Build our distribution(s)."
   method = "build"
   echo_stdout = true
 
+################################################################################
 [clean]
 name = "Clean"
 description = "Clean out our temp files and ALL previous builds."
