@@ -111,7 +111,7 @@ def _gather_available_steps() -> dict[str, Callable]:
     msg = fmt("Reading recipe steps available", color='blue')
     print(msg, flush=True, end="")
     return_ = dict()
-    for pth in Path("manage/commands").glob('*.py'):
+    for pth in (Path(__file__).parent / Path("commands")).glob('*.py'):
         if pth.name.startswith("__"):
             continue
         step_name = pth.stem
