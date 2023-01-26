@@ -13,13 +13,10 @@ import yaml
 from tomli import load
 from dotenv import load_dotenv
 
-try:
-    from rich import print
-    from rich.console import Console
-    input = Console().input
-    HAVE_RICH = True
-except ImportError:
-    HAVE_RICH = False
+from rich import print
+from rich.console import Console
+
+input = Console().input
 
 load_dotenv(verbose=True)
 
@@ -32,43 +29,31 @@ VERSION = None  # Will be set to current value on startup and *may* be changed a
 ################################################################################
 # Utility methods, not meant for direct calling from manage.yaml.
 ################################################################################
-def _color(color: str) -> Optional[str]:
-    """Utility method to either return a markup color if possible or skip colors entirely."""
-    if HAVE_RICH:
-        return f"[{color}]"
-    return ""
-
-
 def _ask_confirm(text: str) -> bool:
     """Ask for confirmation, returns True if "yes" answer, False otherwise"""
     while True:
-        answer = input(f"\n{_color('#fffc00')}{text} (y/N) >").lower()
+        prompt = f"\n[#fffc00]{text} (y/N) ➡ "
+        answer = Console().input(prompt).lower()
         if answer in ("n", "no", ""):
             return False
         elif answer in ("y", "yes"):
             return True
 
 
-def __flag(char: str, msg: Optional[str]) -> None:
-    """Create and print a success or failure with optional message."""
-    out_ = char if not msg else f"{char} {msg}"
-    print(out_)
+def _success() -> None:
+    """Render/print a success symbol."""
+    print("[green]✔")
 
 
-def _success(msg: Optional[str] = None) -> None:
-    """Render/print a success message."""
-    __flag(f"{_color('green')}✔", msg)
-
-
-def _failure(msg: Optional[str] = None) -> None:
-    """Render/print a failure message."""
-    __flag(f"{_color('red')}✖", msg)
+def _failure() -> None:
+    """Render/print a failure symbol."""
+    print("[red]✖")
 
 
 def _fmt(message: str, overhead: int = 0, color: str = 'blue') -> str:
     """Pad the message string to width (net of overhead) and in the specified color (if possible)."""
     padding = 60 - overhead - len(message)
-    return f"{_color(color)}{message}{'.' * padding}"
+    return f"[{color}]{message}{'.' * padding}"
 
 
 def _run(step: Optional[dict], command: str) -> tuple[bool, str]:
@@ -80,13 +65,13 @@ def _run(step: Optional[dict], command: str) -> tuple[bool, str]:
     if result.returncode != 0:
         # Command failed, are we allowed to have errors?
         if step and not step.get("allow_error", False):
-            _failure(result.stderr.decode())
+            _failure()
+            print(result.stderr.decode())
             return False, result.stderr.decode()
     # Command succeeded Ok.
+    _success()
     if step and step.get("echo_stdout", False):
-        _success(result.stdout.decode().strip())
-    else:
-        _success()
+        print(result.stdout.decode().strip())
 
     return True, result.stdout.decode().strip()
 
@@ -114,8 +99,13 @@ def _get_package_from_pyproject() -> Optional[str]:
 def _read_configuration() -> dict:
     msg = _fmt("Reading configuration from manage.yaml", color='blue')
     print(msg, flush=True, end="")
-    with open("manage.yaml", 'r') as stream:
-        configuration = yaml.safe_load(stream)
+    try:
+        with open("manage.yaml", 'r') as stream:
+            configuration = yaml.safe_load(stream)
+    except FileNotFoundError as err:
+        _failure()
+        print(err)
+        sys.exit(1)
     _success()
 
     # Make sure all the the methods and steps are defined and available:
@@ -193,7 +183,8 @@ def update_readme(step) -> bool:
     # new version (leaving another "Unreleased" header for future work)
     readme = PATH_README.read_text()
     if UNRELEASED_HEADER not in readme:
-        _failure(f"Sorry, couldn't find a header consisting of '{UNRELEASED_HEADER}' in README.org!")
+        _failure()
+        print(f"Sorry, couldn't find a header consisting of '{UNRELEASED_HEADER}' in README.org!")
         return False
 
     msg = _fmt("Running update to README.org: '{UNRELEASED_HEADER}'", color='blue')
@@ -363,7 +354,7 @@ def main():
 
     try:
         _dispatch(packge, config, args.target)
-        print(f"\n{_color('green')}Done!")
+        print("\n[green]Done!")
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)
 
