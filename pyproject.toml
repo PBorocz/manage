@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manage"
-version = "0.0.5"
+version = "0.0.6"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
