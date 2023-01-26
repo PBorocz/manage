@@ -165,7 +165,7 @@ def poetry_bump_version_patch(step) -> bool:
     if not success:
         print(f"Sorry, Poetry couldn't determine a new version number from pyproject.toml: {result}")
         sys.exit(1)
-    _, version = result.split()  # a bit fragile, we're relying on poetry default message format :-(
+    version = result.split()[-1]  # a bit fragile, we're relying on poetry default message format :-(
 
     ################################################################################
     # Safety check
