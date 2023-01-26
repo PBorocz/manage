@@ -1,5 +1,4 @@
 """Setup methods, not meant for direct calling from manage.toml."""
-import importlib
 import sys
 from pathlib import Path
 from typing import Callable
@@ -9,6 +8,7 @@ from rich import print
 
 from manage.models import Configuration
 from manage.utilities import fmt, success, failure
+from manage import steps as step_module
 
 UNRELEASED_HEADER = "*** Unreleased"
 PATH_README = Path.cwd() / "README.org"
@@ -111,12 +111,9 @@ def _gather_available_steps() -> dict[str, Callable]:
     msg = fmt("Reading recipe steps available", color='blue')
     print(msg, flush=True, end="")
     return_ = dict()
-    for pth in (Path(__file__).parent / Path("commands")).glob('*.py'):
-        if pth.name.startswith("__"):
-            continue
-        step_name = pth.stem
-        module = importlib.import_module(f'commands.{step_name}')
-        return_[step_name] = getattr(module, "main")
+    for method_name, method in vars(step_module).items():
+        if not method_name.startswith("__"):
+            return_[method_name] = method
     if not return_:
         failure()
         print("[red]Unable to find any valid command steps in manage/commands/*.py?")
