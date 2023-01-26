@@ -1,8 +1,18 @@
 * Manage
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project, this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** Approach
-   - The exact steps necessary to achieve a /target/ are specified in a local ~manage.yaml~ file that is specific to your project.
-   - Plugins will be possible by adding operations to the ~manage/commands~ directory (they'll be picked up automatically).
+   The exact steps necessary to complete a /recipe/ are specified in a local ~manage.yaml~ file that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
+** Installation
+   This isn't packaged for PyPI. Here's how I would approach using this if your interested:
+   - confirm python version availability, I'm on 3.10.9 for now (and use ~pyenv~ to manage all my versions)
+   - setup a .venv using your virtual-env manager of choice is (I use ~python -m venv .venv~)
+   - clone the repo
+   - ~poetry install~ to install requisite dependencies into your venv.
+   - set .envrc to point top-level directory (i.e. README and pyproject.toml) (thus, I use ~direnv~)
+   - ~python manage check~
+
+   You'll note a manage.toml file in the top-level directory so yes, I do eat my own dog-food.
+
 ** Assumptions
 *** Tools
     - [[https://python-poetry.org][Poetry]] is used manage our package dependencies *and* build environment.
@@ -35,15 +45,15 @@
        - print absolute paths associated with readme and pyproject.
        - print package name and version found, how many recipes encountered etc.
      - -vv:
-       - add explicit output of commands, e.g. how many recipes
+       - add explicit output of command executed (sorta like echo_stdout parameter does)
    - Add tests!
 ** Release History
 *** Unreleased
 *** v0.0.10 - 2023-01-26
-    - ADDED: A "check" recipe target to simply run the setup & validation steps only.
+    - ADDED: A "check" recipe/option to simply run the setup & validation steps only.
     - ADDED: A validation that the version in ~pyproject.toml~ is consistent with the last release in the Release History of ~README.org~.
     - CHANGED: Changed terminology from ~target~ to ~recipe~ and manage.toml to consisting of /recipes/.
-    - CHANGED: Complete refactoring to make commands "granular" and dynamically loaded from ~commands~ module.
+    - CHANGED: Complete refactoring to make steps "granular" and loaded from ~steps~ module.
     - CHANGED: Convert over to TOML instead of YAML for configuration file.
 *** v0.0.9 - 2023-01-25
     - CHANGED: Catch exception when manage.yaml can't be opened.
