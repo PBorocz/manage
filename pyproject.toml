@@ -7,6 +7,9 @@ license = "MIT"
 readme = "README.org"
 packages = [{include = "manage"}]
 
+[tool.poetry.scripts]
+manage = "manage.manage:main"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 requests = "^2.28.2"

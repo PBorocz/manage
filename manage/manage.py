@@ -165,7 +165,7 @@ def poetry_bump_version_patch(step) -> bool:
     if not success:
         print(f"Sorry, Poetry couldn't determine a new version number from pyproject.toml: {result}")
         sys.exit(1)
-    version = result.split()[-1]  # a bit fragile, we're relying on poetry default message format :-(
+    _, version = result.split()  # a bit fragile, we're relying on poetry default message format :-(
 
     ################################################################################
     # Safety check
@@ -176,8 +176,7 @@ def poetry_bump_version_patch(step) -> bool:
 
     # Update our version in pyproject.toml
     _, result = _run(step, "poetry version patch")
-
-    VERSION = result.split()[-1]
+    _, VERSION = result.split()
     assert version == VERSION
     return True
 
@@ -360,17 +359,17 @@ def main():
 
     # Although we might update it as part of our steps, in case we don't, get the current value as of now
     global VERSION
-    VERSION = _run(None, "poetry version --short")[-1]
+    _, VERSION = _run(None, "poetry version --short")
 
-    _dispatch(packge, config, args.target)
-    print(f"\n{_color('green')}Done!")
+    try:
+        _dispatch(packge, config, args.target)
+        print(f"\n{_color('green')}Done!")
+    except (KeyboardInterrupt, EOFError):
+        sys.exit(0)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except (KeyboardInterrupt, EOFError):
-        sys.exit(0)
+    main()
 
 
 ################################################################################
