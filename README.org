@@ -1,16 +1,15 @@
 * Manage
   Inspired by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his Organize project, my /manage/ package automates many common operations for poetry & org-based package management. In particular, those that I don't do regularly and/or require multiple steps to perform.
 ** Approach
-   Two salient features:
-   - Plugins are somewhat possible by adding operations to the manage/operations directory (they'll be picked up automatically).
    - The exact steps necessary to achieve a ~target~ are specified in a local "manage.yaml" file that is specific to your project.
+   - Plugins will be possible by adding operations to the ~manage/commands~ directory (they'll be picked up automatically).
 ** Assumptions
 *** Tools
-    - Poetry is used manage our package dependencies *and* build environment.
-    - We assume that execution of this script is from the TOP level of a project, ie. at the same level as pyproject.toml.
+    - [[https://python-poetry.org][Poetry]] is used manage our package dependencies *and* build environment.
+    - We assume that execution of this script is from the TOP level of a project, i.e. at the same level as pyproject.toml.
     - The version string in pyproject.toml is the SINGLE and CANONICAL version string in our project/package.
 *** Versioning
-    - We use semantic versioning with 'poetry version' to update/manage our version number.
+    - We use semantic versioning with ~poetry version~ to update/manage our version number.
 *** Readme Management
     - We manage our README in an Org format (see [[https://orgmode.org/][Emacs Org Mode]] for details)
     - We assume README.org is kept in the top-level directory.
@@ -26,6 +25,10 @@
      | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
 ** Release History
+*** GTD
+**** TODO Add ability to update version by /major/ and /minor/ levels over and above our current /patch/.
+**** TODO Break commands out into ~commands~ sub-module (with dynamic imports obviously)
+**** TODO Convert configuration over to pydantic for validation and documentation.
 *** Unreleased
 *** v0.0.7 - 2023-01-25
     - ADDED: Assumptions and example configurations to README.org.
