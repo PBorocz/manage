@@ -13,23 +13,5 @@ build:
   name: Build
   description: Build our distribution(s).
   steps:
-    - method: run_pre_commit
-      confirm: true
-      echo_stdout: true
-    - method: clean
-      allow_error: true  # Defaults is false
     - method: build
       echo_stdout: true  # Default is false, set to true to see output of command..
-
-# publish:
-#   name: Publish to PyPI
-#   description: Release a new version of our package to PyPI.
-#   steps:
-#     - method: git_create_tag
-#       confirm: true
-#     - method: git_push_to_github
-#       confirm: true
-#     - method: publish_to_pypi
-#       confirm: true
-#     - method: git_create_release
-#       confirm: true
