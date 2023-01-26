@@ -1,42 +1,4 @@
 """'Manage' environment."""
-################################################################################
-# More powerful than a just/make file, customised to our default project environment.
-#
-# ------------------------------------------------------------------------------
-# Assumptions:
-# ------------------------------------------------------------------------------
-# - Poetry is used manage our package dependencies *and* build environment.
-#    - We use semantic versioning with 'poetry version' to update/manage our version number.
-#
-# - We assume that execution of this script is from the TOP level of a project, ie. at the same
-#   level of pyproject.toml.
-#
-# - The version string in pyproject.toml is the SINGLE and CANONICAL version string in our
-#   project/package.
-#
-# - We use a section in README.org to keep an release history, with an "*** Unreleased" header
-#   for upcoming items for the next release.
-#
-# - We assume README.org is kept in the top-level directory.
-#
-# - We need *two* --group dev packages over and above our default environment to support this
-#   script tomli and requests.
-#
-# - We assume the following entries are available in our environment (either set in shell or
-#   through .env):
-#
-#   - GITHUB_USER
-#     Github user id, eg. JBlow
-#
-#   - GITHUB_API_TOKEN
-#     Github personal API token, eg. ghp_1234567890ABCDEFG1234567890
-#
-#   - GITHUB_API_RELEASES
-#     URL to GH release API, eg. https://api.github.com/repos/<user>/<project>/releases
-#
-#   - GITHUB_PROJECT_RELEASE_HISTORY
-#     URL to release history (for release body)
-################################################################################
 import argparse
 import os
 import shlex
@@ -80,7 +42,7 @@ def _color(color: str) -> Optional[str]:
 def _ask_confirm(text: str) -> bool:
     """Ask for confirmation, returns True if "yes" answer, False otherwise"""
     while True:
-        answer = input(f"\n{_color('#fffc00')}{text} \[y/N] ").lower()
+        answer = input(f"\n{_color('#fffc00')}{text} (y/N) >").lower()
         if answer in ("n", "no", ""):
             return False
         elif answer in ("y", "yes"):

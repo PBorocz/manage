@@ -4,6 +4,22 @@
    Two salient features:
    - Plugins are somewhat possible by adding operations to the manage/operations directory (they'll be picked up automatically).
    - The exact steps necessary to achieve a ~target~ are specified in a local "manage.yaml" file that is specific to your project.
+** Assumptions
+   - Poetry is used manage our package dependencies *and* build environment.
+   - We use semantic versioning with 'poetry version' to update/manage our version number.
+   - We assume that execution of this script is from the TOP level of a project, ie. at the same level as pyproject.toml.
+   - The version string in pyproject.toml is the SINGLE and CANONICAL version string in our project/package.
+   - We use a section in README.org to keep an release history, with an "*** Unreleased" header for upcoming items for the next release.
+   - We assume README.org is kept in the top-level directory.
+   - We need *two* --group dev packages over and above our default environment to support this script tomli and requests.
+   - We assume the following entries are available in our environment (either set in shell or through .env):
+     |--------------------------------+-----------------------------------------------------------------------------------|
+     | GITHUB_USER                    | Github user id, eg. JBlow                                                         |
+     | GITHUB_API_TOKEN               | Github personal API token, eg. ghp_1234567890ABCDEFG1234567890                    |
+     | GITHUB_API_RELEASES            | URL to GH release API, eg. https://api.github.com/repos/<user>/<project>/releases |
+     | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body)                                         |
+     |--------------------------------+-----------------------------------------------------------------------------------|
+
 ** Release History
 *** Unreleased
 *** v0.0.6 - 2023-01-25
