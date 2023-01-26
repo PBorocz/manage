@@ -33,6 +33,8 @@
 ** Release History
 *** Unreleased
 *** v0.0.8 - 2023-01-25
+    - CHANGED: Catch exception when manage.yaml can't be opened.
+*** v0.0.8 - 2023-01-25
     - ADDED: Missing /bin/manage script for execution after pip/poetry install.
 *** v0.0.7 - 2023-01-25
     - ADDED: Assumptions and example configurations to README.org.
