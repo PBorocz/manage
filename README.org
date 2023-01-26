@@ -16,7 +16,7 @@
 *** CHANGELOG Management
     - We do *not* use a stand-alone ~CHANGELOG.md~ file.
     - We use a specific section in ~README.org~ called /Release History/.
-    - We keep at list of completed by unreleased items in the /Release History/ under an "Unreleased" header.
+    - We keep a list of completed but unreleased items in the /Release History/ under an "Unreleased" header.
 *** Configuration
     - We need *two* --group dev packages over and above our default environment to support this script tomli and requests.
     - We assume the following entries are available in our environment (either set in shell or through .env):
@@ -27,12 +27,19 @@
      | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
 ** GTD
-   - Add ability to update version by /major/ and /minor/ levels over and above our current /patch/.
-   - Break commands out into ~commands~ sub-module (with dynamic imports obviously)
-   - Convert configuration over to pydantic for validation and documentation (and may toml instead of yaml since we already need tomli for pyproject?)
+   - Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
+   - Convert configuration over to pydantic for validation and documentation.
+   - Add a command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
+   - Add tests!
 ** Release History
 *** Unreleased
-*** v0.0.8 - 2023-01-25
+*** v0.0.10 - 2023-01-26
+    - ADDED: A "check" recipe target to simply run the setup & validation steps only.
+    - ADDED: A validation that the version in ~pyproject.toml~ is consistent with the last release in the Release History of ~README.org~.
+    - CHANGED: Changed terminology from ~target~ to ~recipe~ and manage.toml to consisting of /recipes/.
+    - CHANGED: Complete refactoring to make commands "granular" and dynamically loaded from ~commands~ module.
+    - CHANGED: Convert over to TOML instead of YAML for configuration file.
+*** v0.0.9 - 2023-01-25
     - CHANGED: Catch exception when manage.yaml can't be opened.
 *** v0.0.8 - 2023-01-25
     - ADDED: Missing /bin/manage script for execution after pip/poetry install.

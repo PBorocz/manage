@@ -1,0 +1,35 @@
+[clean]
+name = "Bump Version"
+description = "Bump the version number a single patch level and commit locally"
+
+  [[clean.steps]]
+  method = "clean"
+  confirm = true
+
+[version]
+name = "Bump Version"
+description = "Bump the version number a single patch level and commit locally"
+
+  [[version.steps]]
+  step = "clean"
+  confirm = true
+
+  [[version.steps]]
+  method = "poetry_bump_version_patch"
+  confirm = true
+
+  [[version.steps]]
+  method = "update_readme"
+  confirm = true
+
+  [[version.steps]]
+  method = "git_commit_version_files"
+  confirm = true
+
+[build]
+name = "Build"
+description = "Build our distribution(s)."
+
+  [[build.steps]]
+  method = "build"
+  echo_stdout = true

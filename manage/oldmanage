@@ -1,16 +1,11 @@
 """'Manage' environment."""
 import argparse
 import os
-import shlex
 import sys
-import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import requests
-import yaml
-from tomli import load
 from dotenv import load_dotenv
 
 from rich import print
@@ -24,120 +19,6 @@ UNRELEASED_HEADER = "*** Unreleased"
 PATH_README = Path.cwd() / "README.org"
 
 VERSION = None  # Will be set to current value on startup and *may* be changed as part of processing.
-
-
-################################################################################
-# Utility methods, not meant for direct calling from manage.yaml.
-################################################################################
-def _ask_confirm(text: str) -> bool:
-    """Ask for confirmation, returns True if "yes" answer, False otherwise"""
-    while True:
-        prompt = f"\n[#fffc00]{text} (y/N) ➡ "
-        answer = Console().input(prompt).lower()
-        if answer in ("n", "no", ""):
-            return False
-        elif answer in ("y", "yes"):
-            return True
-
-
-def _success() -> None:
-    """Render/print a success symbol."""
-    print("[green]✔")
-
-
-def _failure() -> None:
-    """Render/print a failure symbol."""
-    print("[red]✖")
-
-
-def _fmt(message: str, overhead: int = 0, color: str = 'blue') -> str:
-    """Pad the message string to width (net of overhead) and in the specified color (if possible)."""
-    padding = 60 - overhead - len(message)
-    return f"[{color}]{message}{'.' * padding}"
-
-
-def _run(step: Optional[dict], command: str) -> tuple[bool, str]:
-    """Run the command for the specified (albeit optional) step, capturing output and signalling success/failure."""
-    msg = _fmt(f"Running [italic]{command}[/italic]", overhead=-17)
-    print(msg, flush=True, end="")
-
-    result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.returncode != 0:
-        # Command failed, are we allowed to have errors?
-        if step and not step.get("allow_error", False):
-            _failure()
-            print(result.stderr.decode())
-            return False, result.stderr.decode()
-    # Command succeeded Ok.
-    _success()
-    if step and step.get("echo_stdout", False):
-        print(result.stdout.decode().strip())
-
-    return True, result.stdout.decode().strip()
-
-
-def _get_package_from_pyproject() -> Optional[str]:
-    """Read the pyproject.toml file to return the name of the current package we're working with."""
-    msg = _fmt("Getting package from pyproject.toml", color='blue')
-    print(msg, end="", flush=True)
-    with open(Path("./pyproject.toml"), "rb") as fh_:
-        pyproject = load(fh_)
-    if packages := pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
-        try:
-            # FIXME: For now, we support the first entry in tool.poetry.packages
-            #        (even though multiple are allowed)
-            package_include = packages[0]
-            package = package_include.get("include")
-            _success()
-            return package
-        except IndexError:
-            ...
-    _failure()
-    return None
-
-
-def _read_configuration() -> dict:
-    msg = _fmt("Reading configuration from manage.yaml", color='blue')
-    print(msg, flush=True, end="")
-    try:
-        with open("manage.yaml", 'r') as stream:
-            configuration = yaml.safe_load(stream)
-    except FileNotFoundError as err:
-        _failure()
-        print(err)
-        sys.exit(1)
-    _success()
-
-    # Make sure all the the methods and steps are defined and available:
-    msg = _fmt("Checking configuration", color='blue')
-    print(msg, flush=True, end="")
-    invalid_method_references = list()
-    invalid_step_references = list()
-    for target in sorted(list(configuration.keys())):
-        for step in configuration.get(target).get("steps"):
-            if "step" in step:
-                step_name = step.get("step")
-                if step_name not in configuration:
-                    invalid_step_references.append(step_name)
-            elif "method" in step:
-                method_name = step.get("method")
-                if method_name not in globals():
-                    invalid_method_references.append(method_name)
-
-    if invalid_method_references or invalid_step_references:
-        if invalid_method_references:
-            print("\nSorry, error in manage.yaml; The following method(s) can't be found:")
-            for method_name in invalid_method_references:
-                print(f"- {method_name}")
-        if invalid_step_references:
-            print("\nSorry, error in manage.yaml; The following step(s) can't be found:")
-            for step_name in invalid_step_references:
-                print(f"- {step_name}")
-        _failure()
-        return None
-
-    _success()
-    return configuration
 
 
 ################################################################################
@@ -208,14 +89,6 @@ def git_commit_version_files(step) -> bool:
     if not _run(step, f'git commit --message "Bump version to v{VERSION}"')[0]:
         return False
     return True
-
-
-def clean(step) -> bool:
-    """Clean the build environment"""
-    if step.get("confirm", False):
-        if not _ask_confirm("Ok to clean build environment?"):
-            return False
-    return _run(step, "rm -rf build dist *.egg-info")[0]
 
 
 def build(step) -> bool:
@@ -319,12 +192,15 @@ def main():
         print("Sorry, we need run this from the same direction that your README.org file sits.")
         sys.exit(1)
 
+    # Gather all available steps
+    available_steps = _gather_available_steps()
+
     # Read configuration and package we're working on
     packge = _get_package_from_pyproject()
     if packge is None:
         sys.exit(1)
 
-    config = _read_configuration()
+    config = _read_configuration(available_steps)
     if config is None:
         sys.exit(1)
 
@@ -345,7 +221,7 @@ def main():
 
     # Validate requested target
     if args.target.casefold() not in config:
-        print(f"Sorry, {args.target} is not a valid target, please check against manage.yaml.")
+        print(f"Sorry, {args.target} is not a valid target, please check against manage.toml.")
         sys.exit(1)
 
     # Although we might update it as part of our steps, in case we don't, get the current value as of now
@@ -357,10 +233,6 @@ def main():
         print("\n[green]Done!")
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
 
 
 ################################################################################
