@@ -1,7 +1,7 @@
 from rich import print
 
-from models import Configuration
-from utilities import ask_confirm, run
+from manage.models import Configuration
+from manage.utilities import ask_confirm, run
 
 
 def main(configuration: Configuration, step: dict) -> bool:

@@ -2,13 +2,13 @@
 import importlib
 import sys
 from pathlib import Path
-from typing import Optional, Callable
+from typing import Callable
 
 from tomli import load
 from rich import print
 
-from models import Configuration
-from utilities import fmt, run, success, failure
+from manage.models import Configuration
+from manage.utilities import fmt, success, failure
 
 UNRELEASED_HEADER = "*** Unreleased"
 PATH_README = Path.cwd() / "README.org"

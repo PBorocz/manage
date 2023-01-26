@@ -8,7 +8,7 @@ readme = "README.org"
 packages = [{include = "manage"}]
 
 [tool.poetry.scripts]
-manage = "manage.manage:main"
+manage = "manage.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"

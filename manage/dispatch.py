@@ -1,5 +1,5 @@
 """Core processing loop to dispatch steps or methods for the selected recipe."""
-from models import Configuration
+from manage.models import Configuration
 
 
 def dispatch(configuration: Configuration, recipes: dict, recipe: str) -> None:

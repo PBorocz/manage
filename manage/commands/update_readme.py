@@ -3,8 +3,8 @@ from pathlib import Path
 
 from rich import print
 
-from models import Configuration
-from utilities import ask_confirm, fmt, failure, success
+from manage.models import Configuration
+from manage.utilities import ask_confirm, fmt, failure, success
 
 UNRELEASED_HEADER = "*** Unreleased"
 PATH_README = Path.cwd() / "README.org"

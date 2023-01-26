@@ -3,8 +3,8 @@ from datetime import datetime
 
 import requests
 
-from models import Configuration
-from utilities import ask_confirm, success
+from manage.models import Configuration
+from manage.utilities import ask_confirm, success
 
 
 def main(configuration: Configuration, step: dict) -> bool:
