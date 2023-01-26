@@ -10,11 +10,13 @@
     - The version string in pyproject.toml is the SINGLE and CANONICAL version string in our project/package.
 *** Versioning
     - We use semantic versioning with ~poetry version~ to update/manage our version number.
-*** Readme Management
-    - We manage our README in an Org format (see [[https://orgmode.org/][Emacs Org Mode]] for details)
-    - We assume README.org is kept in the top-level directory.
-    - We use a section in README.org to keep an release history, with an ~*** Unreleased
-*** v0.0.7 - 2023-01-25~ header for upcoming items for the next release.
+*** README Management
+    - We manage our README in an Org format (see [[https://orgmode.org/][Emacs Org Mode]] for details).
+    - We assume ~README.org~ is kept in the top-level directory.
+*** CHANGELOG Management
+    - We do *not* use a stand-alone ~CHANGELOG.md~ file.
+    - We use a specific section in ~README.org~ called /Release History/.
+    - We keep at list of completed by unreleased items in the /Release History/ under an "Unreleased" header.
 *** Configuration
     - We need *two* --group dev packages over and above our default environment to support this script tomli and requests.
     - We assume the following entries are available in our environment (either set in shell or through .env):
@@ -24,11 +26,11 @@
      | GITHUB_API_RELEASES            | URL to Github release API                 | https://api.github.com/repos/<user>/<project>/releases                   |
      | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
+** GTD
+   - Add ability to update version by /major/ and /minor/ levels over and above our current /patch/.
+   - Break commands out into ~commands~ sub-module (with dynamic imports obviously)
+   - Convert configuration over to pydantic for validation and documentation (and may toml instead of yaml since we already need tomli for pyproject?)
 ** Release History
-*** GTD
-**** TODO Add ability to update version by /major/ and /minor/ levels over and above our current /patch/.
-**** TODO Break commands out into ~commands~ sub-module (with dynamic imports obviously)
-**** TODO Convert configuration over to pydantic for validation and documentation.
 *** Unreleased
 *** v0.0.7 - 2023-01-25
     - ADDED: Assumptions and example configurations to README.org.
