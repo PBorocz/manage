@@ -19,7 +19,7 @@ def main(configuration: Configuration, step: dict) -> bool:
     ################################################################################
     # Safety check
     ################################################################################
-    if step.get("confirm", False):
+    if step.confirm:
         if not ask_confirm(f"Ok to bump version from {configuration.version()} to v{new_version} in pyproject.toml?"):
             return False
 

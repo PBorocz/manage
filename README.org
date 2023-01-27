@@ -37,8 +37,9 @@
      | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
 ** GTD
+   - Make it so that validation doesn't happen until AFTER we validate the command target,
+     ie. read in just enough of the recipes to know what valid targets are and NO more!
    - Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
-   - Convert configuration over to pydantic for validation and documentation.
    - Add a command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
    - Add a command-line parameter for verbosity (-v, -vv, -vvv?)
      - -v:
@@ -46,9 +47,21 @@
        - print package name and version found, how many recipes encountered etc.
      - -vv:
        - add explicit output of command executed (sorta like echo_stdout parameter does)
-   - Add tests!
+   - Add step tests:
+     - 90% clean.py
+     -  0% build.py
+     -  0% git_commit_version_files.py
+     -  0% git_create_release.py
+     -  0% git_create_tag.py
+     -  0% git_push_to_github.py
+     -  0% poetry_bump_version_patch.py
+     -  0% publish_to_pypi.py
+     -  0% run_pre_commit.py
+     -  0% update_readme.py
+   - Add recipe read/validation tests.
 ** Release History
 *** Unreleased
+    - CHANGE: Conversion over to pydantic for stronger typing of Recipes and their associated steps.
 *** v0.0.10 - 2023-01-26
     - ADDED: A "check" recipe/option to simply run the setup & validation steps only.
     - ADDED: A validation that the version in ~pyproject.toml~ is consistent with the last release in the Release History of ~README.org~.

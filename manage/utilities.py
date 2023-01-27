@@ -49,13 +49,13 @@ def run(step: Optional[dict], command: str) -> tuple[bool, str]:
     result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
         # Command failed, are we allowed to have errors?
-        if step and not step.get("allow_error", False):
+        if step and not step.allow_error:
             failure()
             print(result.stderr.decode())
             return False, result.stderr.decode()
     # Command succeeded Ok.
     success()
-    if step and step.get("echo_stdout", False):
+    if step and step.echo_stdout:
         print(result.stdout.decode().strip())
 
     return True, result.stdout.decode().strip()

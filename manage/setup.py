@@ -6,7 +6,7 @@ from typing import Callable
 from tomli import load
 from rich import print
 
-from manage.models import Configuration
+from manage.models import Configuration, Recipes, Recipe, Step
 from manage.utilities import fmt, success, failure
 from manage import steps as step_module
 
@@ -32,11 +32,13 @@ def setup() -> tuple[Configuration, dict]:
     if configuration is None:
         sys.exit(1)
 
-    recipes = _gather_recipes(step_methods)
-    if recipes is None:
-        sys.exit(1)
+    # Read the recipes from specified manage.toml file
+    recipes = _read_parse_recipe_file()
+    recipes = _validate_recipes(recipes, step_methods)
+    recipes = _add_system_recipes(recipes, step_methods)
 
-    recipes["__step_callables__"] = step_methods
+    # FIXME!
+    # recipes["__step_callables__"] = step_methods
 
     # Validate that version numbers are consistent between pyproject.toml and README's change history.
     if not _validate_existing_version_numbers(configuration):
@@ -64,11 +66,10 @@ def _validate_existing_version_numbers(configuration: Configuration) -> bool:
     msg = fmt("Checking consistency of versions (pyproject.toml & README.org)", color='blue')
     print(msg, end="", flush=True)
     last_release_version = __get_last_release_from_readme()
-    if last_release_version != configuration._version:
+    if last_release_version != configuration.version_:
         failure()
-        print(f"[red]Warning, pyproject.toml has version: {configuration._version} while last release in README is {last_release_version}!")
+        print(f"[red]Warning, pyproject.toml has version: {configuration.version_} while last release in README is {last_release_version}!")
         return False
-
     success()
     return True
 
@@ -93,10 +94,9 @@ def _get_package_version_from_pyproject() -> Configuration:
 
     # Similarly, get our current version:
     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-
     if package and version:
         success()
-        return Configuration(_version=version, package=package)
+        return Configuration(version_=version, package=package)
 
     if package is None:
         print("[red]Sorry, unable to find a valid 'packages' entry under [tool.poetry] in pyproject.toml!")
@@ -122,33 +122,44 @@ def _gather_available_steps() -> dict[str, Callable]:
     return return_
 
 
-def _gather_recipes(steps_available: list[Callable]) -> dict:
-    """Gather all recipes current available in our recipes file, including "system" ones we add here!"""
+def _read_parse_recipe_file() -> Recipes:
     msg = fmt("Reading recipes (manage.toml)", color='blue')
     print(msg, flush=True, end="")
-    try:
-        with open("manage.toml", "rb") as stream:
-            recipes = load(stream)
-    except FileNotFoundError as err:
+    if not Path("manage.toml").exists():
         failure()
-        print(f"[red]{err}")
+        print("[red]Sorry, unable to find ./manage.toml for recipes.")
         sys.exit(1)
-    success()
 
-    # Make sure all the the methods and steps from our recipes are defined and available:
+    # Slurp and parse the toml file
+    with open("manage.toml", "rb") as stream:
+        raw_recipes = load(stream)
+
+    # Deserialise into our types dataclasses:
+    recipes = list()
+    for id_, raw_recipe in raw_recipes.items():
+        recipe = Recipe(id_=id_, **raw_recipe)
+        for raw_step in raw_recipe.get("steps", []):
+            recipe.steps.append(Step(**raw_step))
+        recipes.append(recipe)
+    success()
+    return Recipes(recipes=recipes)  # Final conversion (no validation)
+
+
+def _validate_recipes(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes | None:
+    """Make sure all the the methods and steps from our recipes are defined and available"""
     msg = fmt("Validating recipes", color='blue')
     print(msg, flush=True, end="")
     invalid_method_references = list()
     invalid_step_references = list()
-    for target in sorted(list(recipes.keys())):
-        for step in recipes.get(target).get("steps"):
+    for recipe in recipes:
+        for step in recipe:
             if "step" in step:
                 step_name = step.get("step")
                 if step_name not in recipes:
                     invalid_step_references.append(step_name)
             elif "method" in step:
                 method_name = step.get("method")
-                if method_name not in steps_available:
+                if method_name not in step_methods:
                     invalid_method_references.append(method_name)
 
     if invalid_method_references or invalid_step_references:
@@ -162,14 +173,26 @@ def _gather_recipes(steps_available: list[Callable]) -> dict:
                 print(f"[red]- {step_name}")
         failure()
         return None
-
     success()
+    return recipes
 
-    # Add in any "system" recipes
-    recipes["check"] = dict(
-        name="Check configuration",
-        description="Only executes setup and configuration/validation steps",
-        steps=[dict(method=None, built_in=True),]
+
+def _add_system_recipes(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes:
+    """Embellish recipes with our "built-in" ones and add the corresponding methods"""
+
+    # Add the "callable" method onto each step to be used in dispatching:
+    for recipe in recipes:
+        for step in recipe:
+            if step.method:
+                step.callable_ = step_methods.get(step.method)
+
+    # Add our "system"/built-in recipes:
+    recipes.recipes.append(
+        Recipe(
+            id_="check",
+            name="Check configuration",
+            description="Only executes setup and configuration/validation steps",
+            steps=[Step(),]
+        )
     )
-
     return recipes

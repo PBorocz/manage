@@ -11,7 +11,7 @@ def main(configuration: Configuration, step: dict) -> bool:
     """Create github release"""
     now = datetime.now().strftime('%Y-%m-%dT%H%M')
 
-    if step.get("confirm", False):
+    if step.confirm:
         if not ask_confirm(f"Ok to create github release using tag {configuration.version()}?"):
             return False
 

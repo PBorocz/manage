@@ -16,15 +16,14 @@ def main():
     # Run our own setup steps, reading/validating the recipe file and getting some core environment information etc. If there are
     # any issues, setup will sys.exit(1) after providing feedback as to what's wrong.
     configuration, recipes = setup()
-    recipes_raw = sorted([key for key in recipes.keys() if not key.startswith("__")])
-    recipes_console = [f"[italic]{key}[/]" for key in recipes_raw]
+    recipes_console = [f"[italic]{id_}[/]" for id_ in recipes.ids()]
 
     # Handle arg(s)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "recipe",
         type=str,
-        help=f"Please specify a recipe to run, available now are: {smart_join(recipes_raw)}",
+        help=f"Please specify a recipe to run, available now are: {smart_join(recipes.ids())}",
         nargs="?",
         default=None
     )
@@ -34,7 +33,7 @@ def main():
         sys.exit(0)
 
     # Validate requested recipe (allowing for "system" recipe(s) built-in)
-    if args.recipe.casefold() not in recipes:
+    if not recipes.check_target(args.recipe.casefold()):
         print(f"Sorry, [red]{args.recipe}[/] is not a valid recipe, must be one of {smart_join(recipes_console)}.")
         sys.exit(1)
 

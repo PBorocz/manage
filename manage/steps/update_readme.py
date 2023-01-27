@@ -33,7 +33,7 @@ def main(configuration: Configuration, step: dict) -> bool:
     ...
 
     """
-    if step.get("confirm", False):
+    if step.confirm:
         msg = f"Ok to update README.org's 'Unreleased' header to {configuration.version()}?"
         if not ask_confirm(msg):
             print("Nothing done (but pyproject.toml may still be on new version)")
