@@ -1,10 +1,12 @@
 """Utility methods, not meant for direct calling from manage.toml."""
 import shlex
 import subprocess
-from typing import Optional
+import sys
 
 from rich import print
 from rich.console import Console
+
+from manage.models import Step
 
 TERMINAL_WIDTH = 70
 
@@ -41,21 +43,29 @@ def fmt(message: str, overhead: int = 0, color: str = 'blue') -> str:
     return f"[{color}]{message}{'.' * padding}"
 
 
-def run(step: Optional[dict], command: str) -> tuple[bool, str]:
-    """Run the command for the specified (albeit optional) step, capturing output and signalling success/failure."""
-    msg = fmt(f"Running [italic]{command}[/italic]", overhead=-17)
-    print(msg, flush=True, end="")
+def run(step: Step, command: str) -> tuple[bool, str]:
+    """Run the command for the specified Step, capturing output and signalling success/failure."""
+    if not step.quiet_mode:
+        msg = fmt(f"Running [italic]{command}[/italic]", overhead=-17)
+        print(msg, flush=True, end="")
 
     result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
-        # Command failed, are we allowed to have errors?
+        ################################################
+        # Failed:
+        ################################################
+        # Are we allowed to have error?
         if step and not step.allow_error:
             failure()
-            print(result.stderr.decode())
+            sys.stderr.print(result.stderr.decode())
             return False, result.stderr.decode()
-    # Command succeeded Ok.
-    success()
-    if step and step.echo_stdout:
-        print(result.stdout.decode().strip())
+
+    ################################################
+    # Success:
+    ################################################
+    if not step.quiet_mode:
+        success()
+        if step.echo_stdout:
+            print(result.stdout.decode().strip())
 
     return True, result.stdout.decode().strip()

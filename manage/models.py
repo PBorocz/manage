@@ -7,9 +7,10 @@ from pydantic import BaseModel, validator
 class Step(BaseModel):
     method: str | None = None
     step: str | None = None
-    confirm: bool | None = False
+    confirm: bool | None = True
     echo_stdout: bool | None = False
     allow_error: bool | None = False
+    quiet_mode: bool | None = False
     callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
 
     @validator('method', 'step')

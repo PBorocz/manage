@@ -63,6 +63,7 @@
 ** Release History
 *** Unreleased
     - ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
+    - CHANGED: Default value for 'confirm' step option to True (as most of my steps are using True).
     - CHANGED: To pydantic for stronger typing of Recipes and their associated steps.
     - CHANGED: Sample recipe toml files to match pydantic-based data models, swap toml for tomli.
 *** v0.0.10 - 2023-01-26
