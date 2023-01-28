@@ -9,11 +9,9 @@ def dispatch(configuration: Configuration, recipes: dict, args_recipe: str) -> N
     if args_recipe.casefold() in ("check"):
         return  # We've already run setup which does all of our validations
 
-    for step in recipes.find_recipe(args_recipe).steps:
-
-        # This step could be either a request to invoke a particular method OR a request to run another step
+    for step in recipes[args_recipe]:
         if step.callable_:
-            # Run the method already associated with the step:
+            # Run the *method* associated with the step
             step.callable_(configuration, step)
         else:
             # Run another step!

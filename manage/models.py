@@ -28,37 +28,31 @@ class Step(BaseModel):
 
 
 class Recipe(BaseModel):
-    id_: str
     name: str | None = None
     description: str | None = None
     steps: list[Step] = []
 
     def __iter__(self):
-        for step in self.steps:
-            yield step
+        return iter(self.steps)
 
 
 class Recipes(BaseModel):
-    recipes: list[Recipe]
+    recipes: dict[str, Recipe]
 
     def __iter__(self):
-        for recipe in self.recipes:
-            yield recipe
+        return iter(self.recipes.items())
 
-    def find_recipe(self, id_: str) -> Recipe | None:
-        """Return the recipe with the associated id or None if not found."""
-        for recipe in self:
-            if id_.casefold() == recipe.id_.casefold():
-                return recipe
-        return None
+    def __getitem__(self, id_: str) -> Recipe | None:
+        return self.recipes.get(id_.casefold())
 
-    def ids(self):
+    def ids(self) -> list[str]:
         """Return a sorted list of recipe "ids", used for command-line argument for what to run"""
-        return sorted([recipe.id_ for recipe in self])  # in self if not recipe.id_.startswith("__")])
+        return sorted(list(self.recipes.keys()))  # in self if not recipe.id_.startswith("__")])
 
     def check_target(self, recipe_target: str) -> bool:
         """Is the target provide valid against our current recipes?"""
-        return recipe_target.casefold() in [recipe.id_.casefold() for recipe in self]
+        targets_defined_casefolded = [id_.casefold() for id_ in self.recipes.keys()]
+        return recipe_target.casefold() in targets_defined_casefolded
 
 
 class Configuration(BaseModel):

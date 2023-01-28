@@ -1,54 +1,54 @@
 ################################################################################
-[[recipes]]
+[recipes.version]
 id_="version"
 name = "Bump Version"
 description = "Bump the version number a single patch level and commit locally"
 
-[[recipes.steps]]
+[[recipes.version.steps]]
 method = "poetry_bump_version_patch"
 
-[[recipes.steps]]
+[[recipes.version.steps]]
 method = "update_readme"
 
-[[recipes.steps]]
+[[recipes.version.steps]]
 method = "git_commit_version_files"
 
 
 ################################################################################
-[[recipes]]
+[recipes.build]
 id_="build"
 name = "Build"
 description = "Build our distribution(s)."
 
-[[recipes.steps]]
+[[recipes.build.steps]]
 method = "run_pre_commit"
 echo_stdout = true
 
-[[recipes.steps]]
+[[recipes.build.steps]]
 method = "clean"
 allow_error = true
 confirm = false
 
-[[recipes.steps]]
+[[recipes.build.steps]]
 method = "build"
 echo_stdout = true
 confirm = false
 
 
 ################################################################################
-[[recipes]]
+[recipes.publish]
 id_="publish"
 name = "Publish to PyPI"
 description = "Release a new version of our package to PyPI."
 
-[[recipes.steps]]
+[[recipes.publish.steps]]
 method = "git_create_tag"
 
-[[recipes.steps]]
+[[recipes.publish.steps]]
 method = "git_push_to_github"
 
-[[recipes.steps]]
+[[recipes.publish.steps]]
 method = "publish_to_pypi"
 
-[[recipes.steps]]
+[[recipes.publish.steps]]
 method = "git_create_release"

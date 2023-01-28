@@ -171,18 +171,15 @@ def _add_system_recipes(recipes: Recipes, step_methods: dict[str, Callable]) -> 
     """Embellish recipes with our "built-in" ones and add the corresponding methods"""
 
     # Add the "callable" method onto each step to be used in dispatching:
-    for recipe in recipes:
+    for id_, recipe in recipes:
         for step in recipe:
             if step.method:
                 step.callable_ = step_methods.get(step.method)
 
     # Add our "system"/built-in recipes:
-    recipes.recipes.append(
-        Recipe(
-            id_="check",
-            name="Check configuration",
-            description="Only executes setup and configuration/validation steps",
-            steps=[Step(),]
-        )
+    recipes.recipes["check"] = Recipe(
+        name="Check configuration",
+        description="Only executes setup and configuration/validation steps",
+        steps=[Step(),]
     )
     return recipes
