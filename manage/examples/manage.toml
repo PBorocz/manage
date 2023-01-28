@@ -1,52 +1,54 @@
-[version]
+################################################################################
+[[recipes]]
+id_="version"
 name = "Bump Version"
 description = "Bump the version number a single patch level and commit locally"
 
-  [[version.steps]]
-  method = "poetry_bump_version_patch"
-  confirm = true
+[[recipes.steps]]
+method = "poetry_bump_version_patch"
 
-  [[version.steps]]
-  method = "update_readme"
-  confirm = true
+[[recipes.steps]]
+method = "update_readme"
 
-  [[version.steps]]
-  method = "git_commit_version_files"
-  confirm = true
+[[recipes.steps]]
+method = "git_commit_version_files"
 
-[build]
+
+################################################################################
+[[recipes]]
+id_="build"
 name = "Build"
 description = "Build our distribution(s)."
 
-  [[build.steps]]
-  method = "run_pre_commit"
-  confirm = true
-  echo_stdout = true
+[[recipes.steps]]
+method = "run_pre_commit"
+echo_stdout = true
 
-  [[build.steps]]
-  method = "clean"
-  allow_error = true
+[[recipes.steps]]
+method = "clean"
+allow_error = true
+confirm = false
 
-  [[build.steps]]
-  method = "build"
-  echo_stdout = true
+[[recipes.steps]]
+method = "build"
+echo_stdout = true
+confirm = false
 
-[publish]
+
+################################################################################
+[[recipes]]
+id_="publish"
 name = "Publish to PyPI"
 description = "Release a new version of our package to PyPI."
 
-  [[publish.steps]]
-  method = "git_create_tag"
-  confirm = true
+[[recipes.steps]]
+method = "git_create_tag"
 
-  [[publish.steps]]
-  method = "git_push_to_github"
-  confirm = true
+[[recipes.steps]]
+method = "git_push_to_github"
 
-  [[publish.steps]]
-  method = "publish_to_pypi"
-  confirm = true
+[[recipes.steps]]
+method = "publish_to_pypi"
 
-  [[publish.steps]]
-  method = "git_create_release"
-  confirm = true
+[[recipes.steps]]
+method = "git_create_release"

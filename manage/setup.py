@@ -1,9 +1,9 @@
 """Setup methods, not meant for direct calling from manage.toml."""
 import sys
+import toml
 from pathlib import Path
 from typing import Callable
 
-from tomli import load
 from rich import print
 
 from manage.models import Configuration, Recipes, Recipe, Step
@@ -78,8 +78,7 @@ def _get_package_version_from_pyproject() -> Configuration:
     """Read the pyproject.toml file to return current package and version we're working with."""
     msg = fmt("Reading package & version (pyproject.toml)", color='blue')
     print(msg, end="", flush=True)
-    with open(Path("./pyproject.toml"), "rb") as fh_:
-        pyproject = load(fh_)
+    pyproject = toml.loads(Path("./pyproject.toml").read_text())
 
     # Lookup the package which "should" represent the current package we're working on:
     package = None
@@ -130,19 +129,10 @@ def _read_parse_recipe_file() -> Recipes:
         print("[red]Sorry, unable to find ./manage.toml for recipes.")
         sys.exit(1)
 
-    # Slurp and parse the toml file
-    with open("manage.toml", "rb") as stream:
-        raw_recipes = load(stream)
+    recipes = Recipes(**toml.loads(Path("manage.toml").read_text()))
 
-    # Deserialise into our types dataclasses:
-    recipes = list()
-    for id_, raw_recipe in raw_recipes.items():
-        recipe = Recipe(id_=id_, **raw_recipe)
-        for raw_step in raw_recipe.get("steps", []):
-            recipe.steps.append(Step(**raw_step))
-        recipes.append(recipe)
     success()
-    return Recipes(recipes=recipes)  # Final conversion (no validation)
+    return recipes
 
 
 def _validate_recipes(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes | None:

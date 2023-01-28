@@ -1,3 +1,4 @@
+
 * Manage
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project, this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** Approach
@@ -61,15 +62,17 @@
    - Add recipe read/validation tests.
 ** Release History
 *** Unreleased
-    - CHANGE: Conversion over to pydantic for stronger typing of Recipes and their associated steps.
+    - ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
+    - CHANGED: To pydantic for stronger typing of Recipes and their associated steps.
+    - CHANGED: Sample recipe toml files to match pydantic-based data models, swap toml for tomli.
 *** v0.0.10 - 2023-01-26
     - ADDED: A "check" recipe/option to simply run the setup & validation steps only.
     - ADDED: A validation that the version in ~pyproject.toml~ is consistent with the last release in the Release History of ~README.org~.
-    - CHANGED: Changed terminology from ~target~ to ~recipe~ and manage.toml to consisting of /recipes/.
-    - CHANGED: Complete refactoring to make steps "granular" and loaded from ~steps~ module.
-    - CHANGED: Convert over to TOML instead of YAML for configuration file.
+    - CHANGED: Terminology from ~target~ to ~recipe~ and manage.toml to consisting of /recipes/.
+    - CHANGED: Steps to make them more "granular" and loaded from ~steps~ module.
+    - CHANGED: Over to TOML (tomli) instead of YAML for recipe files.
 *** v0.0.9 - 2023-01-25
-    - CHANGED: Catch exception when manage.yaml can't be opened.
+    - CHANGED: To catch exception when manage.yaml can't be opened.
 *** v0.0.8 - 2023-01-25
     - ADDED: Missing /bin/manage script for execution after pip/poetry install.
 *** v0.0.7 - 2023-01-25

@@ -1,34 +1,34 @@
 ################################################################################
-[version]
+[[recipes]]
+id_="version"
 name = "Bump Version"
 description = "Bump the version number to the next /patch/ level and commit locally"
 
-  [[version.steps]]
-  method = "poetry_bump_version_patch"
-  confirm = true
+[[recipes.steps]]
+method = "poetry_bump_version_patch"
 
-  [[version.steps]]
-  method = "update_readme"
-  confirm = true
+[[recipes.steps]]
+method = "update_readme"
 
-  [[version.steps]]
-  method = "git_commit_version_files"
-  confirm = true
+[[recipes.steps]]
+method = "git_commit_version_files"
 
 ################################################################################
-[build]
+[[recipes]]
+id_="build"
 name = "Build"
 description = "Build our distribution(s)."
 
-  [[build.steps]]
-  method = "build"
-  echo_stdout = true
+[[recipes.steps]]
+method = "build"
+confirm = false
+echo_stdout = true
 
 ################################################################################
-[clean]
+[[recipes]]
+id_="clean"
 name = "Clean"
 description = "Clean out our temp files and ALL previous builds."
 
-  [[clean.steps]]
-  method = "clean"
-  confirm = true
+[[recipes.steps]]
+method = "clean"
