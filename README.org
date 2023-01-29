@@ -59,6 +59,7 @@
      -  0% update_readme.py
 ** Release History
 *** Unreleased
+*** v0.0.11 - 2023-01-29
     - ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
     - ADDED: A command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
     - CHANGED: Back to YAML instead of TOML for recipe files (TOML nice for serialisation but too verbose for our use case).
