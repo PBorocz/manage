@@ -9,6 +9,11 @@ def dispatch(configuration: Configuration, recipes: dict, args_recipe: str) -> N
     if args_recipe.casefold() in ("check"):
         return  # We've already run setup which does all of our validations
 
+    if args_recipe.casefold() in ("print"):
+        from rich import print
+        print(recipes)
+        return
+
     for step in recipes.get(args_recipe):
         if step.callable_:
             # Run the *method* associated with the step

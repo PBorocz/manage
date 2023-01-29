@@ -1,4 +1,4 @@
-"""Core Data Types"""
+"""Core data types and recipe toml read"""
 from typing import Callable, Iterable
 
 from pydantic import BaseModel

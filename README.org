@@ -38,9 +38,6 @@
      | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
 ** GTD
-   - Make it so that validation doesn't happen until AFTER we validate the command target,
-     ie. read in just enough of the recipes to know what valid targets are and NO more!
-   - WORKING Add a command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
    - Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
    - Add a command-line parameter for verbosity (-v, -vv, -vvv?)
      - -v:
@@ -59,10 +56,10 @@
      -  0% publish_to_pypi.py
      -  0% run_pre_commit.py
      -  0% update_readme.py
-   - Add recipe read/validation tests.
 ** Release History
 *** Unreleased
     - ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
+    - ADDED: A command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
     - CHANGED: Default value for 'confirm' step option to True (as most of my steps are using True).
     - CHANGED: To pydantic for stronger typing of Recipes and their associated steps.
     - CHANGED: Sample recipe toml files to match pydantic-based data models (in particular, recipes are a dict!).
