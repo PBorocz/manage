@@ -1,5 +1,6 @@
 import pydantic
 import pytest
+import yaml
 from manage.models import Step, Recipe, Recipes
 
 
@@ -8,14 +9,14 @@ def recipes():
     # NOTE: Must match contents of tests/test_models.toml!
     s1 = Step(action="clean_step_1")
     s2 = Step(action="clean_step_2", config=True, echo_stdout=True, allow_error=True, quiet_mode=True)
-    r1 = Recipe(name="Do Clean", description="A Description", steps=[s1, s2])
+    r1 = Recipe(description="A Description", steps=[s1, s2])
 
     s3 = Step(action="build")
-    r2 = Recipe(name="Do Build", description="Another Description", steps=[s3,])
+    r2 = Recipe(description="Another Description", steps=[s3,])
 
     return Recipes.parse_obj({
-        "Do Clean" : r1,
-        "Do Build" : r2,
+        "clean" : r1,
+        "build" : r2,
     })
 
 

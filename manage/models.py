@@ -17,7 +17,6 @@ class Step(BaseModel):
 
 
 class Recipe(BaseModel):
-    name: str | None = None
     description: str | None = None
     steps: list[Step] = []
 
@@ -66,7 +65,7 @@ class Recipes(BaseModel):
                 else:
                     # Then, better be another step!
                     if self.get(step.action) is None:
-                        return_.append(f"Sorry, {step.action} in {recipe.name} is NOT valid!")
+                        return_.append(f"Sorry, {step.action} in {id_} is NOT valid!")
         return return_
 
 

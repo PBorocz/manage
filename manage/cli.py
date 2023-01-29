@@ -13,6 +13,8 @@ from manage.utilities import smart_join, get_package_version_from_pyproject
 
 load_dotenv(verbose=True)
 
+DEFAULT = Path("manage.yaml")
+
 
 def get_args() -> argparse.Namespace:
     """Define, parse and return command-line args."""
@@ -27,9 +29,9 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "recipe_file",
         type=Path,
-        help="Override default recipes TOML file, default is './manage.toml'.",
+        help=f"Override default recipes yaml file, default is '{DEFAULT}'.",
         nargs="?",
-        default=Path("manage.toml"),
+        default=DEFAULT,
     )
 
     args = parser.parse_args()

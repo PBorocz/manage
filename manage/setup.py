@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import Callable, Final
 
-import toml
+import yaml
 from rich import print
 
 from manage import steps as step_module
@@ -23,14 +23,15 @@ def read_parse_recipe_file(path: Path, methods: dict[Callable] | None) -> Recipe
         sys.exit(1)
 
     # Read raw..
-    raw_recipes = toml.loads(path.read_text()).get("recipes")
+    raw_recipes = yaml.safe_load(path.read_text())
 
     # ..and deserialise into our types dataclasses:
     d_recipes = dict()
-    for raw_recipe in raw_recipes:
-        recipe = Recipe(**raw_recipe)
-        d_recipes[recipe.name] = recipe
-    success()
+    if raw_recipes:
+        for id_, raw_recipe in raw_recipes.items():
+            recipe = Recipe(**raw_recipe)
+            d_recipes[id_] = recipe
+        success()
 
     # Convert raw objects into typed hierarchy.
     recipes = Recipes.parse_obj(d_recipes)
@@ -70,7 +71,8 @@ def validate_existing_version_numbers(configuration: Configuration) -> bool:
     last_release_version = __get_last_release_from_readme()
     if last_release_version != configuration.version_:
         failure()
-        print(f"[red]Warning, pyproject.toml has version: {configuration.version_} while last release in README is {last_release_version}!")
+        print(f"[red]Warning, pyproject.toml has version: {configuration.version_} "
+              f"while last release in README is {last_release_version}!")
         return False
     success()
     return True
@@ -103,14 +105,10 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
     """Embellish recipes with our "built-in" one(s)."""
     recipes.set(
         "check",
-        Recipe(
-            name="Check configuration",
-            description="Only executes setup and configuration/validation steps",
-            steps=[Step(action="check"),]
-        ))
+        Recipe(description="Check configuration only", steps=[Step(action="check"),]))
     recipes.set(
         "print",
-        Recipe(name="Print recipe file")
+        Recipe(description="Print recipe file")
     )
     return recipes
 
