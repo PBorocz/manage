@@ -20,14 +20,14 @@ def get_args() -> argparse.Namespace:
     """Define, parse and return command-line args."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "recipe",
+        "target",
         type=str,
-        help="Please specify a recipe to run from your recipe file, eg. build, clean, compress etc.",
+        help="Please specify a specific recipe to run from your recipe file, eg. build, clean, compress etc.",
         default=None
     )
 
     parser.add_argument(
-        "recipe_file",
+        "--recipes",
         type=Path,
         help=f"Override default recipes yaml file, default is '{DEFAULT}'.",
         nargs="?",
@@ -35,7 +35,7 @@ def get_args() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
-    if not vars(args) or not args.recipe:
+    if not vars(args) or not args.target:
         parser.print_help()
         sys.exit(0)
 
@@ -69,12 +69,12 @@ def main():
     recipes = read_parse_recipe_file(args.recipe_file, methods)
 
     # Make sure the user's target request is valid (allowing for "system" recipe(s) built-in)
-    if not recipes.check_target(args.recipe.casefold()):
+    if not recipes.check_target(args.target.casefold()):
         recipes_console = [f"[italic]{id_}[/]" for id_ in recipes.ids()]
         print(f"Sorry, [red]{args.recipe}[/] is not a valid recipe, must be one of {smart_join(recipes_console)}.")
         sys.exit(1)
 
     try:
-        dispatch(configuration, recipes, args.recipe)
+        dispatch(configuration, recipes, args.target)
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)

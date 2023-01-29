@@ -24,8 +24,8 @@ class Step(BaseModel):
             raise ValueError('must provide either method or step')
         return v
 
-    # NOTE: We can't perform DYNAMIC validation on 'method' here until we have a list of methods, so, we do it with a dedicated
-    # method on the recipes instance
+    # NOTE: We can't perform DYNAMIC validation on 'method' here until we have a list of methods,
+    # so, we do it with a dedicated method on the recipes instance
 
 
 class Recipe(BaseModel):
@@ -86,4 +86,4 @@ class Configuration(BaseModel):
 
     def version(self):
         """Return version number in "formal" format, usable (for instance) as git tag."""
-        return f"v{self._version}"
+        return f"v{self.version_}"

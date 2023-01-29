@@ -9,7 +9,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     msg = "Ok to commit changes to pyproject.toml and README.org?"
     if step.confirm:
         if not ask_confirm(msg):
-            print(f"To rollback, you may have to set version back to {configuration._version} re-commit locally.")
+            print(f"To rollback, you may have to set version back to {configuration.version_} re-commit locally.")
             return False
     if not run(step, "git add pyproject.toml README.org")[0]:
         return False

@@ -26,7 +26,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     ...
     * Release History
     ** Unreleased
-    ** vA.B.D - <today>    <-- Adding this line based on configuration._version and today
+    ** vA.B.D - <today>    <-- Adding this line based on configuration.version_ and today
        - changed this
        - changed that
     ** vA.B.C - <older date>

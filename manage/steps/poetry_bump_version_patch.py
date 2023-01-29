@@ -25,5 +25,5 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
 
     # Update our version in pyproject.toml
     _, result = run(step, "poetry version patch")
-    configuration._version = result.split()[-1]
+    configuration.version_ = result.split()[-1]
     return True
