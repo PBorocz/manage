@@ -1,24 +1,21 @@
 # NOTE: Must match contents of tests/test_models.py!
 clean:
-  description: A Description
+  description: A Clean Recipe
   steps:
-    - action: clean_step_1
-      confirm: true
+    - method: clean
+      confirm: true             # All these are DEFAULT values!
       echo_stdout: false
       allow_error: false
       quiet_mode: false
 
-    - action: clean_step_2
+    - method: show
       confirm: true
       echo_stdout: true
       allow_error: true
       quiet_mode: true
 
 build:
-  description: Another Description
+  description: A Build Recipe
   steps:
-    - action: build
-      confirm: true
-      echo_stdout: false
-      allow_error: false
-      quiet_mode: false
+    - step: clean
+    - method: build

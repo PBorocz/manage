@@ -17,7 +17,7 @@ def dispatch(configuration: Configuration, recipes: dict, args_recipe: str) -> N
     for step in recipes.get(args_recipe):
         if step.callable_:
             # Run the *method* associated with the step
-            step.callable_(configuration, step)
+            step.callable_(configuration, recipes, step)
         else:
             # Run another step!
             dispatch(configuration, recipes, step.action)

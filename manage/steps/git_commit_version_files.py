@@ -1,10 +1,10 @@
 from rich import print
 
-from manage.models import Configuration
+from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, run
 
 
-def main(configuration: Configuration, step: dict) -> bool:
+def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Commits updated files that contain version information locally."""
     msg = "Ok to commit changes to pyproject.toml and README.org?"
     if step.confirm:

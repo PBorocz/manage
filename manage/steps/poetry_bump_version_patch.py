@@ -2,11 +2,11 @@ import sys
 
 from rich import print
 
-from manage.models import Configuration
+from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, run
 
 
-def main(configuration: Configuration, step: dict) -> bool:
+def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Use poetry to do a "patch" level version bump to pyproject.toml"""
 
     # Use poetry to get what our next version should be:

@@ -7,27 +7,31 @@ from manage.setup import read_parse_recipe_file
 
 @pytest.fixture
 def recipes():
+    # NOTE: Must match contents of tests/test_models.yaml!
+    recipe_clean = Recipe(
+        description="A Clean Recipe",
+        steps=[
+            Step(method="clean"),  # Test that defaults match those in yaml file..
+            Step(method="show",
+                 config=True,
+                 echo_stdout=True,
+                 allow_error=True,
+                 quiet_mode=True),
+        ]
+    )
 
-    # Test recipes:
-    r1 = Recipe(name="Do Clean",
-                description="A Description",
-                steps=[
-                    Step(action="clean_step_1"),
-                    Step(action="clean_step_2", config=True, echo_stdout=True, allow_error=True, quiet_mode=True),
-                ])
-    r2 = Recipe(name="Do Build",
-                description="Another Description",
-                steps=[
-                    Step(action="build"),
-                ])
-
+    recipe_build = Recipe(
+        description="A Build Recipe",
+        steps=[
+            Step(step="clean"),
+            Step(method="build"),
+        ]
+    )
     return Recipes.parse_obj({
-        "clean" : r1,
-        "build" : r2,
-
-        # System recipes auto-added by read_parse_recipe_file:
-        "check" : Recipe(description="Check configuration only", steps=[Step(action="check")]),
-        "print" : Recipe(description="Print recipe file"),
+        "clean" : recipe_clean,
+        "build" : recipe_build,
+        "check" : Recipe(description="Check configuration only", steps=[Step(method="check")]),
+        "show"  : Recipe(description="Show recipe file contents", steps=[Step(method="show")]),
     })
 
 

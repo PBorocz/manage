@@ -1,4 +1,4 @@
-"""Setup functions, not meant for direct calling from manage.toml."""
+"""Setup functions, not meant for direct calling from recipe file."""
 import sys
 from pathlib import Path
 from typing import Callable, Final
@@ -44,7 +44,8 @@ def read_parse_recipe_file(path: Path, methods: dict[Callable] | None) -> Recipe
         recipes = _add_callables(recipes, methods)
 
         # Validate that each of the methods are valid.
-        recipes = _validate_recipe_methods(recipes, methods)
+        if not _validate_recipe_methods(recipes, methods):
+            sys.exit(1)
 
     return recipes
 
@@ -78,25 +79,25 @@ def validate_existing_version_numbers(configuration: Configuration) -> bool:
     return True
 
 
-def _validate_recipe_methods(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes | None:
+def _validate_recipe_methods(recipes: Recipes, step_methods: dict[str, Callable]) -> bool:
     """Make sure all the the methods and steps from our recipes are defined and available"""
     msg = fmt("Validating recipes", color='blue')
     print(msg, flush=True, end="")
-    if invalid_actions := recipes.validate_step_actions(step_methods):
-        print("\n[red]Sorry, error in manage.toml; The following action(s) can't be found:")
-        for action in invalid_actions:
-            print(f"[red]- {action}")
+    if invalid_method_steps := recipes.validate_methods_steps(step_methods):
+        print("\n[red]Sorry, we encountered the following errors in inbound recipe file:")
+        for method_step in invalid_method_steps:
+            print(f"[red]- {method_step}")
         failure()
-        return None
+        return False
     success()
-    return recipes
+    return True
 
 
 def _add_callables(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes:
-    """Add the "callable" method onto each step to be used in dispatching."""
+    """Add the "callable" method onto each method step to dispatch on."""
     for name, recipe in recipes.items():
         for step in recipe:
-            if callable_ := step_methods.get(step.action):
+            if callable_ := step_methods.get(step.method):
                 step.callable_ = callable_
     return recipes
 
@@ -105,11 +106,10 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
     """Embellish recipes with our "built-in" one(s)."""
     recipes.set(
         "check",
-        Recipe(description="Check configuration only", steps=[Step(action="check"),]))
+        Recipe(description="Check configuration only", steps=[Step(method="check"),]))
     recipes.set(
-        "print",
-        Recipe(description="Print recipe file")
-    )
+        "show",
+        Recipe(description="Show recipe file contents", steps=[Step(method="show"),]))
     return recipes
 
 

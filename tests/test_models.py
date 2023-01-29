@@ -1,40 +1,61 @@
 import pydantic
 import pytest
-import yaml
+
 from manage.models import Step, Recipe, Recipes
 
 
 @pytest.fixture
 def recipes():
-    # NOTE: Must match contents of tests/test_models.toml!
-    s1 = Step(action="clean_step_1")
-    s2 = Step(action="clean_step_2", config=True, echo_stdout=True, allow_error=True, quiet_mode=True)
-    r1 = Recipe(description="A Description", steps=[s1, s2])
+    # NOTE: Must match contents of tests/test_models.yaml!
+    recipe_clean = Recipe(
+        description="A Clean Recipe",
+        steps=[
+            Step(method="clean"),  # Test that defaults match those in yaml file..
+            Step(method="show",
+                 config=True,
+                 echo_stdout=True,
+                 allow_error=True,
+                 quiet_mode=True),
+        ]
+    )
 
-    s3 = Step(action="build")
-    r2 = Recipe(description="Another Description", steps=[s3,])
-
+    recipe_build = Recipe(
+        description="A Build Recipe",
+        steps=[
+            Step(step="clean"),
+            Step(method="build"),
+        ]
+    )
     return Recipes.parse_obj({
-        "clean" : r1,
-        "build" : r2,
+        "clean" : recipe_clean,
+        "build" : recipe_build,
     })
 
 
-def test_step_validation(recipes):
-    # Action is required...
-    Step(action="foo")
+def test_step():
+    """Test simple step model validation"""
 
-    # however:
+    # Normal case, either is required:
+    Step(step="bar")
+    Step(method="foo")
     with pytest.raises(pydantic.ValidationError):
         Step()
+    with pytest.raises(pydantic.ValidationError):
+        Step(step="aStep", method="aMethod")
+
+
+def test_recipe():
+    step = Step(method="build")
+    recipe = Recipe(description="Another Description", steps=[step])
+    assert len(recipe) == 1
 
 
 def test_recipe_step_validation(recipes):
     # assert recipes.validate_step_actions({}) is not None
     methods = {
-        "clean_step_1" : lambda x: x,
-        "clean_step_2" : lambda x: x,
+        "clean" : lambda x: x,
+        "show" : lambda x: x,
         "build": lambda x: x,
         "another": lambda x: x,
     }
-    assert not recipes.validate_step_actions(methods)
+    assert not recipes.validate_methods_steps(methods)

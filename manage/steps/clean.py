@@ -1,9 +1,9 @@
 """Clean step"""
-from manage.models import Configuration
+from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, run
 
 
-def main(configuration: Configuration, step: dict) -> bool:
+def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Clean the build environment."""
     if step.confirm and not step.quiet_mode:
         if not ask_confirm("Ok to clean build environment?"):

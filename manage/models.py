@@ -1,19 +1,31 @@
-"""Core data types and recipe toml read"""
+"""Core data types and recipe file read"""
 from typing import Callable, Iterable
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 
 class Step(BaseModel):
-    action: str
+    method: str | None = None
+    step: str | None = None
     confirm: bool | None = True
     echo_stdout: bool | None = False
     allow_error: bool | None = False
     quiet_mode: bool | None = False
     callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
 
-    # NOTE: We can't perform simple pydantic validation on 'action' here until we have a list of methods,
-    # so...we do it with a dedicated method on the recipes instance
+    # Confirm that EITHER method or step is specified on creation.
+    # NOTE: We use "step" here as it's *after* method in field definition order!
+    @validator('step', always=True)
+    def check_consistency(cls, v, field, values):
+        # print(f"check_consistency: {v=} {field.name=} {values=}")
+        if v is not None and values['method'] is not None:
+            raise ValueError('must not provide both method and step')
+        if v is None and values['method'] is None:
+            raise ValueError('must provide either method or step')
+        return v
+
+    # NOTE: We can't perform DYNAMIC validation on 'method' here until we have a list of methods, so, we do it with a dedicated
+    # method on the recipes instance
 
 
 class Recipe(BaseModel):
@@ -54,18 +66,17 @@ class Recipes(BaseModel):
         targets_defined_casefolded = [id_.casefold() for id_ in self.keys()]
         return recipe_target.casefold() in targets_defined_casefolded
 
-    def validate_step_actions(self, methods_available: dict[Callable]) -> list | None:
-        """Each step in each recipe needs to be either a "built-in" method or refer to another step"""
+    def validate_methods_steps(self, methods_available: dict[Callable]) -> list | None:
+        """Each step in each recipe needs to be either a "built-in" method or refer to another valid step"""
         return_ = list()
         for id_, recipe in self.items():
             for step in recipe:
-                # Is this step a method-type?
-                if step.action in methods_available:
-                    continue
+                if step.method:
+                    if step.method not in methods_available:
+                        return_.append(f"Method: '{step.method}' in recipe={id_} is NOT a valid step method!")
                 else:
-                    # Then, better be another step!
-                    if self.get(step.action) is None:
-                        return_.append(f"Sorry, {step.action} in {id_} is NOT valid!")
+                    if self.get(step.step) is None:
+                        return_.append(f"Step: '{step.step}' in recipe={id_} can't be found in this file!")
         return return_
 
 

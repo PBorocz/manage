@@ -2,15 +2,15 @@
 bump:
   description: Bump the version number to the next /patch/ level and commit locally
   steps:
-    - action: poetry_bump_version_patch
-    - action: update_readme
-    - action: git_commit_version_files
+    - method: poetry_bump_version_patch
+    - method: update_readme
+    - method: git_commit_version_files
 
 ################################################################################
 build:
   description: Build our distribution(s).
   steps:
-    - action: build
+    - method: build
       confirm: false
       echo_stdout: true
 
@@ -18,4 +18,4 @@ build:
 clean:
   description: Clean out our temp files and ALL previous builds.
   steps:
-    - action: clean
+    - method: clean

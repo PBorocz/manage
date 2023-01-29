@@ -1,8 +1,8 @@
-from manage.models import Configuration
+from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, run
 
 
-def main(configuration: Configuration, step: dict) -> bool:
+def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Create git tag, i.e. v<major>.<minor>.<patch>"""
     tag = configuration.version()
     if step.confirm:
