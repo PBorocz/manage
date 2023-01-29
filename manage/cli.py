@@ -66,7 +66,7 @@ def main():
         sys.exit(1)
 
     # Read, parse, validate and configure the specified recipe file!
-    recipes = read_parse_recipe_file(args.recipe_file, methods)
+    recipes = read_parse_recipe_file(args.recipes, methods)
 
     # Make sure the user's target request is valid (allowing for "system" recipe(s) built-in)
     if not recipes.check_target(args.target.casefold()):

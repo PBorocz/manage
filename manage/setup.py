@@ -1,4 +1,5 @@
 """Setup functions, not meant for direct calling from recipe file."""
+import importlib
 import sys
 from pathlib import Path
 from typing import Callable, Final
@@ -113,7 +114,7 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
     return recipes
 
 
-def gather_available_steps() -> dict[str, Callable]:
+def simple_gather_available_steps() -> dict[str, Callable]:
     msg = fmt("Reading recipe steps available", color='blue')
     print(msg, flush=True, end="")
     return_ = dict()
@@ -123,6 +124,31 @@ def gather_available_steps() -> dict[str, Callable]:
     if not return_:
         failure()
         print("[red]Unable to find any valid command steps in manage/commands/*.py?")
+        sys.exit(1)
+    success()
+    return return_
+
+
+def gather_available_steps() -> dict[str, Callable]:
+    """Read and return all the python-defined step methods available"""
+
+    def __gather_step_modules():
+        """Utility method that iterates over all step modules."""
+        for path in sorted((Path(__file__).parent / Path("steps")).glob("*.py")):
+            if path.name.startswith("__"):
+                continue
+            module = importlib.import_module(f"manage.steps.{path.stem}")
+            yield path.stem, getattr(module, "main")
+
+    msg = fmt("Reading recipe steps available", color='blue')
+    print(msg, flush=True, end="")
+
+    # Get all the 'main" methods in each python file in the steps module:
+    return_ = {method_name: method for method_name, method in __gather_step_modules()}
+
+    if not return_:
+        failure()
+        print("[red]Unable to find any valid command steps in manage/steps/*.py?")
         sys.exit(1)
     success()
     return return_

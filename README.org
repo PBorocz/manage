@@ -47,18 +47,19 @@
      - -vv:
        - add explicit output of command executed (sorta like echo_stdout parameter does)
    - Add step tests:
-     - 90% clean.py
-     -  0% build.py
-     -  0% git_commit_version_files.py
-     -  0% git_create_release.py
-     -  0% git_create_tag.py
-     -  0% git_push_to_github.py
-     -  0% poetry_bump_version_patch.py
-     -  0% publish_to_pypi.py
-     -  0% run_pre_commit.py
-     -  0% update_readme.py
+     - 100% clean.py
+     -   0% build.py
+     -   0% git_commit_version_files.py
+     -   0% git_create_release.py
+     -   0% git_create_tag.py
+     -   0% git_push_to_github.py
+     -   0% poetry_bump_version_patch.py
+     -   0% publish_to_pypi.py
+     -   0% run_pre_commit.py
+     -   0% update_readme.py
 ** Release History
 *** Unreleased
+    - CHANGED: Moved back to dynamically importing available step methods from manage.steps module.
 *** v0.0.11 - 2023-01-29
     - ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
     - ADDED: A command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
