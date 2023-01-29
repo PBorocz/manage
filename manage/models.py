@@ -1,30 +1,19 @@
 """Core Data Types"""
-from typing import Callable
+from typing import Callable, Iterable
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 
 class Step(BaseModel):
-    method: str | None = None
-    step: str | None = None
+    action: str
     confirm: bool | None = True
     echo_stdout: bool | None = False
     allow_error: bool | None = False
     quiet_mode: bool | None = False
     callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
 
-    @validator('method', 'step')
-    def validate_one_field_using_the_others(cls, value, values, field, config):
-        # TEST: ALL 4 cases possible here
-        if field.name == "method":
-            # Pass this through as is and check on the "step" field next time through
-            return value
-        elif field.name == "step":
-            if value is None and values.get("method") is None:
-                raise ValueError("Either 'method' or 'step' must be specified for a recipe step.")
-            elif value and values["method"]:
-                raise ValueError("Only one of 'method' or 'step' must be specified for a recipe step, not both.")
-            return value
+    # NOTE: We can't perform simple pydantic validation on 'action' here until we have a list of methods,
+    # so...we do it with a dedicated method on the recipes instance
 
 
 class Recipe(BaseModel):
@@ -35,24 +24,50 @@ class Recipe(BaseModel):
     def __iter__(self):
         return iter(self.steps)
 
+    def __len__(self):
+        return len(self.steps)
+
 
 class Recipes(BaseModel):
-    recipes: dict[str, Recipe]
+    __root__: dict[str, Recipe]
 
-    def __iter__(self):
-        return iter(self.recipes.items())
+    def __len__(self):
+        return len(self.__root__)
 
-    def __getitem__(self, id_: str) -> Recipe | None:
-        return self.recipes.get(id_.casefold())
+    def items(self) -> Iterable[tuple[str, Recipe]]:
+        return iter(self.__root__.items())
+
+    def get(self, id_: str) -> Recipe | None:
+        return self.__root__.get(id_.casefold())
+
+    def set(self, id_: str, recipe: Recipe) -> None:
+        self.__root__[id_] = recipe
+
+    def keys(self) -> Iterable[str]:
+        return iter(self.__root__.keys())
 
     def ids(self) -> list[str]:
         """Return a sorted list of recipe "ids", used for command-line argument for what to run"""
-        return sorted(list(self.recipes.keys()))  # in self if not recipe.id_.startswith("__")])
+        return sorted(list(self.keys()))  # in self if not recipe.id_.startswith("__")])
 
     def check_target(self, recipe_target: str) -> bool:
         """Is the target provide valid against our current recipes?"""
-        targets_defined_casefolded = [id_.casefold() for id_ in self.recipes.keys()]
+        targets_defined_casefolded = [id_.casefold() for id_ in self.keys()]
         return recipe_target.casefold() in targets_defined_casefolded
+
+    def validate_step_actions(self, methods_available: dict[Callable]) -> list | None:
+        """Each step in each recipe needs to be either a "built-in" method or refer to another step"""
+        return_ = list()
+        for id_, recipe in self.items():
+            for step in recipe:
+                # Is this step a method-type?
+                if step.action in methods_available:
+                    continue
+                else:
+                    # Then, better be another step!
+                    if self.get(step.action) is None:
+                        return_.append(f"Sorry, {step.action} in {recipe.name} is NOT valid!")
+        return return_
 
 
 class Configuration(BaseModel):

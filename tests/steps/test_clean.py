@@ -13,12 +13,12 @@ def configuration():
 
 @pytest.fixture
 def step_no_confirm():
-    return Step(method="aMethod", confirm=False, quiet_mode=True)
+    return Step(action="aMethod", confirm=False, quiet_mode=True)
 
 
 @pytest.fixture
 def step_confirm():
-    return Step(method="aMethod", confirm=True, quiet_mode=False)
+    return Step(action="aMethod", confirm=True, quiet_mode=False)
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def mock_input():
         yield m
 
 
-def tst_clean_with_confirm(configuration, step_confirm, mock_input):
+def test_clean_with_confirm(configuration, step_confirm, mock_input):
     mock_input.return_value = 'y'
     assert clean(configuration, step_confirm)
 

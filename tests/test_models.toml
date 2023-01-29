@@ -1,0 +1,29 @@
+# NOTE: Must match contents of tests/test_models.py!
+[[recipes]]
+name = "Do Clean"
+description = "A Description"
+
+[[recipes.steps]]
+action = "clean_step_1"
+confirm = true
+echo_stdout = false
+allow_error = false
+quiet_mode = false
+
+[[recipes.steps]]
+action = "clean_step_2"
+confirm = true
+echo_stdout = true
+allow_error = true
+quiet_mode = true
+
+[[recipes]]
+name = "Do Build"
+description = "Another Description"
+
+[[recipes.steps]]
+action = "build"
+confirm = true
+echo_stdout = false
+allow_error = false
+quiet_mode = false

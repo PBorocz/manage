@@ -1,54 +1,51 @@
 ################################################################################
-[recipes.version]
-id_="version"
+[[recipes]]
 name = "Bump Version"
 description = "Bump the version number a single patch level and commit locally"
 
-[[recipes.version.steps]]
-method = "poetry_bump_version_patch"
+[[recipes.steps]]
+action = "poetry_bump_version_patch"
 
-[[recipes.version.steps]]
-method = "update_readme"
+[[recipes.steps]]
+action = "update_readme"
 
-[[recipes.version.steps]]
-method = "git_commit_version_files"
+[[recipes.steps]]
+action = "git_commit_version_files"
 
 
 ################################################################################
-[recipes.build]
-id_="build"
+[[recipes]]
 name = "Build"
 description = "Build our distribution(s)."
 
-[[recipes.build.steps]]
-method = "run_pre_commit"
+[[recipes.steps]]
+action = "run_pre_commit"
 echo_stdout = true
 
-[[recipes.build.steps]]
-method = "clean"
+[[recipes.steps]]
+action = "clean"
 allow_error = true
 confirm = false
 
-[[recipes.build.steps]]
-method = "build"
+[[recipes.steps]]
+action = "build"
 echo_stdout = true
 confirm = false
 
 
 ################################################################################
-[recipes.publish]
-id_="publish"
+[[recipes]]
 name = "Publish to PyPI"
 description = "Release a new version of our package to PyPI."
 
-[[recipes.publish.steps]]
-method = "git_create_tag"
+[[recipes.steps]]
+action = "git_create_tag"
 
-[[recipes.publish.steps]]
-method = "git_push_to_github"
+[[recipes.steps]]
+action = "git_push_to_github"
 
-[[recipes.publish.steps]]
-method = "publish_to_pypi"
+[[recipes.steps]]
+action = "publish_to_pypi"
 
-[[recipes.publish.steps]]
-method = "git_create_release"
+[[recipes.steps]]
+action = "git_create_release"

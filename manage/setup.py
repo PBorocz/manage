@@ -1,4 +1,4 @@
-"""Setup methods, not meant for direct calling from manage.toml."""
+"""Setup functions, not meant for direct calling from manage.toml."""
 import sys
 import toml
 from pathlib import Path
@@ -14,8 +14,8 @@ UNRELEASED_HEADER = "*** Unreleased"
 PATH_README = Path.cwd() / "README.org"
 
 
-def setup() -> tuple[Configuration, dict]:
-    """Setup method, return steps/commands, current package name and recipe book."""
+def setup() -> tuple[Configuration, Recipes]:
+    """Driver 'setup' method, returns configuration and user recipes."""
 
     # Confirm we're working from the README/root level of our project
     if not (Path.cwd() / "README.org").exists():
@@ -34,13 +34,17 @@ def setup() -> tuple[Configuration, dict]:
 
     # Read the recipes from specified manage.toml file
     recipes = _read_parse_recipe_file()
-    recipes = _validate_recipes(recipes, step_methods)
-    recipes = _add_system_recipes(recipes, step_methods)
 
-    # FIXME!
-    # recipes["__step_callables__"] = step_methods
+    # Map the built-in methods available onto each recipe step.
+    recipes = _add_callables(recipes, step_methods)
 
-    # Validate that version numbers are consistent between pyproject.toml and README's change history.
+    # Validate that each of the methods are valid.
+    recipes = _validate_recipe_methods(recipes, step_methods)
+
+    # Add system recipe target(s)
+    recipes = _add_system_recipe_s(recipes)
+
+    # Finally, validate that version numbers are consistent between pyproject.toml and README's change history.
     if not _validate_existing_version_numbers(configuration):
         sys.exit(1)
 
@@ -121,65 +125,57 @@ def _gather_available_steps() -> dict[str, Callable]:
     return return_
 
 
-def _read_parse_recipe_file() -> Recipes:
-    msg = fmt("Reading recipes (manage.toml)", color='blue')
+def _read_parse_recipe_file(path: Path = Path("manage.toml")) -> Recipes:
+    """We want a clean/easy-to-use recipe file, thus, do our own deserialisation."""
+    msg = fmt(f"Reading recipes ({path})", color='blue')
     print(msg, flush=True, end="")
-    if not Path("manage.toml").exists():
+    if not path.exists():
         failure()
-        print("[red]Sorry, unable to find ./manage.toml for recipes.")
+        print(f"[red]Sorry, unable to find {path} for recipes.")
         sys.exit(1)
 
-    recipes = Recipes(**toml.loads(Path("manage.toml").read_text()))
+    # Read raw..
+    raw_recipes = toml.loads(path.read_text()).get("recipes")
 
+    # ..and deserialise into our types dataclasses:
+    recipes = dict()
+    for raw_recipe in raw_recipes:
+        recipe = Recipe(**raw_recipe)
+        recipes[recipe.name] = recipe
     success()
-    return recipes
+    return Recipes.parse_obj(recipes)  # Final conversion (no validation)
 
 
-def _validate_recipes(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes | None:
+def _validate_recipe_methods(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes | None:
     """Make sure all the the methods and steps from our recipes are defined and available"""
     msg = fmt("Validating recipes", color='blue')
     print(msg, flush=True, end="")
-    invalid_method_references = list()
-    invalid_step_references = list()
-    for recipe in recipes:
-        for step in recipe:
-            if "step" in step:
-                step_name = step.get("step")
-                if step_name not in recipes:
-                    invalid_step_references.append(step_name)
-            elif "method" in step:
-                method_name = step.get("method")
-                if method_name not in step_methods:
-                    invalid_method_references.append(method_name)
-
-    if invalid_method_references or invalid_step_references:
-        if invalid_method_references:
-            print("\n[red]Sorry, error in manage.toml; The following method(s) can't be found:")
-            for method_name in invalid_method_references:
-                print(f"[red]- {method_name}")
-        if invalid_step_references:
-            print("\n[red]Sorry, error in manage.toml; The following step(s) can't be found:")
-            for step_name in invalid_step_references:
-                print(f"[red]- {step_name}")
+    if invalid_actions := recipes.validate_step_actions(step_methods):
+        print("\n[red]Sorry, error in manage.toml; The following action(s) can't be found:")
+        for action in invalid_actions:
+            print(f"[red]- {action}")
         failure()
         return None
     success()
     return recipes
 
 
-def _add_system_recipes(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes:
-    """Embellish recipes with our "built-in" ones and add the corresponding methods"""
-
-    # Add the "callable" method onto each step to be used in dispatching:
-    for id_, recipe in recipes:
+def _add_callables(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes:
+    """Add the "callable" method onto each step to be used in dispatching."""
+    for name, recipe in recipes.items():
         for step in recipe:
-            if step.method:
-                step.callable_ = step_methods.get(step.method)
+            if callable_ := step_methods.get(step.action):
+                step.callable_ = callable_
+    return recipes
 
-    # Add our "system"/built-in recipes:
-    recipes.recipes["check"] = Recipe(
-        name="Check configuration",
-        description="Only executes setup and configuration/validation steps",
-        steps=[Step(),]
-    )
+
+def _add_system_recipe_s(recipes: Recipes) -> Recipes:
+    """Embellish recipes with our "built-in" one(s)."""
+    recipes.set(
+        "check",
+        Recipe(
+            name="Check configuration",
+            description="Only executes setup and configuration/validation steps",
+            steps=[Step(action="__check__"),]
+        ))
     return recipes

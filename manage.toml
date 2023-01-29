@@ -1,31 +1,31 @@
 ################################################################################
-[recipes.version]
-name = "Bump Version"
+[[recipes]]
+name = "bump"
 description = "Bump the version number to the next /patch/ level and commit locally"
 
-[[recipes.version.steps]]
-method = "poetry_bump_version_patch"
+[[recipes.steps]]
+action = "poetry_bump_version_patch"
 
-[[recipes.version.steps]]
-method = "update_readme"
+[[recipes.steps]]
+action = "update_readme"
 
-[[recipes.version.steps]]
-method = "git_commit_version_files"
+[[recipes.steps]]
+action = "git_commit_version_files"
 
 ################################################################################
-[recipes.build]
-name = "Build"
+[[recipes]]
+name = "build"
 description = "Build our distribution(s)."
 
-[[recipes.build.steps]]
-method = "build"
+[[recipes.steps]]
+action = "build"
 confirm = false
 echo_stdout = true
 
 ################################################################################
-[recipes.clean]
-name = "Clean"
+[[recipes]]
+name = "clean"
 description = "Clean out our temp files and ALL previous builds."
 
-[[recipes.clean.steps]]
-method = "clean"
+[[recipes.steps]]
+action = "clean"

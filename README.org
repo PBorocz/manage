@@ -40,8 +40,8 @@
 ** GTD
    - Make it so that validation doesn't happen until AFTER we validate the command target,
      ie. read in just enough of the recipes to know what valid targets are and NO more!
+   - WORKING Add a command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
    - Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
-   - Add a command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
    - Add a command-line parameter for verbosity (-v, -vv, -vvv?)
      - -v:
        - print absolute paths associated with readme and pyproject.
