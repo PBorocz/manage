@@ -20,7 +20,7 @@ def smart_join(lst: list[str]) -> str:
 
 
 def ask_confirm(text: str) -> bool:
-    """Ask for confirmation, returns True if "yes" answer, False otherwise"""
+    """Ask for confirmation, returns True if "yes" answer, False otherwise."""
     while True:
         prompt = fmt(f"{text} (y/N)", color="#fffc00")
         answer = Console().input(prompt).lower()
@@ -47,7 +47,7 @@ def fmt(message: str, overhead: int = 0, color: str = 'blue') -> str:
 
 
 def run(step: Step, command: str) -> tuple[bool, str]:
-    """Run the command for the specified Step, capturing output and signalling success/failure."""
+    """Run the command for the specified Step, capturing output and signal success/failure."""
     if not step.quiet_mode:
         msg = fmt(f"Running [italic]{command}[/italic]", overhead=-17)
         print(msg, flush=True, end="")
@@ -60,7 +60,9 @@ def run(step: Step, command: str) -> tuple[bool, str]:
         # Are we allowed to have error?
         if step and not step.allow_error:
             failure()
-            sys.stderr.print(result.stderr.decode())
+            sys.stderr.write(result.stderr.decode())
+            breakpoint()
+
             return False, result.stderr.decode()
 
     ################################################

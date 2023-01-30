@@ -1,10 +1,11 @@
-"""Core data types and recipe file read"""
+"""Core data types and recipe file read."""
 from typing import Callable, Iterable
 
 from pydantic import BaseModel, validator
 
 
 class Step(BaseModel):
+    """A step in a recipe."""
     method: str | None = None
     step: str | None = None
     confirm: bool | None = True
@@ -12,23 +13,23 @@ class Step(BaseModel):
     allow_error: bool | None = False
     quiet_mode: bool | None = False
     callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
+    args_: dict | None = {}            # Supplemental runtime arguments for the callable
 
-    # Confirm that EITHER method or step is specified on creation.
-    # NOTE: We use "step" here as it's *after* method in field definition order!
     @validator('step', always=True)
     def check_consistency(cls, v, field, values):
-        # print(f"check_consistency: {v=} {field.name=} {values=}")
+        """Confirm that EITHER method or step is specified on creation.
+
+        NOTE: We use "step" here as it's *after* the method attribute in field definition order!
+        """
         if v is not None and values['method'] is not None:
             raise ValueError('must not provide both method and step')
         if v is None and values['method'] is None:
             raise ValueError('must provide either method or step')
         return v
 
-    # NOTE: We can't perform DYNAMIC validation on 'method' here until we have a list of methods,
-    # so, we do it with a dedicated method on the recipes instance
-
 
 class Recipe(BaseModel):
+    """A recipe, mostly consisting of a description and a set of steps."""
     description: str | None = None
     steps: list[Step] = []
 
@@ -40,6 +41,7 @@ class Recipe(BaseModel):
 
 
 class Recipes(BaseModel):
+    """A collection of recipes, maps 1-to-1 with an inbound file."""
     __root__: dict[str, Recipe]
 
     def __len__(self):
@@ -58,7 +60,7 @@ class Recipes(BaseModel):
         return iter(self.__root__.keys())
 
     def ids(self) -> list[str]:
-        """Return a sorted list of recipe "ids", used for command-line argument for what to run"""
+        """Return a sorted list of recipe "ids", used for command-line argument for what to run."""
         return sorted(list(self.keys()))  # in self if not recipe.id_.startswith("__")])
 
     def check_target(self, recipe_target: str) -> bool:
@@ -81,6 +83,7 @@ class Recipes(BaseModel):
 
 
 class Configuration(BaseModel):
+    """Internal configuration/state."""
     version_: str | None = None
     package: str | None = None
 
