@@ -10,10 +10,10 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+# 2023-01-30 Removed dist/ from the list below so we can try pip install *from* git.
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/

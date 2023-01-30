@@ -1,7 +1,16 @@
 * Manage
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project, this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
-** Approach
-   The exact steps necessary to complete a /recipe/ are specified in a local ~manage.yaml~ file that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
+** What is it?
+   Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
+** Inspiration:
+   - [[https://github.com/tfeldmann/organize/blob/main/manage.py][organize/manage.py at main · tfeldmann/organize · GitHub]]
+   - [[https://github.com/casey/just][GitHub - casey/just: 🤖 Just a command runner]]
+** Design:
+   - The exact steps necessary to complete a /recipe/ are specified in a local ~manage.yaml~ file that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
+   - ~manage.yaml~ contains:
+     - A set of targets aka recipes (think of as Makefile commands or justfile targets).
+     - Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
+     - Each step can have a "confirmation" before-hand (e.g. "Are you sure?)
 ** Installation
    This isn't packaged for PyPI. Here's how I would approach using this if your interested:
    - confirm python version availability, I'm on 3.10.9 for now (and use ~pyenv~ to manage all my versions)
@@ -10,10 +19,9 @@
    - ~poetry install~ to install requisite dependencies into your venv.
    - set .envrc to point top-level directory (i.e. README and pyproject.toml) (thus, I use ~direnv~)
    - ~python manage check~
-
-   You'll note a manage.toml file in the top-level directory so yes, I do eat my own dog-food.
-
-** Assumptions
+   You'll note a manage.yaml file in the top-level directory so yes, I do eat my own dog-food.
+** Critical Assumptions
+   To the degree that your development/release environment stray from mine, the tool becomes less and less relevant to you!
 *** Tools
     - [[https://python-poetry.org][Poetry]] is used manage our package dependencies *and* build environment.
     - We assume that execution of this script is from the TOP level of a project, i.e. at the same level as pyproject.toml.
@@ -37,6 +45,8 @@
      | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
 ** GTD
+   - Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
+     Essentially a copy of ~manage/examples/manage.yaml~ to ~~~ and checking to not overwrite any existing file.
    - Can we refactor steps/*.py to have/use a common-base class?
      Mostly to reduce duplicate code associated with confirmation and return statuses.
    - Can we refactor and dynamically create the GITHUB_PROJECT_RELEASE_HISTORY URL?
