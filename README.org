@@ -75,11 +75,11 @@ clean:
 #+end_src
    - At this point, you should be able to run: ~python manage check~ (one of two built-in targets) against ~manage.yaml~ you just created.
 ** Development
-   - Confirm python version availability, I'm developing on 3.10.9 for now (and use ~pyenv~ to manage all my versions)
-   - Setup a .venv using your virtual-env manager of choice is (I use ~python -m venv .venv~)
-   - Clone the repo
+   - Confirm python version availability, I'm developing on 3.10.9 for now (and use [[https://github.com/pyenv/pyenv][pyenv]] to manage all my versions).
+   - Setup a .venv using your virtual-env manager of choice (I use ~python -m venv .venv~).
+   - Clone the repo.
    - ~poetry install~ to install requisite dependencies into your venv.
-   - Set ~.envrc~ to point top-level directory (i.e. README and pyproject.toml) (thus, I use ~direnv~). Here's why my ~.envrc~ contains:
+   - Set ~.envrc~ to point top-level directory (i.e. README and pyproject.toml), I use the wonderful [[https://direnv.net/][direnv]] package to take of this housekeeping. Here's why my ~.envrc~ contains, it not only sets the PYTHON_PATH appropriately but also takes care of automatically point me to my virtual-env:
 #+begin_src bash
 export PYTHONPATH=`pwd`
 export VIRTUAL_ENV=$PYTHONPATH/.venv
