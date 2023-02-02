@@ -1,42 +1,54 @@
 * Manage
-  Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project, this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
+  Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project and wonderful [[https://github.com/casey/just][Just command runner]], this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** What is it?
    Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
-** Inspiration:
-   - [[https://github.com/tfeldmann/organize/blob/main/manage.py][organize/manage.py at main · tfeldmann/organize · GitHub]]
-   - [[https://github.com/casey/just][GitHub - casey/just: 🤖 Just a command runner]]
 ** Design:
    - The exact steps necessary to complete a /recipe/ are specified in a local ~manage.yaml~ file that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
    - ~manage.yaml~ contains:
      - A set of targets aka recipes (think of as Makefile commands or justfile targets).
      - Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
      - Each step can have a "confirmation" before-hand (e.g. "Are you sure?)
-** Installation
-   This isn't packaged for PyPI. Here's how I would approach using this if your interested:
-   - confirm python version availability, I'm on 3.10.9 for now (and use ~pyenv~ to manage all my versions)
-   - setup a .venv using your virtual-env manager of choice is (I use ~python -m venv .venv~)
-   - clone the repo
-   - ~poetry install~ to install requisite dependencies into your venv.
-   - set .envrc to point top-level directory (i.e. README and pyproject.toml) (thus, I use ~direnv~)
-   - ~python manage check~
-   You'll note a manage.yaml file in the top-level directory so yes, I do eat my own dog-food.
-** Critical Assumptions
-   To the degree that your development/release environment stray from mine, the tool becomes less and less relevant to you!
+   - An example ~manage.yaml~ might look like this:
+#+begin_src yaml
+################################################################################
+bump:
+  description: Bump the version number to the next /patch/ level and commit locally
+  steps:
+    - method: poetry_bump_version_patch
+    - method: update_readme
+    - method: git_commit_version_files
+
+################################################################################
+clean:
+  description: Clean out our temp files and ALL previous builds.
+  steps:
+    - method: clean
+
+################################################################################
+build:
+  description: Build our distribution(s).
+  steps:
+    - method: build
+      confirm: false
+      echo_stdout: true
+#+end_src
+** Fundamental Assumptions
+   To the degree that your development/release environment stray from mine, the tool probably becomes less and less relevant! However, these are my common python project standards, allowing for the ability of this tool to work seamlessly:
 *** Tools
-    - [[https://python-poetry.org][Poetry]] is used manage our package dependencies *and* build environment.
+    - [[https://python-poetry.org][Poetry]] is used to manage package dependencies *and* build environment.
     - We assume that execution of this script is from the TOP level of a project, i.e. at the same level as pyproject.toml.
     - The version string in pyproject.toml is the SINGLE and CANONICAL version string in our project/package.
+      In particular, there are no ~/module/__version__.py~'s or versions embedded in ~__init__.py~~ files.
 *** Versioning
-    - We use semantic versioning with ~poetry version~ to update/manage our version number.
+    - We use semantic versioning with ~poetry version~ to update/manage our version number. Specifically, this allows us to use ~poetry version~ command's keywords for version updates, ie. patch, minor, major etc.
 *** README Management
     - We manage our README in an Org format (see [[https://orgmode.org/][Emacs Org Mode]] for details).
     - We assume ~README.org~ is kept in the top-level directory.
 *** CHANGELOG Management
     - We do *not* use a stand-alone ~CHANGELOG.md~ file.
     - We use a specific section in ~README.org~ called /Release History/.
-    - We keep a list of completed but unreleased items in the /Release History/ under an "Unreleased" header.
+    - We keep a list of completed but unreleased items in the /Release History/ under an "Unreleased" header. This allows us to easily update the version number associated with the set of changes to be released automatically.
 *** Configuration
-    - We need *two* --group dev packages over and above our default environment to support this script tomli and requests.
     - We assume the following entries are available in our environment (either set in shell or through .env):
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
      | GITHUB_USER                    | Github user id                            | JohnJacobJingleheimerSchmidt                                             |
@@ -44,6 +56,36 @@
      | GITHUB_API_RELEASES            | URL to Github release API                 | https://api.github.com/repos/<user>/<project>/releases                   |
      | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
+
+     Note: technically, we might be able to infer GITHUB_PROJECT_RELEASE_HISTORY based on the GITHUB_USER and project name but we'd have to infer the "mainline" branch, some have moved ~master~ to ~main~ others to ~trunk~ (like me).
+** Installation
+   This isn't packaged for PyPI. However, distribution files are released to github.
+   - If you use ~poetry~, this should suffice:
+#+begin_src bash
+poetry add git+https://github.com/PBorocz/manage
+#+end_src
+   - Create your ~manage.yaml~ file, here's starting one:
+#+begin_src yaml
+clean:
+  description: Clean out our temp files and ALL previous builds.
+  steps:
+    - method: clean
+      echo_stdout: true
+      confirm: true
+#+end_src
+   - At this point, you should be able to run: ~python manage check~ (one of two built-in targets) against ~manage.yaml~ you just created.
+** Development
+   - Confirm python version availability, I'm developing on 3.10.9 for now (and use ~pyenv~ to manage all my versions)
+   - Setup a .venv using your virtual-env manager of choice is (I use ~python -m venv .venv~)
+   - Clone the repo
+   - ~poetry install~ to install requisite dependencies into your venv.
+   - Set ~.envrc~ to point top-level directory (i.e. README and pyproject.toml) (thus, I use ~direnv~). Here's why my ~.envrc~ contains:
+#+begin_src bash
+export PYTHONPATH=`pwd`
+export VIRTUAL_ENV=$PYTHONPATH/.venv
+PATH_add "$VIRTUAL_ENV/bin"
+#+end_src
+   - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
    - Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
      Essentially a copy of ~manage/examples/manage.yaml~ to ~~~ and checking to not overwrite any existing file.
