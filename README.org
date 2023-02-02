@@ -66,12 +66,19 @@ poetry add git+https://github.com/PBorocz/manage
 #+end_src
    - Create your ~manage.yaml~ file, here's starting one:
 #+begin_src yaml
-clean:
-  description: Clean out our temp files and ALL previous builds.
-  steps:
-    - method: clean
-      echo_stdout: true
-      confirm: true
+  clean:
+    description: Clean out our temp files and ALL previous builds.
+    steps:
+      - method: clean
+        echo_stdout: true
+
+  build:
+    description: Build our package.
+    steps:
+      - step: clean
+      - method: build
+        confirm: true
+        echo_stdout: true
 #+end_src
    - At this point, you should be able to run: ~python manage check~ (one of two built-in targets) against ~manage.yaml~ you just created.
 ** Development
