@@ -132,7 +132,10 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+*** v0.0.12 - 2023-02-02
     - ADDED: A step method that uses pandoc converter, for example to go from README.org to README.md.
+    - ADDED: The first draft of a better "show" target to document the current ~manage.yaml~ file.
+    - CHANGED Corrected data model: instead of ~method~ or ~step~ for a recipe, it's now ~method~ or /recipe/.
     - CHANGED: Moved back to dynamically importing available step methods from manage.steps module.
 *** v0.0.11 - 2023-01-29
     - ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
