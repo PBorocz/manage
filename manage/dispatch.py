@@ -19,7 +19,7 @@ def dispatch(configuration: Configuration, recipes: dict, args_recipe: str) -> N
             # Run the *method* associated with the step
             step.callable_(configuration, recipes, step)
         else:
-            # Run another step!
-            dispatch(configuration, recipes, step.action)
+            # Run another recipe!
+            dispatch(configuration, recipes, step.recipe)
 
         # No need for else here as we've already validated the recipe file.
