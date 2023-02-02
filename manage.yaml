@@ -1,4 +1,12 @@
 ################################################################################
+convert:
+  description: Convert readme
+  steps:
+    - method: pandoc_convert_org_to_markdown
+      arguments:
+        path_org: "./README.org"
+        path_md: "./README.md"
+
 bump:
   description: Bump the version number to the next /patch/ level and commit locally
   steps:
@@ -10,6 +18,7 @@ bump:
 build:
   description: Build our distribution(s).
   steps:
+    - recipe: clean
     - method: build
       confirm: false
       echo_stdout: true

@@ -1,19 +1,22 @@
 """Core data types and recipe file read."""
-from typing import Callable, Iterable
+from typing import Any, Callable, Dict, Iterable
 
 from pydantic import BaseModel, validator
 
 
 class Step(BaseModel):
     """A step in a recipe."""
+    # FROM inbound manage file:
     method: str | None = None
-    recipe: str | None = None          # Reference to the id_ of another recipe
+    recipe: str | None = None        # Reference to the id_ of another recipe
     confirm: bool | None = True
     echo_stdout: bool | None = False
     allow_error: bool | None = False
     quiet_mode: bool | None = False
+    arguments: Dict[str, Any] = {}   # Supplemental arguments for the callable
+
+    # NOT from inbound manage file:
     callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
-    args_: dict | None = {}            # Supplemental runtime arguments for the callable
 
     @validator('recipe', always=True)
     def check_consistency(cls, v, field, values):
@@ -27,9 +30,12 @@ class Step(BaseModel):
             raise ValueError('must provide either method or recipe')
         return v
 
+    def get_arg(self, arg_key: str) -> Any | None:
+        """Return the value associated with the specified argument (or None)."""
+        return self.arguments.get(arg_key)
 
 class Recipe(BaseModel):
-    """A recipe, mostly consisting of a description and a set of steps."""
+    """A recipe, consisting of a description and a set of steps."""
     description: str | None = None
     steps: list[Step] = []
 
@@ -47,7 +53,7 @@ class Recipes(BaseModel):
     def __len__(self):
         return len(self.__root__)
 
-    def items(self) -> Iterable[tuple[str, Recipe]]:
+    def __iter__(self) -> Iterable[tuple[str, Recipe]]:
         return iter(self.__root__.items())
 
     def get(self, id_: str) -> Recipe | None:
@@ -71,7 +77,7 @@ class Recipes(BaseModel):
     def validate_methods_steps(self, methods_available: dict[Callable]) -> list | None:
         """Each step in each recipe needs to be either a "built-in" method or refer to another valid step"""
         return_ = list()
-        for id_, recipe in self.items():
+        for id_, recipe in self:
             for step in recipe:
                 if step.method:
                     if step.method not in methods_available:

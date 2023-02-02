@@ -36,7 +36,7 @@ def test_normal_case(path_org, path_md):
     # Setup
     step = Step(
         method="aMethod", confirm=False, quiet_mode=True,
-        args_=dict(path_org=path_org, path_md=path_md),
+        arguments=dict(path_org=path_org, path_md=path_md),
     )
 
     # Test

@@ -46,6 +46,23 @@ def test_step():
         Step(recipe="aStep", method="aMethod")
 
 
+def test_step_args():
+    """Test step model argument handling"""
+    test_args = {
+        "arg_1_str": "arg_1_str_value",
+        "arg_2_bool": True,
+        "arg_3_int": 42,
+    }
+    # Test
+    step = Step(method="bar", arguments=test_args)
+
+    # Confirm
+    assert step.arguments == test_args
+    assert step.get_arg("arg_1_str") == "arg_1_str_value"
+    assert step.get_arg("arg_2_bool") == True
+    assert step.get_arg("arg_3_int") == 42
+
+
 def test_recipe():
     step = Step(method="build")
     recipe = Recipe(description="Another Description", steps=[step])

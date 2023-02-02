@@ -96,7 +96,7 @@ def _validate_recipe_methods(recipes: Recipes, step_methods: dict[str, Callable]
 
 def _add_callables(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes:
     """Add the "callable" method onto each method step to dispatch on."""
-    for name, recipe in recipes.items():
+    for name, recipe in recipes:
         for step in recipe:
             if callable_ := step_methods.get(step.method):
                 step.callable_ = callable_

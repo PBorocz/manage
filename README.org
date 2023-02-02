@@ -3,34 +3,38 @@
 ** What is it?
    Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
 ** Design:
-   - The exact steps necessary to complete a /recipe/ are specified in a local ~manage.yaml~ file that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
-   - ~manage.yaml~ contains:
-     - A set of targets aka recipes (think of as Makefile commands or justfile targets).
+   - The exact steps necessary to complete a /recipe/ are specified in a local recipe file (default ~./manage.yaml~) that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
+   - A recipe file contains:
+     - A set of /targets/ aka recipes (think of as Makefile commands or justfile targets).
      - Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
-     - Each step can have a "confirmation" before-hand (e.g. "Are you sure?)
+     - Each step can refer either to a built-in method (e.g. ~clean~) or to the name of another recipe.
+     - Each step can have a user-confirmation before executing, e.g. "Are you sure? (~confirm~).
+     - Each step can be configured as to whether or not it's stdout is displayed (~echo_stdout~).
+     - Each step can be configured control whether errors encountered are fatal or not (~allow_error~).
    - An example ~manage.yaml~ might look like this:
 #+begin_src yaml
-################################################################################
-bump:
-  description: Bump the version number to the next /patch/ level and commit locally
-  steps:
-    - method: poetry_bump_version_patch
-    - method: update_readme
-    - method: git_commit_version_files
+  ################################################################################
+  bump:
+    description: Bump the version number to the next /patch/ level and commit locally
+    steps:
+      - method: poetry_bump_version_patch
+      - method: update_readme
+      - method: git_commit_version_files
 
-################################################################################
-clean:
-  description: Clean out our temp files and ALL previous builds.
-  steps:
-    - method: clean
+  ################################################################################
+  clean:
+    description: Clean out our temp files and ALL previous builds.
+    steps:
+      - method: clean
 
-################################################################################
-build:
-  description: Build our distribution(s).
-  steps:
-    - method: build
-      confirm: false
-      echo_stdout: true
+  ################################################################################
+  build:
+    description: Build our distribution(s).
+    steps:
+      - method: build
+        confirm: false
+        echo_stdout: true
+        allow_error: true  # We don't care if no files are clean or if dirs don't exist.
 #+end_src
 ** Fundamental Assumptions
    To the degree that your development/release environment stray from mine, the tool probably becomes less and less relevant! However, these are my common python project standards, allowing for the ability of this tool to work seamlessly:
@@ -94,18 +98,10 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
-   - [WORK] Clean up the built-in "show" command
-     (instead of just a simple rich print (which admittedly is much better than a regular print!))
-   - [TODO] Allow for arbitrary arguments to be passed from manage.yaml.
-     Example is pandoc conversion of README.org to README.md. Would be nice to not have to hard-code the respective file names.
    - [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
-     Essentially a copy of ~manage/examples/manage.yaml~ to ~~~ and checking to not overwrite any existing file.
+     Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
    - [TODO] Can we refactor steps/*.py to have/use a common-base class?
      Mostly to reduce duplicate code associated with confirmation and return statuses.
-   - [TODO] Can we refactor and dynamically create the GITHUB_PROJECT_RELEASE_HISTORY URL?
-     We know the package name (from pyproject.toml)    -  90% confidence
-     We know the user name (from another env variable  - 100% confidence
-     We can somewhat surely assume the default branch? -  50% confidence.
    - [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
    - [TODO] Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
    - [TODO] Add a command-line parameter for verbosity (-v, -vv?)
@@ -114,6 +110,10 @@ PATH_add "$VIRTUAL_ENV/bin"
        - print package name and version found, how many recipes encountered etc.
      - -vv:
        - add explicit output of command executed (sorta like echo_stdout parameter does)
+   - [TODO] Can we refactor and dynamically create the GITHUB_PROJECT_RELEASE_HISTORY URL?
+     We know the package name (from pyproject.toml)    -  90% confidence
+     We know the user name (from another env variable  - 100% confidence
+     We can somewhat surely assume the default branch? -  50% confidence.
    - [WORK] Status of ongoing test development:
      |--------+-----------------------------------|
      | Status | Module                            |
@@ -132,6 +132,9 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+    - ADDED: Ability to pass general "arguments" into steps that might require ~manage.yaml~ time configuration.
+      Example is a step to convert from org to markdown, arguments are used to pass the specific input & output paths.
+    - CHANGED: Added ability for built-in "show" target to render nested recipes.
 *** v0.0.12 - 2023-02-02
     - ADDED: A step method that uses pandoc converter, for example to go from README.org to README.md.
     - ADDED: The first draft of a better "show" target to document the current ~manage.yaml~ file.

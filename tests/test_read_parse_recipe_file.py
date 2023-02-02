@@ -11,7 +11,12 @@ def recipes():
     recipe_clean = Recipe(
         description="A Clean Recipe",
         steps=[
-            Step(method="clean"),  # Test that defaults match those in yaml file..
+            Step(method="clean",  # Test that defaults match those in yaml file..
+                 arguments=
+                     dict(arg_1_str="arg_1_str_value",
+                          arg_2_bool=False,
+                          arg_3_int=42),
+                 ),
             Step(method="show",
                  config=True,
                  echo_stdout=True,

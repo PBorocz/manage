@@ -7,6 +7,10 @@ clean:
       echo_stdout: false
       allow_error: false
       quiet_mode: false
+      arguments:
+        arg_1_str: arg_1_str_value
+        arg_2_bool: false
+        arg_3_int: 42
 
     - method: show
       confirm: true
