@@ -7,7 +7,7 @@ from pydantic import BaseModel, validator
 class Step(BaseModel):
     """A step in a recipe."""
     method: str | None = None
-    step: str | None = None
+    recipe: str | None = None          # Reference to the id_ of another recipe
     confirm: bool | None = True
     echo_stdout: bool | None = False
     allow_error: bool | None = False
@@ -15,16 +15,16 @@ class Step(BaseModel):
     callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
     args_: dict | None = {}            # Supplemental runtime arguments for the callable
 
-    @validator('step', always=True)
+    @validator('recipe', always=True)
     def check_consistency(cls, v, field, values):
-        """Confirm that EITHER method or step is specified on creation.
+        """Confirm that EITHER method or another recipe is specified on creation.
 
-        NOTE: We use "step" here as it's *after* the method attribute in field definition order!
+        NOTE: We use ~recipe~ here as it's *after* the ~method~ attribute in field definition order!
         """
         if v is not None and values['method'] is not None:
-            raise ValueError('must not provide both method and step')
+            raise ValueError('must not provide both method and recipe')
         if v is None and values['method'] is None:
-            raise ValueError('must provide either method or step')
+            raise ValueError('must provide either method or recipe')
         return v
 
 
@@ -77,8 +77,8 @@ class Recipes(BaseModel):
                     if step.method not in methods_available:
                         return_.append(f"Method: '{step.method}' in recipe={id_} is NOT a valid step method!")
                 else:
-                    if self.get(step.step) is None:
-                        return_.append(f"Step: '{step.step}' in recipe={id_} can't be found in this file!")
+                    if self.get(step.recipe) is None:
+                        return_.append(f"Step: '{step.recipe}' in recipe={id_} can't be found in this file!")
         return return_
 
 

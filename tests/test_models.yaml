@@ -17,5 +17,5 @@ clean:
 build:
   description: A Build Recipe
   steps:
-    - step: clean
+    - recipe: clean
     - method: build

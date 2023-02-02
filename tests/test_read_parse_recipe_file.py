@@ -23,15 +23,15 @@ def recipes():
     recipe_build = Recipe(
         description="A Build Recipe",
         steps=[
-            Step(step="clean"),
+            Step(recipe="clean"),
             Step(method="build"),
         ]
     )
     return Recipes.parse_obj({
         "clean" : recipe_clean,
         "build" : recipe_build,
-        "check" : Recipe(description="Check configuration only", steps=[Step(method="check")]),
-        "show"  : Recipe(description="Show recipe file contents", steps=[Step(method="show")]),
+        "check" : Recipe(description="Check configuration only.", steps=[Step(method="check")]),
+        "show"  : Recipe(description="Show recipe file contents.", steps=[Step(method="show")]),
     })
 
 

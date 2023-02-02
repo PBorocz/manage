@@ -22,7 +22,7 @@ def recipes():
     recipe_build = Recipe(
         description="A Build Recipe",
         steps=[
-            Step(step="clean"),
+            Step(recipe="clean"),
             Step(method="build"),
         ]
     )
@@ -36,12 +36,14 @@ def test_step():
     """Test simple step model validation"""
 
     # Normal case, either is required:
-    Step(step="bar")
+    Step(recipe="bar")
     Step(method="foo")
+
+    # However, ValidatorErrors when neither is provided or if both are provided:
     with pytest.raises(pydantic.ValidationError):
         Step()
     with pytest.raises(pydantic.ValidationError):
-        Step(step="aStep", method="aMethod")
+        Step(recipe="aStep", method="aMethod")
 
 
 def test_recipe():

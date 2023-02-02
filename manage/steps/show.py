@@ -20,7 +20,7 @@ def print_step(step: Step) -> None:
     if step.method:
         print(f"{indent}• [bold]{step.method}[/] method")
     else:
-        print(f"{indent}• [bold]{step.step}[/] step!")
+        print(f"{indent}• [bold]{step.recipe}[/] step!")
 
     indent += " " * 2
 
