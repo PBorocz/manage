@@ -87,27 +87,27 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
-   - Clean up the built-in "show" command
+*** WORKING Clean up the built-in "show" command
      (instead of just a simple rich print (which admittedly is much better than a regular print!))
-   - Allow for arbitrary arguments to be passed from manage.yaml.
+*** TODO Allow for arbitrary arguments to be passed from manage.yaml.
      Example is pandoc conversion of README.org to README.md. Would be nice to not have to hard-code the respective file names.
-   - Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
+*** TODO Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
      Essentially a copy of ~manage/examples/manage.yaml~ to ~~~ and checking to not overwrite any existing file.
-   - Can we refactor steps/*.py to have/use a common-base class?
+*** TODO Can we refactor steps/*.py to have/use a common-base class?
      Mostly to reduce duplicate code associated with confirmation and return statuses.
-   - Can we refactor and dynamically create the GITHUB_PROJECT_RELEASE_HISTORY URL?
+*** TODO Can we refactor and dynamically create the GITHUB_PROJECT_RELEASE_HISTORY URL?
      We know the package name (from pyproject.toml)    -  90% confidence
      We know the user name (from another env variable  - 100% confidence
      We can somewhat surely assume the default branch? -  50% confidence.
-   - Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
-   - Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
-   - Add a command-line parameter for verbosity (-v, -vv?)
+*** TODO Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
+*** TODO Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
+*** TODO Add a command-line parameter for verbosity (-v, -vv?)
      - -v:
        - print absolute paths associated with readme and pyproject.
        - print package name and version found, how many recipes encountered etc.
      - -vv:
        - add explicit output of command executed (sorta like echo_stdout parameter does)
-   - Status of ongoing test development:
+*** WORKING Status of ongoing test development:
      |--------+-----------------------------------|
      | Status | Module                            |
      |--------+-----------------------------------|
