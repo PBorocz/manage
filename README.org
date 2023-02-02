@@ -87,6 +87,10 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
+   - Clean up the built-in "show" command
+     (instead of just a simple rich print (which admittedly is much better than a regular print!))
+   - Allow for arbitrary arguments to be passed from manage.yaml.
+     Example is pandoc conversion of README.org to README.md. Would be nice to not have to hard-code the respective file names.
    - Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
      Essentially a copy of ~manage/examples/manage.yaml~ to ~~~ and checking to not overwrite any existing file.
    - Can we refactor steps/*.py to have/use a common-base class?
@@ -103,17 +107,22 @@ PATH_add "$VIRTUAL_ENV/bin"
        - print package name and version found, how many recipes encountered etc.
      - -vv:
        - add explicit output of command executed (sorta like echo_stdout parameter does)
-   - Add step tests:
-     - 100% clean.py
-     -   0% build.py
-     -   0% git_commit_version_files.py
-     -   0% git_create_release.py
-     -   0% git_create_tag.py
-     -   0% git_push_to_github.py
-     -   0% poetry_bump_version_patch.py
-     -   0% publish_to_pypi.py
-     -   0% run_pre_commit.py
-     -   0% update_readme.py
+   - Status of ongoing test development:
+     |--------+-----------------------------------|
+     | Status | Module                            |
+     |--------+-----------------------------------|
+     |     0% | build.py                          |
+     |     0% | git_commit_version_files.py       |
+     |     0% | git_create_release.py             |
+     |     0% | git_create_tag.py                 |
+     |     0% | git_push_to_github.py             |
+     |     0% | poetry_bump_version_patch.py      |
+     |     0% | publish_to_pypi.py                |
+     |     0% | run_pre_commit.py                 |
+     |     0% | update_readme.py                  |
+     |   100% | clean.py                          |
+     |   100% | pandoc_convert_org_to_markdown.py |
+     |--------+-----------------------------------|
 ** Release History
 *** Unreleased
     - ADDED: A step method that uses pandoc converter, for example to go from README.org to README.md.

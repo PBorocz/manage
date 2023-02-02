@@ -107,10 +107,10 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
     """Embellish recipes with our "built-in" one(s)."""
     recipes.set(
         "check",
-        Recipe(description="Check configuration only", steps=[Step(method="check"),]))
+        Recipe(description="Check configuration only.", steps=[Step(method="check"),]))
     recipes.set(
         "show",
-        Recipe(description="Show recipe file contents", steps=[Step(method="show"),]))
+        Recipe(description="Show recipe file contents.", steps=[Step(method="show"),]))
     return recipes
 
 
