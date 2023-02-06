@@ -6,9 +6,6 @@ from rich import print
 from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, fmt, failure, success
 
-UNRELEASED_HEADER = "*** Unreleased"
-PATH_README = Path.cwd() / "README.org"
-
 
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Search for 'Unreleased...' header in Changelog portion of README and replace with current version and date.

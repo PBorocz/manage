@@ -56,19 +56,23 @@ def validate_existing_version_numbers(configuration: Configuration) -> bool:
 
     def __get_last_release_from_readme(path_readme: Path = None) -> str:
         """Mini state-machine to find last "release" in our changelog embedded within our README."""
-        path_readme = Path.cwd() / "README.org" if path_readme is None else path_readme
+        path_readme = Path.cwd() / "README.md" if path_readme is None else path_readme
+        header = "### "
+        if not path_readme.exists():
+            path_readme = Path.cwd() / "README.org"
+            header = "*** "
         take_next_release = False
         for line in path_readme.read_text().split("\n"):
             if line.startswith(UNRELEASED_HEADER):
                 take_next_release = True
                 continue
-            if take_next_release and line.startswith("*** "):  # eg "*** vX.Y.Z - <aDate>"
+            if take_next_release and line.startswith(header):  # eg "*** vX.Y.Z - <aDate>"
                 tag = line.split()[1]
                 version = tag[1:]
                 return version
         return None
 
-    msg = fmt("Checking consistency of versions (pyproject.toml & README.org)", color='blue')
+    msg = fmt("Checking consistency of versions (pyproject.toml & README)", color='blue')
     print(msg, end="", flush=True)
     last_release_version = __get_last_release_from_readme()
     if last_release_version != configuration.version_:

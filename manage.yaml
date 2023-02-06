@@ -10,10 +10,13 @@ bump:
 
 ################################################################################
 build:
-  description: Build our distribution(s).
+  description: Build our distribution(s) and release to "github" (not PyPI!)
   steps:
     - recipe: clean
     - method: build
+      confirm: false
+      echo_stdout: true
+    - method: git_push_to_github
       confirm: false
       echo_stdout: true
 

@@ -47,8 +47,8 @@ def main():
     args = get_args()
 
     # Confirm we're working from the README/root level of our project
-    if not (Path.cwd() / "README.org").exists():
-        print("[red]Sorry, we need run this from the same direction that your README.org file sits.")
+    if not (Path.cwd() / "README.org").exists() and not (Path.cwd() / "README.md").exists():
+        print("[red]Sorry, we need run this from the same direction that your README.md/org file sits.")
         sys.exit(1)
 
     # Read configuration and package we're working on
