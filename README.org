@@ -132,6 +132,8 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+
+*** v0.0.14 - 2023-02-06
     - ADDED: Ability for ~update_readme~ to take an argument specifying what format the project's README file is in, ie. 'md' for markdown (default) or 'org'. Optional argument is ~readme_format~.
 *** v0.0.13 - 2023-02-02
     - ADDED: Ability to pass general "arguments" into steps that might require ~manage.yaml~ time configuration.
