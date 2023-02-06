@@ -11,8 +11,6 @@ from manage import steps as step_module
 from manage.models import Configuration, Recipes, Recipe, Step
 from manage.utilities import fmt, success, failure
 
-UNRELEASED_HEADER: Final = "*** Unreleased"
-
 
 def read_parse_recipe_file(path: Path, methods: dict[Callable] | None) -> Recipes:
     """We want a clean/easy-to-use recipe file, thus, do our own deserialisation."""
@@ -54,16 +52,21 @@ def read_parse_recipe_file(path: Path, methods: dict[Callable] | None) -> Recipe
 def validate_existing_version_numbers(configuration: Configuration) -> bool:
     """Check that the last released version in README is consistent with canonical version in pyproject.toml"""
 
-    def __get_last_release_from_readme(path_readme: Path = None) -> str:
+    def __get_last_release_from_readme() -> str:
         """Mini state-machine to find last "release" in our changelog embedded within our README."""
-        path_readme = Path.cwd() / "README.md" if path_readme is None else path_readme
-        header = "### "
+        path_readme = Path.cwd() / "README.md"
+        header = "###"
         if not path_readme.exists():
             path_readme = Path.cwd() / "README.org"
-            header = "*** "
+            header = "***"
+            if not path_readme.exists():
+                print(f"[red]Sorry, unable to open EITHER README.md or README.org from the current directory.")
+                return None
+
+        unreleased_header = f"{header} Unreleased"
         take_next_release = False
         for line in path_readme.read_text().split("\n"):
-            if line.startswith(UNRELEASED_HEADER):
+            if line.startswith(unreleased_header):
                 take_next_release = True
                 continue
             if take_next_release and line.startswith(header):  # eg "*** vX.Y.Z - <aDate>"

@@ -16,9 +16,10 @@ build:
     - method: build
       confirm: false
       echo_stdout: true
-    - method: git_push_to_github
-      confirm: false
-      echo_stdout: true
+    # FIXME: Need to "commit" and then push
+    # - method: git_push_to_github
+    #   confirm: false
+    #   echo_stdout: true
 
 ################################################################################
 clean:
