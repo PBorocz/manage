@@ -1,17 +1,11 @@
 ################################################################################
-convert:
-  description: Convert readme
-  steps:
-    - method: pandoc_convert_org_to_markdown
-      arguments:
-        path_org: "./README.org"
-        path_md: "./README.md"
-
 bump:
   description: Bump the version number to the next /patch/ level and commit locally
   steps:
     - method: poetry_bump_version_patch
     - method: update_readme
+      arguments:
+        readme_format: "org"
     - method: git_commit_version_files
 
 ################################################################################
