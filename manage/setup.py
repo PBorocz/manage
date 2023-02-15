@@ -9,20 +9,20 @@ from rich import print
 
 from manage import steps as step_module
 from manage.models import Configuration, Recipes, Recipe, Step
-from manage.utilities import fmt, success, failure
+from manage.utilities import fmt, success, failure, SimpleObj
 
 
-def read_parse_recipe_file(path: Path, methods: dict[Callable] | None) -> Recipes:
+def read_parse_recipe_file(args: SimpleObj, methods: dict[Callable] | None) -> Recipes:
     """We want a clean/easy-to-use recipe file, thus, do our own deserialisation."""
-    msg = fmt(f"Reading recipes ({path})", color='blue')
-    print(msg, flush=True, end="")
-    if not path.exists():
+
+    print(fmt(f"Reading recipes ({args.recipes})", color='blue'), flush=True, end="")
+    if not args.recipes.exists():
         failure()
-        print(f"[red]Sorry, unable to find {path} for recipes.")
+        print(f"[red]Sorry, unable to find {args.recipes} for recipes.")
         sys.exit(1)
 
-    # Read raw..
-    raw_recipes = yaml.safe_load(path.read_text())
+    # Read raw (safely!)...
+    raw_recipes = yaml.safe_load(args.recipes.read_text())
 
     # ..and deserialise into our types dataclasses:
     d_recipes = dict()
@@ -37,6 +37,9 @@ def read_parse_recipe_file(path: Path, methods: dict[Callable] | None) -> Recipe
 
     # Add system recipe target(s)
     recipes = _add_system_recipe_s(recipes)
+
+    # Override any recipe settings with anything from the command-line:
+    recipes = _override_steps_from_args(recipes, args)
 
     if methods:
         # Map the built-in methods available onto each recipe step.
@@ -89,8 +92,7 @@ def validate_existing_version_numbers(configuration: Configuration) -> bool:
 
 def _validate_recipe_methods(recipes: Recipes, step_methods: dict[str, Callable]) -> bool:
     """Make sure all the the methods and steps from our recipes are defined and available"""
-    msg = fmt("Validating recipes", color='blue')
-    print(msg, flush=True, end="")
+    print(fmt("Validating recipes", color='blue'), flush=True, end="")
     if invalid_method_steps := recipes.validate_methods_steps(step_methods):
         print("\n[red]Sorry, we encountered the following errors in inbound recipe file:")
         for method_step in invalid_method_steps:
@@ -114,16 +116,27 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
     """Embellish recipes with our "built-in" one(s)."""
     recipes.set(
         "check",
-        Recipe(description="Check configuration only.", steps=[Step(method="check"),]))
+        Recipe(description="Check configuration only.", steps=[Step(method="check", confirm=False,),]))
     recipes.set(
         "show",
-        Recipe(description="Show recipe file contents.", steps=[Step(method="show"),]))
+        Recipe(description="Show recipe file contents.", steps=[Step(method="show", confirm=False,)]))
+    return recipes
+
+
+def _override_steps_from_args(recipes: Recipes, args: SimpleObj) -> Recipes:
+    """Override any recipe settings with anything from the command-line."""
+    for name, recipe in recipes:
+        for step in recipe:
+            if args.no_confirm and step.confirm:
+                # Override step request to confirm with command-line request NOT TO confirm:
+                step.confirm = False
+                print(fmt(f"Overriding confirmation: {name} - {step.name()}", color='yellow'), flush=True, end="")
+                success(color="yellow")
     return recipes
 
 
 def simple_gather_available_steps() -> dict[str, Callable]:
-    msg = fmt("Reading recipe steps available", color='blue')
-    print(msg, flush=True, end="")
+    print(fmt("Reading recipe steps available", color='blue'), flush=True, end="")
     return_ = dict()
     for method_name, method in vars(step_module).items():
         if not method_name.startswith("__"):
@@ -147,8 +160,7 @@ def gather_available_steps() -> dict[str, Callable]:
             module = importlib.import_module(f"manage.steps.{path.stem}")
             yield path.stem, getattr(module, "main")
 
-    msg = fmt("Reading recipe steps available", color='blue')
-    print(msg, flush=True, end="")
+    print(fmt("Reading recipe steps available", color='blue'), flush=True, end="")
 
     # Get all the 'main" methods in each python file in the steps module:
     return_ = {method_name: method for method_name, method in __gather_step_modules()}

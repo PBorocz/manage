@@ -14,6 +14,11 @@ from manage.models import Step, Configuration
 TERMINAL_WIDTH: Final = 70
 
 
+class SimpleObj:
+    def __init__(self, *args, **kwargs):
+        self.__dict__ = kwargs
+
+
 def smart_join(lst: list[str]) -> str:
     """Essentially ', ' but with nicer formatting."""
     return ', '.join(lst[:-1]) + " or " + lst[-1]
@@ -30,9 +35,9 @@ def ask_confirm(text: str) -> bool:
             return True
 
 
-def success() -> None:
+def success(color: str = "green") -> None:
     """Render/print a success symbol."""
-    print("[green]✔")
+    print(f"[{color}]✔")
 
 
 def failure() -> None:
@@ -76,10 +81,23 @@ def run(step: Step, command: str) -> tuple[bool, str]:
     return True, result.stdout.decode().strip()
 
 
-def get_package_version_from_pyproject() -> Configuration:
-    """Read the pyproject.toml file to return current package and version we're working with."""
-    msg = fmt("Reading package & version (pyproject.toml)", color='blue')
-    print(msg, end="", flush=True)
+def ConfigurationFactory(args: SimpleObj) -> Configuration | None:
+    """Create a Configuration object, setting some attrs from pyproject.toml others from command-line args."""
+
+    version, package = get_package_version_from_pyproject_toml()
+    if version is None or package is None:
+        return None
+
+    return Configuration(
+        version_=version,
+        package=package,
+        no_confirm=args.no_confirm,
+    )
+
+
+def get_package_version_from_pyproject_toml() -> tuple[str | None, str | None]:
+    """Read the pyproject.toml file to return *current* package and version we're working with."""
+    print(fmt("Reading package & version (pyproject.toml)", color='blue'), end="", flush=True)
     pyproject = toml.loads(Path("./pyproject.toml").read_text())
 
     # Lookup the package which "should" represent the current package we're working on:
@@ -97,7 +115,7 @@ def get_package_version_from_pyproject() -> Configuration:
     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
     if package and version:
         success()
-        return Configuration(version_=version, package=package)
+        return version, package
 
     if package is None:
         print("[red]Sorry, unable to find a valid 'packages' entry under [tool.poetry] in pyproject.toml!")
@@ -105,4 +123,4 @@ def get_package_version_from_pyproject() -> Configuration:
         print("[red]Sorry, unable to find a valid version entry under [tool.poetry] in pyproject.toml")
 
     failure()
-    return None
+    return None, None

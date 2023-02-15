@@ -9,11 +9,11 @@ from rich import print
 from manage.dispatch import dispatch
 from manage.setup import gather_available_steps, read_parse_recipe_file, validate_existing_version_numbers
 
-from manage.utilities import smart_join, get_package_version_from_pyproject
+from manage.utilities import smart_join, ConfigurationFactory, SimpleObj
 
 load_dotenv(verbose=True)
 
-DEFAULT = Path("manage.yaml")
+DEFAULT_RECIPE_PATH = Path("manage.yaml")
 
 
 def get_args() -> argparse.Namespace:
@@ -29,9 +29,14 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--recipes",
         type=Path,
-        help=f"Override default recipes yaml file, default is '{DEFAULT}'.",
-        nargs="?",
-        default=DEFAULT,
+        help=f"Override default recipes yaml file, default is '{DEFAULT_RECIPE_PATH}'.",
+        default=DEFAULT_RECIPE_PATH,
+    )
+
+    parser.add_argument(
+        "--no-confirm",
+        help=f"Override confirm=True recipes settings and run in NO confirmation mode, default is False.",
+        action='store_true'
     )
 
     args = parser.parse_args()
@@ -39,7 +44,8 @@ def get_args() -> argparse.Namespace:
         parser.print_help()
         sys.exit(0)
 
-    return args
+    # Return a more flattened namespace object that's easier to work with.
+    return SimpleObj(**vars(args))
 
 
 def main():
@@ -52,7 +58,7 @@ def main():
         sys.exit(1)
 
     # Read configuration and package we're working on
-    configuration = get_package_version_from_pyproject()
+    configuration = ConfigurationFactory(args)
     if configuration is None:
         sys.exit(1)
 
@@ -66,7 +72,7 @@ def main():
         sys.exit(1)
 
     # Read, parse, validate and configure the specified recipe file!
-    recipes = read_parse_recipe_file(args.recipes, methods)
+    recipes = read_parse_recipe_file(args, methods)
 
     # Make sure the user's target request is valid (allowing for "system" recipe(s) built-in)
     if not recipes.check_target(args.target.casefold()):
@@ -75,6 +81,6 @@ def main():
         sys.exit(1)
 
     try:
-        dispatch(configuration, recipes, args.target)
+        dispatch(configuration, recipes, args)
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)

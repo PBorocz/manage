@@ -34,6 +34,12 @@ class Step(BaseModel):
         """Return the value associated with the specified argument (or None)."""
         return self.arguments.get(arg_key)
 
+    def name(self) -> str:
+        """Return a description name for this step, i.e. either method or recipe."""
+        if self.method:
+            return self.method
+        return self.recipe
+
 class Recipe(BaseModel):
     """A recipe, consisting of a description and a set of steps."""
     description: str | None = None

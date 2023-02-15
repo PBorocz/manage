@@ -98,10 +98,13 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
+   - [TODO] Handle Sphinx documentation management
+     - Update release number in docs/source/conf.py
+     - Clean & build (look at justfile for current commands used).
    - [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
      Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
    - [TODO] Can we refactor steps/*.py to have/use a common-base class?
-     Mostly to reduce duplicate code associated with confirmation and return statuses.
+     Might significantly reduce duplicate code associated with confirmation and return statuses.
    - [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
    - [TODO] Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
    - [TODO] Add a command-line parameter for verbosity (-v, -vv?)
@@ -132,7 +135,7 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
-
+    - ADDED: Ability to override "confirm" recipe step attribute with command-line flag: ~--no-confirm~.
 *** v0.0.14 - 2023-02-06
     - ADDED: Ability for ~update_readme~ to take an argument specifying what format the project's README file is in, ie. 'md' for markdown (default) or 'org'. Optional argument is ~readme_format~.
 *** v0.0.13 - 2023-02-02
