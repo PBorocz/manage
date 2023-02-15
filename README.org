@@ -98,6 +98,8 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
+   - [WORKING] Add a command-line parameter to override all step-based confirmation configurations.
+     eg. --no-confirm
    - [TODO] Handle Sphinx documentation management
      - Update release number in docs/source/conf.py
      - Clean & build (look at justfile for current commands used).

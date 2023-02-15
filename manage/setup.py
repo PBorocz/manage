@@ -12,17 +12,20 @@ from manage.models import Configuration, Recipes, Recipe, Step
 from manage.utilities import fmt, success, failure, SimpleObj
 
 
-def read_parse_recipe_file(args: SimpleObj, methods: dict[Callable] | None) -> Recipes:
-    """We want a clean/easy-to-use recipe file, thus, do our own deserialisation."""
-
-    print(fmt(f"Reading recipes ({args.recipes})", color='blue'), flush=True, end="")
-    if not args.recipes.exists():
+def read_recipe_file(path_recipes: Path) -> dict:
+    """Do a raw read of the specified recipe file path, doing no other processing!."""
+    print(fmt(f"Reading recipes ({path_recipes})", color='blue'), flush=True, end="")
+    if not path_recipes.exists():
         failure()
-        print(f"[red]Sorry, unable to find {args.recipes} for recipes.")
+        print(f"[red]Sorry, unable to find {path_recipes} for recipes.")
         sys.exit(1)
 
     # Read raw (safely!)...
-    raw_recipes = yaml.safe_load(args.recipes.read_text())
+    return yaml.safe_load(path_recipes.read_text())
+
+
+def parse_recipe_file(args: SimpleObj, raw_recipes: dict, methods: dict[Callable] | None) -> Recipes:
+    """We want a clean/easy-to-use recipe file, thus, do our own deserialisation."""
 
     # ..and deserialise into our types dataclasses:
     d_recipes = dict()
@@ -127,11 +130,12 @@ def _override_steps_from_args(recipes: Recipes, args: SimpleObj) -> Recipes:
     """Override any recipe settings with anything from the command-line."""
     for name, recipe in recipes:
         for step in recipe:
-            if args.no_confirm and step.confirm:
-                # Override step request to confirm with command-line request NOT TO confirm:
-                step.confirm = False
-                print(fmt(f"Overriding confirmation: {name} - {step.name()}", color='yellow'), flush=True, end="")
-                success(color="yellow")
+            if args.no_confirm == True:
+                # We ARE overriding confirm, is this a case where step.confirm is set?
+                if step.confirm:
+                    step.confirm = False  # Yes..
+                    print(fmt(f"Overriding confirmation: {name} - {step.name()}", color='yellow'), flush=True, end="")
+                    success(color="yellow")
     return recipes
 
 

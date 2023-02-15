@@ -97,8 +97,11 @@ def ConfigurationFactory(args: SimpleObj) -> Configuration | None:
 
 def get_package_version_from_pyproject_toml() -> tuple[str | None, str | None]:
     """Read the pyproject.toml file to return *current* package and version we're working with."""
-    print(fmt("Reading package & version (pyproject.toml)", color='blue'), end="", flush=True)
-    pyproject = toml.loads(Path("./pyproject.toml").read_text())
+    path_pyproject = Path("./pyproject.toml")
+
+    print(fmt(f"Reading package & version ({path_pyproject})", color='blue'), end="", flush=True)
+
+    pyproject = toml.loads(path_pyproject.read_text())
 
     # Lookup the package which "should" represent the current package we're working on:
     package = None

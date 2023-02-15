@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from manage.models import Step, Recipe, Recipes
 from manage.setup import read_parse_recipe_file
+from manage.utilities import SimpleObj
 
 
 @pytest.fixture
@@ -19,6 +20,7 @@ def recipes():
                  ),
             Step(method="show",
                  config=True,
+                 confirm=True,
                  echo_stdout=True,
                  allow_error=True,
                  quiet_mode=True),
@@ -35,13 +37,14 @@ def recipes():
     return Recipes.parse_obj({
         "clean" : recipe_clean,
         "build" : recipe_build,
-        "check" : Recipe(description="Check configuration only.", steps=[Step(method="check")]),
-        "show"  : Recipe(description="Show recipe file contents.", steps=[Step(method="show")]),
+        "check" : Recipe(description="Check configuration only.", steps=[Step(method="check", confirm=False)]),
+        "show"  : Recipe(description="Show recipe file contents.", steps=[Step(method="show", confirm=False)]),
     })
 
 
 def test_read_parse_recipe_file(recipes):
-    recipes_from_file = read_parse_recipe_file(Path("tests/test_models.yaml"), None)
+    args = SimpleObj(recipes=Path("tests/test_models.yaml"), no_confirm=None)
+    recipes_from_file = read_parse_recipe_file(args, None)
     assert len(recipes) == len(recipes_from_file)
     assert sum([len(recipe) for recipe in recipes]) == sum([len(recipe) for recipe in recipes_from_file])
     assert recipes == recipes_from_file
