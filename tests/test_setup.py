@@ -1,9 +1,16 @@
+"""Test ability to convert raw_recipes into strongly-typed instances."""
 from pathlib import Path
 
 import pytest
 from manage.models import Step, Recipe, Recipes
-from manage.setup import read_parse_recipe_file
-from manage.utilities import SimpleObj
+from manage.setup import read_recipes_file, uptype_recipes
+
+
+class Namespace:
+    """Emulate arg result from argparse."""
+    def __init__(self, *args, **kwargs):
+        """Emulate arg result from argparse."""
+        self.__dict__ = kwargs
 
 
 @pytest.fixture
@@ -24,7 +31,7 @@ def recipes():
                  echo_stdout=True,
                  allow_error=True,
                  quiet_mode=True),
-        ]
+        ],
     )
 
     recipe_build = Recipe(
@@ -32,7 +39,7 @@ def recipes():
         steps=[
             Step(recipe="clean"),
             Step(method="build"),
-        ]
+        ],
     )
     return Recipes.parse_obj({
         "clean" : recipe_clean,
@@ -42,9 +49,54 @@ def recipes():
     })
 
 
-def test_read_parse_recipe_file(recipes):
-    args = SimpleObj(recipes=Path("tests/test_models.yaml"), no_confirm=None)
-    recipes_from_file = read_parse_recipe_file(args, None)
+def test_read_recipes_file(recipes):
+    args = Namespace(recipes=Path("tests/test_models.yaml"), no_confirm=None)
+    raw_recipes = read_recipes_file(args.recipes)
+    assert raw_recipes is not None
+    assert type(raw_recipes) == dict
+    assert len(raw_recipes) == 2
+
+
+def test_uptype_recipes(recipes):
+    args = Namespace(recipes=Path("tests/test_models.yaml"), no_confirm=None)
+    raw_recipes = read_recipes_file(args.recipes)
+    recipes_from_file = uptype_recipes(args, raw_recipes, None)
     assert len(recipes) == len(recipes_from_file)
     assert sum([len(recipe) for recipe in recipes]) == sum([len(recipe) for recipe in recipes_from_file])
     assert recipes == recipes_from_file
+
+    
+def tst_parse_dynamic_arguments():
+    # FIXME: Implement me..
+    ...
+
+
+def tst_validate_existing_version_numbers():
+    # FIXME: Implement me..
+    ...
+
+    
+def tst_validate_recipe_methods():
+    # FIXME: Implement me..
+    ...
+
+    
+def tst_add_callables():
+    # FIXME: Implement me..
+    ...
+
+    
+def tst_add_system_recipes():
+    # FIXME: Implement me..
+    ...
+
+    
+def tst_override_steps_from_args():
+    # FIXME: Implement me..
+    ...
+
+    
+def tst_gather_available_steps():
+    # FIXME: Implement me..
+    ...
+    

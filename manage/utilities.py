@@ -14,11 +14,6 @@ from manage.models import Step, Configuration
 TERMINAL_WIDTH: Final = 70
 
 
-class SimpleObj:
-    def __init__(self, *args, **kwargs):
-        self.__dict__ = kwargs
-
-
 def smart_join(lst: list[str]) -> str:
     """Essentially ', ' but with nicer formatting."""
     return ', '.join(lst[:-1]) + " or " + lst[-1]
@@ -27,7 +22,7 @@ def smart_join(lst: list[str]) -> str:
 def ask_confirm(text: str) -> bool:
     """Ask for confirmation, returns True if "yes" answer, False otherwise."""
     while True:
-        prompt = fmt(f"{text} (y/N)", color="#fffc00")
+        prompt = message(f"{text} (y/N)", color="#fffc00")
         answer = Console().input(prompt).lower()
         if answer in ("n", "no", ""):
             return False
@@ -45,17 +40,35 @@ def failure() -> None:
     print("[red]✖")
 
 
-def fmt(message: str, overhead: int = 0, color: str = 'blue') -> str:
-    """Pad the message string to width (net of overhead) and in the specified color (if possible)."""
+def message(message: str, overhead: int = 0, color: str = 'blue') -> str:
+    """Create and print a message string, padding to width and in the specified color."""
     padding = TERMINAL_WIDTH - overhead - len(message)
-    return f"[{color}]{message}{'.' * padding}"
+    formatted = f"[{color}]{message}{'.' * padding}"
+    print(formatted, end="", flush=True)
+
+
+def parse_dynamic_argument(arg: str) -> [str, type]:
+    """Parse a dynamic argument name into a typed version.
+
+    Specifically:
+    "anArgument"  -> ["anArgument", str]
+    "an_argument" -> ["an_argument", str]
+    "aStrArg_str" -> ["aStrArg", str]
+    "another_int" -> ["another", int]
+    "yes_no_bool" -> ["yes_no", bool]
+    """
+    mapping = {"str": str, "int": int, "bool": bool}
+    pieces = arg.split("_")
+    if pieces[-1] in mapping:
+        type_ = mapping.get(pieces[-1])
+        return ["_".join(pieces[0:-1]), type_]
+    return [arg, str]
 
 
 def run(step: Step, command: str) -> tuple[bool, str]:
     """Run the command for the specified Step, capturing output and signal success/failure."""
     if not step.quiet_mode:
-        msg = fmt(f"Running [italic]{command}[/italic]", overhead=-17)
-        print(msg, flush=True, end="")
+        message(f"Running [italic]{command}[/italic]", overhead=-17)
 
     result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
@@ -66,8 +79,6 @@ def run(step: Step, command: str) -> tuple[bool, str]:
         if step and not step.allow_error:
             failure()
             sys.stderr.write(result.stderr.decode())
-            breakpoint()
-
             return False, result.stderr.decode()
 
     ################################################
@@ -76,14 +87,14 @@ def run(step: Step, command: str) -> tuple[bool, str]:
     if not step.quiet_mode:
         success()
         if step.echo_stdout:
-            print(result.stdout.decode().strip())
+            stdout = result.stdout.decode().strip()
+            print(f"[grey]{stdout}")
 
     return True, result.stdout.decode().strip()
 
 
-def ConfigurationFactory(args: SimpleObj) -> Configuration | None:
+def configuration_factory(args) -> Configuration | None:
     """Create a Configuration object, setting some attrs from pyproject.toml others from command-line args."""
-
     version, package = get_package_version_from_pyproject_toml()
     if version is None or package is None:
         return None
@@ -99,7 +110,7 @@ def get_package_version_from_pyproject_toml() -> tuple[str | None, str | None]:
     """Read the pyproject.toml file to return *current* package and version we're working with."""
     path_pyproject = Path("./pyproject.toml")
 
-    print(fmt(f"Reading package & version ({path_pyproject})", color='blue'), end="", flush=True)
+    message(f"Reading package & version ({path_pyproject})")
 
     pyproject = toml.loads(path_pyproject.read_text())
 

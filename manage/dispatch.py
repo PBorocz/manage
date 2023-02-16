@@ -1,4 +1,4 @@
-"""Core processing loop to dispatch steps or methods for the selected recipe."""
+"""Core processing loop to dispatch recipe method(s) and/or step(s)."""
 import argparse
 
 from manage.models import Configuration
@@ -6,7 +6,6 @@ from manage.models import Configuration
 
 def dispatch(configuration: Configuration, recipes: dict, args: argparse.Namespace) -> None:
     """Iterate, ie. execute, each step defined for the recipe specified."""
-
     # Check for special "no-op" recipes (for now, just "check")
     if args.target.casefold() in ("check"):
         return  # We've already run setup which does all of our validations
@@ -16,7 +15,9 @@ def dispatch(configuration: Configuration, recipes: dict, args: argparse.Namespa
         print(recipes)
         return
 
+    # We have a "regular" step to be performed, could still be either a method OR another step though!
     for step in recipes.get(args.target):
+
         if step.callable_:
             # Run the *method* associated with the step
             step.callable_(configuration, recipes, step)
@@ -24,5 +25,3 @@ def dispatch(configuration: Configuration, recipes: dict, args: argparse.Namespa
             # Run another recipe!
             args.target = step.recipe  # Override the target (but leave the rest)
             dispatch(configuration, recipes, args)
-
-        # No need for else here as we've already validated the recipe file.

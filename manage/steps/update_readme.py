@@ -4,7 +4,7 @@ from pathlib import Path
 from rich import print
 
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, fmt, failure, success
+from manage.utilities import ask_confirm, message, failure, success
 
 
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
@@ -58,22 +58,19 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
             print("Nothing done (but pyproject.toml may still be on new version)")
             return False
 
-    # Read and update the Changelog section embedded in our readme with the new version (leaving another "Unreleased" header for
-    # future work)
+    # Read and update the Changelog section embedded in our readme with the new version (leaving another
+    # "Unreleased" header for future work)
     readme_contents = path_readme.read_text()
     if unreleased_header not in readme_contents:
         failure()
         print(f"[red]Sorry, couldn't find a header consisting of '{unreleased_header}' in {readme_name}!")
         return False
 
-    msg = fmt(f"Running update to {readme_name}: '{unreleased_header}'", color='blue')
-    print(msg, flush=True, end="")
+    message(f"Running update to {readme_name}: '{unreleased_header}'")
     release_header = f"\n{header} {configuration.version()} - {datetime.now().strftime('%Y-%m-%d')}"
     readme_contents = readme_contents.replace(
         unreleased_header,
         unreleased_header + "\n" + release_header)
-
     path_readme.write_text(readme_contents)
-
     success()
     return True

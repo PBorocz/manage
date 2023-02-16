@@ -3,9 +3,11 @@ bump:
   description: Bump the version number to the next /patch/ level and commit locally
   steps:
     - method: poetry_bump_version_patch
+      arguments:
+        poetry_version: patch
     - method: update_readme
       arguments:
-        readme_format: "org"
+        readme_format: md
     - method: git_commit_version_files
 
 ################################################################################

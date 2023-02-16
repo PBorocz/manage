@@ -52,3 +52,13 @@ def test_invalid_target(capsys):
             assert pytest_wrapped_e.type == SystemExit
             assert pytest_wrapped_e.value.code == 1
             assert "is not a valid recipe" in out
+
+
+def tst_get_recipes_args():
+    # FIXME: Implement me
+    ...
+
+
+def tst_get_all_other_args():
+    # FIXME: Implement me
+    ...
