@@ -33,7 +33,6 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     if step.confirm:
         if not ask_confirm(f"Ok to bump version from {configuration.version()} to v{new_version} in pyproject.toml?"):
             return False
-    breakpoint()
 
     # Update our version in pyproject.toml
     _, result = run(step, f"poetry version {poetry_version}")

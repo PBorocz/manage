@@ -7,7 +7,7 @@ bump:
         poetry_version: patch
     - method: update_readme
       arguments:
-        readme_format: "md"
+        readme_format: "org"
     - method: git_commit_version_files
 
 ################################################################################
