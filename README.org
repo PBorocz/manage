@@ -99,17 +99,14 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
-   - [WORKING] Add a command-line parameter to override all step-based confirmation configurations.
-     eg. --no-confirm
-   - [TODO] Handle Sphinx documentation management
+   - [TODO] Handle Sphinx documentation management:
      - Update release number in docs/source/conf.py
-     - Clean & build (look at justfile for current commands used).
+     - Clean & build (look at justfile in RaindropIOPy for current commands used).
    - [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
      Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
    - [TODO] Can we refactor steps/*.py to have/use a common-base class?
      Might significantly reduce duplicate code associated with confirmation and return statuses.
    - [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
-   - [TODO] Add a command-line parameter to take a specific poetry version "bump", ie /major/ and /minor/ over and above our current /patch/.
    - [TODO] Add a command-line parameter for verbosity (-v, -vv?)
      - -v:
        - print absolute paths associated with readme and pyproject.
