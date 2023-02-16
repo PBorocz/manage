@@ -139,6 +139,8 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+
+*** v0.1.0 - 2023-02-16
     - ADDED: Support for step-specific command-line overrides.
       For example, when "bumping" the version number of a package, while the recipe's step may default to *patch*,
       we can now specify *minor* (or any of the Poetry version labels) on the command-line instead, e.g. ~--poetry-version~.
