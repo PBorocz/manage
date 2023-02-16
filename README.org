@@ -18,7 +18,7 @@
   bump:
     description: Bump the version number to the next /patch/ level and commit locally
     steps:
-      - method: poetry_bump_version_patch
+      - method: poetry_bump_version
       - method: update_readme
       - method: git_commit_version_files
 
@@ -99,6 +99,7 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
+   - [TODO] Need a command-line option to confirm version! --version
    - [TODO] Handle Sphinx documentation management:
      - Update release number in docs/source/conf.py
      - Clean & build (look at justfile in RaindropIOPy for current commands used).
@@ -127,7 +128,7 @@ PATH_add "$VIRTUAL_ENV/bin"
      |     0% | git_create_release.py             |
      |     0% | git_create_tag.py                 |
      |     0% | git_push_to_github.py             |
-     |     0% | poetry_bump_version_patch.py      |
+     |     0% | poetry_bump_version.py            |
      |     0% | publish_to_pypi.py                |
      |     0% | run_pre_commit.py                 |
      |     0% | update_readme.py                  |
