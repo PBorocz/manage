@@ -33,8 +33,7 @@ def recipes():
 
 
 def test_step():
-    """Test simple step model validation"""
-
+    """Test simple step model validation."""
     # Normal case, either is required:
     Step(recipe="bar")
     Step(method="foo")
@@ -47,7 +46,7 @@ def test_step():
 
 
 def test_step_args():
-    """Test step model argument handling"""
+    """Test step model argument handling."""
     test_args = {
         "arg_1_str": "arg_1_str_value",
         "arg_2_bool": True,

@@ -1,3 +1,4 @@
+
 * Manage
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project and wonderful [[https://github.com/casey/just][Just command runner]], this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** What is it?
@@ -119,7 +120,8 @@ PATH_add "$VIRTUAL_ENV/bin"
      We know the package name (from pyproject.toml)    -  90% confidence
      We know the user name (from another env variable  - 100% confidence
      We can somewhat surely assume the default branch? -  50% confidence.
-   - [WORK] Status of ongoing test development:
+   - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
+   - [WORKING] Status of ongoing test development:
      |--------+-----------------------------------|
      | Status | Module                            |
      |--------+-----------------------------------|
@@ -137,7 +139,10 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
-    - ADDED: Ability to override "confirm" recipe step attribute with command-line flag: ~--no-confirm~.
+    - ADDED: Support for step-specific command-line overrides.
+      For example, when "bumping" the version number of a package, while the recipe's step may default to *patch*,
+      we can now specify *minor* (or any of the Poetry version labels) on the command-line instead, e.g. ~--poetry-version~.
+    - ADDED: Ability to override "confirm" recipe step attribute with command-line flag: ~--no-confirm~ or ~--confirm~.
 *** v0.0.14 - 2023-02-06
     - ADDED: Ability for ~update_readme~ to take an argument specifying what format the project's README file is in, ie. 'md' for markdown (default) or 'org'. Optional argument is ~readme_format~.
 *** v0.0.13 - 2023-02-02

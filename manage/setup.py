@@ -68,9 +68,6 @@ def uptype_recipes(args, raw_recipes: dict, methods: dict[Callable] | None = Non
     # Add system recipe target(s)
     recipes = _add_system_recipe_s(recipes)
 
-    # Override any recipe settings with anything from the command-line:
-    recipes = _override_steps_from_args(recipes, args)
-
     if methods:
         # Map the built-in methods available onto each recipe step.
         recipes = _add_callables(recipes, methods)
@@ -152,17 +149,17 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
     return recipes
 
 
-def _override_steps_from_args(recipes: Recipes, args) -> Recipes:
-    """Override any recipe settings with anything from the command-line."""
-    for name, recipe in recipes:
-        for step in recipe:
-            if args.no_confirm is True:  # Careful, default is None otherwise!
-                # We ARE overriding confirm, is this a case where step.confirm is set?
-                if step.confirm:
-                    step.confirm = False  # Yes..
-                    message(f"Overriding confirmation: {name} - {step.name()}", color='yellow')
-                    success(color="yellow")
-    return recipes
+# def _override_steps_from_args(recipes: Recipes, args) -> Recipes:
+#     """Override any recipe settings with anything from the command-line."""
+#     for name, recipe in recipes:
+#         for step in recipe:
+#             if args.no_confirm is True:  # Careful, default is None otherwise!
+#                 # We ARE overriding confirm, is this a case where step.confirm is set?
+#                 if step.confirm:
+#                     step.confirm = False  # Yes..
+#                     message(f"Overriding confirmation: {name} - {step.name()}", color='yellow')
+#                     success(color="yellow")
+#     return recipes
 
 
 def gather_available_steps() -> dict[str, Callable]:

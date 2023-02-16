@@ -1,17 +1,16 @@
 """Utility methods, not meant for direct calling from manage.toml."""
+import re
 import shlex
 import subprocess
 import sys
 import toml
 from pathlib import Path
-from typing import Final
+from typing import Final, Any
 
 from rich import print
 from rich.console import Console
 
-from manage.models import Step, Configuration
-
-TERMINAL_WIDTH: Final = 70
+TERMINAL_WIDTH: Final = 79
 
 
 def smart_join(lst: list[str]) -> str:
@@ -20,31 +19,46 @@ def smart_join(lst: list[str]) -> str:
 
 
 def ask_confirm(text: str) -> bool:
-    """Ask for confirmation, returns True if "yes" answer, False otherwise."""
+    """Ask for confirmation, returns True if "yes" answer or False..Quits if requested!"""
     while True:
-        prompt = message(f"{text} (y/N)", color="#fffc00")
+        prompt = message(f"{text} (y/N/q)", color="#fffc00")
         answer = Console().input(prompt).lower()
-        if answer in ("n", "no", ""):
+        if answer in ("q"):
+            message("Ok", end_success=True)
+            sys.exit(0)
+        elif answer in ("n", "no", ""):
             return False
         elif answer in ("y", "yes"):
             return True
 
 
 def success(color: str = "green") -> None:
-    """Render/print a success symbol."""
+    """Render/print a success symbol in the specified color."""
     print(f"[{color}]✔")
 
 
-def failure() -> None:
-    """Render/print a failure symbol."""
-    print("[red]✖")
+def failure(color: str = "red") -> None:
+    """Render/print a failure symbol (almost always in red but overrideable)."""
+    print(f"[{color}]✖")
 
 
-def message(message: str, overhead: int = 0, color: str = 'blue') -> str:
-    """Create and print a message string, padding to width and in the specified color."""
-    padding = TERMINAL_WIDTH - overhead - len(message)
+def replace_rich_markup(string: str) -> str:
+    """Return a string without Rich markup."""
+    return_ = string
+    for pattern in re.findall(r"\[.*?\]", string):
+        return_ = return_.replace(pattern, "")
+    return return_
+
+
+def message(message: str, overhead: int = 0, color: str = 'blue', end_success: bool = False, end_failure: bool = False) -> str:
+    """Create and print a message string, padded to width (minus markup) and in the specified color."""
+    padding = TERMINAL_WIDTH - overhead - len(replace_rich_markup(message))
     formatted = f"[{color}]{message}{'.' * padding}"
     print(formatted, end="", flush=True)
+    if end_success:
+        success(color=color)
+    elif end_failure:
+        failure(color=color)
 
 
 def parse_dynamic_argument(arg: str) -> [str, type]:
@@ -65,10 +79,10 @@ def parse_dynamic_argument(arg: str) -> [str, type]:
     return [arg, str]
 
 
-def run(step: Step, command: str) -> tuple[bool, str]:
+def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step" but will create circular import!
     """Run the command for the specified Step, capturing output and signal success/failure."""
     if not step.quiet_mode:
-        message(f"Running [italic]{command}[/italic]", overhead=-17)
+        message(f"Running [italic]{command}[/]")
 
     result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
@@ -91,19 +105,6 @@ def run(step: Step, command: str) -> tuple[bool, str]:
             print(f"[grey]{stdout}")
 
     return True, result.stdout.decode().strip()
-
-
-def configuration_factory(args) -> Configuration | None:
-    """Create a Configuration object, setting some attrs from pyproject.toml others from command-line args."""
-    version, package = get_package_version_from_pyproject_toml()
-    if version is None or package is None:
-        return None
-
-    return Configuration(
-        version_=version,
-        package=package,
-        no_confirm=args.no_confirm,
-    )
 
 
 def get_package_version_from_pyproject_toml() -> tuple[str | None, str | None]:

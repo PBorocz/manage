@@ -1,7 +1,14 @@
 """Core data types and recipe file read."""
-from typing import Any, Callable, Dict, Iterable
+import argparse
+from typing import Any, Callable, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
+
+from manage.utilities import get_package_version_from_pyproject_toml
+
+
+TStep = TypeVar("Step")
+TConfiguration = TypeVar("Configuration")
 
 
 class Step(BaseModel):
@@ -40,6 +47,35 @@ class Step(BaseModel):
             return self.method
         return self.recipe
 
+    def reflect_runtime_arguments(self, args: argparse.Namespace) -> str:
+        """Update the step based on any/all arguments received on the command-line."""
+        from manage.utilities import message, success
+
+        # Common across all steps (for now, just the "confirm" flag):
+        if args.confirm is not None:
+
+            # Is the command-line setting DIFFERENT than that for the step?
+            if self.confirm != args.confirm:
+                # FIXME: Verbose only?
+                msg = f"Overriding [italic]confirm[/] in {self.name()} from [italic]{self.confirm}[/] to [italic]{args.confirm}[/]"
+                message(msg, color='light_slate_grey', end_success=True)
+                self.confirm = args.confirm
+
+        # Those arguments that are *specific* to this step:
+        for step_arg, step_arg_value  in self.arguments.items():
+            # *Do* we potentially have a relevant command-line argument?
+            if hasattr(args, step_arg):
+                # Yes, what is it?
+                if (runtime_arg_value := getattr(args, step_arg)) is not None:
+                    # Is it different than what the step is configured for now?
+                    if step_arg_value != runtime_arg_value:
+                        # Yep!, Override it!!
+                        self.arguments[step_arg] = runtime_arg_value
+                        # FIXME: Verbose only?
+                        msg = f"Overriding: [italic]{step_arg}[/] in {self.name()} from [italic]{step_arg_value}[/] to [italic]{runtime_arg_value}[/]"
+                        message(msg, color='light_slate_grey', end_success=True)
+
+
 class Recipe(BaseModel):
     """A recipe, consisting of a description and a set of steps."""
     description: str | None = None
@@ -63,12 +99,15 @@ class Recipes(BaseModel):
         return iter(self.__root__.items())
 
     def get(self, id_: str) -> Recipe | None:
+        """Treat Recipes as a mapping, return a specific Recipe by it's id."""
         return self.__root__.get(id_.casefold())
 
     def set(self, id_: str, recipe: Recipe) -> None:
+        """Treat Recipes as a mapping, setting a specific Recipe using it's id."""
         self.__root__[id_] = recipe
 
     def keys(self) -> Iterable[str]:
+        """Get the names of all Recipes."""
         return iter(self.__root__.keys())
 
     def ids(self) -> list[str]:
@@ -81,7 +120,7 @@ class Recipes(BaseModel):
         return recipe_target.casefold() in targets_defined_casefolded
 
     def validate_methods_steps(self, methods_available: dict[Callable]) -> list | None:
-        """Each step in each recipe needs to be either a "built-in" method or refer to another valid step"""
+        """Each step in each recipe needs to be either a "built-in" method or refer to another valid step."""
         return_ = list()
         for id_, recipe in self:
             for step in recipe:
@@ -102,3 +141,15 @@ class Configuration(BaseModel):
     def version(self):
         """Return version number in "formal" format, usable (for instance) as git tag."""
         return f"v{self.version_}"
+
+
+def configuration_factory(args) -> Configuration | None:
+    """Create a Configuration object, setting some attrs from pyproject.toml."""
+    version, package = get_package_version_from_pyproject_toml()
+    if version is None or package is None:
+        return None
+
+    return Configuration(
+        version_=version,
+        package=package,
+    )

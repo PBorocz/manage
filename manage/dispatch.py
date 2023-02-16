@@ -18,6 +18,10 @@ def dispatch(configuration: Configuration, recipes: dict, args: argparse.Namespa
     # We have a "regular" step to be performed, could still be either a method OR another step though!
     for step in recipes.get(args.target):
 
+        # Before we execute, update step with any/all runtime arguments received from the command line:
+        # (while we "could" do this once on setup
+        step.reflect_runtime_arguments(args)
+
         if step.callable_:
             # Run the *method* associated with the step
             step.callable_(configuration, recipes, step)

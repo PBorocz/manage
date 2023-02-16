@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from rich import print
 
 from manage.dispatch import dispatch
+from manage.models import configuration_factory
 from manage.setup import (
     gather_available_steps,
     read_parse_recipes,
@@ -14,7 +15,7 @@ from manage.setup import (
     validate_existing_version_numbers,
 )
 
-from manage.utilities import smart_join, configuration_factory, message, success
+from manage.utilities import smart_join, message, success
 load_dotenv(verbose=True)
 
 DEFAULT_RECIPE_PATH = Path("manage.yaml")
@@ -74,9 +75,12 @@ def get_all_other_args(
     )
 
     parser.add_argument(
-        "--no-confirm",
-        help="Override confirm=True recipes setting and run in NO confirmation mode, default is False.",
-        action="store_true",
+        "--confirm",
+        help=("Override recipe's 'confirm' setting to run all confirmable "
+              "steps as either confirm or don't confirm, default is None."),
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=None,
     )
 
     # Now, add the *DYNAMIC* arguments to add based on our specific recipe file
@@ -84,7 +88,6 @@ def get_all_other_args(
         parser.add_argument(
             f"--{arg_name}",
             type=type_,
-            nargs=1,
             help=f"{type_.__name__.title()} argument for recipe '{recipe_name}', default is '{default}'.",
             default=None)
 
@@ -100,6 +103,7 @@ def get_all_other_args(
 
 
 def main():
+
     # Before anything else, confirm we're working from the root-level of the target project
     if not (Path.cwd() / "README.org").exists() and not (Path.cwd() / "README.md").exists():
         print("[red]Sorry, you need to run this from the same directory that your README file exists.")

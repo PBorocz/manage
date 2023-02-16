@@ -2,7 +2,11 @@ version:
   description: Bump the version number a single patch level and commit locally
   steps:
     - method: poetry_bump_version_patch
+      arguments:
+        poetry_version: patch
     - method: update_readme
+      arguments:
+        readme_format: "md"
     - method: git_commit_version_files
 
 build:

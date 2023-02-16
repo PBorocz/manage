@@ -7,7 +7,7 @@ bump:
         poetry_version: patch
     - method: update_readme
       arguments:
-        readme_format: md
+        readme_format: "md"
     - method: git_commit_version_files
 
 ################################################################################
@@ -18,10 +18,9 @@ build:
     - method: build
       confirm: false
       echo_stdout: true
-    # FIXME: Need to "commit" and then push
-    # - method: git_push_to_github
-    #   confirm: false
-    #   echo_stdout: true
+    - method: git_push_to_github
+      confirm: false
+      echo_stdout: true
 
 ################################################################################
 clean:
