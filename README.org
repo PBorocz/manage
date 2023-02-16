@@ -138,6 +138,8 @@ PATH_add "$VIRTUAL_ENV/bin"
 ** Release History
 *** Unreleased
 
+*** v0.1.1 - 2023-02-16
+
 *** v0.1.0 - 2023-02-16
     - ADDED: Support for step-specific command-line overrides.
       For example, when "bumping" the version number of a package, while the recipe's step may default to *patch*,
