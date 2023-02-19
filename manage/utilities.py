@@ -4,6 +4,7 @@ import shlex
 import subprocess
 import sys
 import toml
+from importlib import metadata
 from pathlib import Path
 from typing import Final, Any
 
@@ -107,11 +108,12 @@ def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step"
     return True, result.stdout.decode().strip()
 
 
-def get_package_version_from_pyproject_toml() -> tuple[str | None, str | None]:
+def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | None, str | None]:
     """Read the pyproject.toml file to return *current* package and version we're working with."""
     path_pyproject = Path("./pyproject.toml")
 
-    message(f"Reading package & version ({path_pyproject})")
+    if not quiet:
+        message(f"Reading package & version ({path_pyproject})")
 
     pyproject = toml.loads(path_pyproject.read_text())
 
@@ -129,7 +131,8 @@ def get_package_version_from_pyproject_toml() -> tuple[str | None, str | None]:
     # Similarly, get our current version:
     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
     if package and version:
-        success()
+        if not quiet:
+            success()
         return version, package
 
     if package is None:
@@ -137,5 +140,27 @@ def get_package_version_from_pyproject_toml() -> tuple[str | None, str | None]:
     if version is None:
         print("[red]Sorry, unable to find a valid version entry under [tool.poetry] in pyproject.toml")
 
-    failure()
+    if not quiet:
+        failure()
     return None, None
+
+
+def get_version():
+    """Return version from installed module or manually from pyproject.toml.
+
+    This is a little subtle. If this is running from an "installed" environment,
+    the importlib.metadata *should* work (by getting version from the "build"
+    environment used to package the 'manage' projec.
+
+    However, if this is running in a/the development mode (where we're *not*
+    "installed" per se), we simply cheat and use the pyproject.toml reader/parser
+    we already have but against *out own* pyproject.toml!...too subtle?
+
+    FIXME: Instead of relying upon metadata not working, can we categorically
+           know if we're running from a "build" environment??
+    """
+    try:
+        return metadata.version('manage')
+    except metadata.PackageNotFoundError:
+        version, _ = get_package_version_from_pyproject_toml(quiet=True)
+        return version

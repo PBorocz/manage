@@ -15,7 +15,7 @@ from manage.setup import (
     validate_existing_version_numbers,
 )
 
-from manage.utilities import smart_join, message, success
+from manage.utilities import smart_join, get_version
 load_dotenv(verbose=True)
 
 DEFAULT_RECIPE_PATH = Path("manage.yaml")
@@ -43,6 +43,12 @@ def handle_arguments_read_raw_recipes() -> [argparse.Namespace, dict]:
 def get_recipes_arg():
     """Pro-forma arg processing, get the recipe file and find available steps."""
     parser = argparse.ArgumentParser(add_help=False)
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=get_version())
+
     parser.add_argument(
         "-r",
         "--recipes",
@@ -50,6 +56,7 @@ def get_recipes_arg():
         help=f"Override default recipes yaml file, default is './{DEFAULT_RECIPE_PATH}'.",
         default=DEFAULT_RECIPE_PATH,
     )
+
     args, _ = parser.parse_known_args()
     return parser, args.recipes
 
@@ -63,7 +70,7 @@ def get_all_other_args(
 
     Note: These include both *static* args (like the target) and *dynamic* ones based on our recipe file.
     """
-    parser = argparse.ArgumentParser(parents=[initial_parser])
+    parser = argparse.ArgumentParser("", parents=[initial_parser])
 
     # Add STATIC command-line arguments (ie. that are always valid)
     s_targets = ": " + smart_join(available_targets) if available_targets else ""

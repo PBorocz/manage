@@ -65,11 +65,11 @@
      Note: technically, we might be able to infer GITHUB_PROJECT_RELEASE_HISTORY based on the GITHUB_USER and project name but we'd have to infer the "mainline" branch, some have moved ~master~ to ~main~ others to ~trunk~ (like me).
 ** Installation
    This isn't packaged for PyPI. However, distribution files are released to github.
-   - If you use ~poetry~, this should suffice:
+   - If you use ~poetry~, this should suffice (and is how I use it from other projects).
 #+begin_src bash
 poetry add git+https://github.com/PBorocz/manage
 #+end_src
-   - Create your ~manage.yaml~ file, here's starting one:
+   - Create your ~manage.yaml~ file, here's a sample one to start from:
 #+begin_src yaml
   clean:
     description: Clean out our temp files and ALL previous builds.
@@ -99,7 +99,13 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
-   - [TODO] Need a command-line option to confirm version! --version
+   - [TODO] Replace hard-coded emoji's with keynames?
+     [[https://unicode.org/emoji/charts/emoji-list.html]]
+
+     from rich.console import Console
+     console = Console()
+     console.print("Hello, [bold red]Rich[/] :snake:")
+
    - [TODO] Handle Sphinx documentation management:
      - Update release number in docs/source/conf.py
      - Clean & build (look at justfile in RaindropIOPy for current commands used).
@@ -137,9 +143,8 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
-
+    - ADDED: Command-line argument to display package' version and quit.
 *** v0.1.1 - 2023-02-16
-
 *** v0.1.0 - 2023-02-16
     - ADDED: Support for step-specific command-line overrides.
       For example, when "bumping" the version number of a package, while the recipe's step may default to *patch*,
