@@ -143,6 +143,8 @@ PATH_add "$VIRTUAL_ENV/bin"
      |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+
+*** v0.1.2 - 2023-02-18
     - ADDED: Command-line argument to display package' version and quit.
 *** v0.1.1 - 2023-02-16
 *** v0.1.0 - 2023-02-16
