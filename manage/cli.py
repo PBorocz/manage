@@ -101,7 +101,7 @@ def get_all_other_args(
     args = parser.parse_args()
 
     # We have enough information now to validate the user's specific target requested:
-    if args.target.casefold() not in available_targets + ["check", "show"]:
+    if args.target.casefold() not in available_targets + ["check", "show", "print"]:
         s_targets = [f"[italic]{id_}[/]" for id_ in available_targets]
         print(f"Sorry, [red]{args.target}[/] is not a valid recipe, must be one of {smart_join(s_targets)}.")
         sys.exit(1)
@@ -124,8 +124,7 @@ def main():
     args, raw_recipes = handle_arguments_read_raw_recipes()
 
     # Read configuration and package we're working on
-    configuration = configuration_factory(args)
-    if configuration is None:
+    if not (configuration := configuration_factory(args)):
         sys.exit(1)
 
     # Validate that version numbers are consistent between pyproject.toml and README's change history.
@@ -133,11 +132,10 @@ def main():
         sys.exit(1)
 
     # Gather all available steps
-    methods = gather_available_steps()
-    if not methods:
+    if not (methods := gather_available_steps()):
         sys.exit(1)
 
-    # Calidate and configure the specified recipe file into strongly-typed instances
+    # Validate and configure the specified recipe file into strongly-typed instances
     recipes = uptype_recipes(args, raw_recipes, methods)
 
     try:

@@ -1,5 +1,4 @@
-""" Essentially a no-op"""
-
+"""Essentially a no-op."""
 from manage.models import Configuration, Recipes
 
 

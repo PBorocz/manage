@@ -1,5 +1,4 @@
-from rich import print
-
+"""."""
 from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, run
 
