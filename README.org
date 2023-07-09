@@ -1,4 +1,3 @@
-
 * Manage
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project and wonderful [[https://github.com/casey/just][Just command runner]], this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** What is it?
@@ -56,13 +55,13 @@
 *** Configuration
     - We assume the following entries are available in our environment (either set in shell or through .env):
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
-     | GITHUB_USER                    | Github user id                            | JohnJacobJingleheimerSchmidt                                             |
-     | GITHUB_API_TOKEN               | Github personal API token                 | ghp_1234567890ABCDEFG1234567890                                          |
-     | GITHUB_API_RELEASES            | URL to Github release API                 | https://api.github.com/repos/<user>/<project>/releases                   |
-     | GITHUB_PROJECT_RELEASE_HISTORY | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
+     | ~GITHUB_USER~                    | Github user id                            | ~John-Jacob_JingleheimerSchmidt~                                           |
+     | ~GITHUB_API_TOKEN~               | Github personal API token                 | ~ghp_1234567890ABCDEFG1234567890~                                          |
+     | ~GITHUB_API_RELEASES~            | URL to Github release API                 | https://api.github.com/repos/<user>/<project>/releases                   |
+     | ~GITHUB_PROJECT_RELEASE_HISTORY~ | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
      |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
 
-     Note: technically, we might be able to infer GITHUB_PROJECT_RELEASE_HISTORY based on the GITHUB_USER and project name but we'd have to infer the "mainline" branch, some have moved ~master~ to ~main~ others to ~trunk~ (like me).
+     Note: technically, we might be able to infer ~GITHUB_PROJECT_RELEASE_HISTORY~ based on the ~GITHUB_USER~ and project name but we'd have to infer the "mainline" branch, some have moved ~master~ to ~main~ and others to ~trunk~.
 ** Installation
    This isn't packaged for PyPI. However, distribution files are released to github.
    - If you use ~poetry~, this should suffice (and is how I use it from other projects).
@@ -99,92 +98,98 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
    - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
-   - [TODO] Replace hard-coded emoji's with keynames?
-     [[https://unicode.org/emoji/charts/emoji-list.html]]
-
-     from rich.console import Console
-     console = Console()
-     console.print("Hello, [bold red]Rich[/] :snake:")
-
-   - [TODO] Handle Sphinx documentation management:
-     - Update release number in docs/source/conf.py
-     - Clean & build (look at justfile in RaindropIOPy for current commands used).
-   - [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory.
-     Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
-   - [TODO] Can we refactor steps/*.py to have/use a common-base class?
-     Might significantly reduce duplicate code associated with confirmation and return statuses.
-   - [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
-   - [TODO] Add a command-line parameter for verbosity (-v, -vv?)
-     - -v:
-       - print absolute paths associated with readme and pyproject.
-       - print package name and version found, how many recipes encountered etc.
-     - -vv:
-       - add explicit output of command executed (sorta like echo_stdout parameter does)
-   - [TODO] Can we refactor and dynamically create the GITHUB_PROJECT_RELEASE_HISTORY URL?
-     We know the package name (from pyproject.toml)    -  90% confidence
-     We know the user name (from another env variable  - 100% confidence
-     We can somewhat surely assume the default branch? -  50% confidence.
-   - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
-   - [WORKING] Status of ongoing test development:
-     |--------+-----------------------------------|
-     | Status | Module                            |
-     |--------+-----------------------------------|
-     |     0% | build.py                          |
-     |     0% | git_commit_version_files.py       |
-     |     0% | git_create_release.py             |
-     |     0% | git_create_tag.py                 |
-     |     0% | git_push_to_github.py             |
-     |     0% | poetry_bump_version.py            |
-     |     0% | publish_to_pypi.py                |
-     |     0% | run_pre_commit.py                 |
-     |     0% | update_readme.py                  |
-     |   100% | clean.py                          |
-     |   100% | pandoc_convert_org_to_markdown.py |
-     |--------+-----------------------------------|
+- [TODO] Can we add a help command that lists the targets available from the relevant ~manage.yaml~ file?
+- [TODO] Add all the commands currently implemented to this README for (my own) documentation.
+- Perhaps use something like [[https://towardsdatascience.com/how-i-turned-my-companys-docs-into-a-searchable-database-with-openai-4f2d34bd8736][this]] to create our index repository for searching?
+- [RESEARCH] Can we get the "help" to look like [[https://github.com/pycontribs/mk][this]]?
+- [TODO] Replace hard-coded emoji's with key-names? (minor)
+  [[https://unicode.org/emoji/charts/emoji-list.html]]
+  #+begin_src python
+    from rich.console import Console
+    console = Console()
+    console.print("Hello, [bold red]Rich[0/0] :snake:")
+    # grid.add_row("Raising shields", "[bold magenta]COMPLETED [green]:heavy_check_mark:")
+  #+end_src
+- [TODO] Handle steps to support Sphinx documentation management:
+  - Pull version from pyproject.toml and push to docs/source/conf.py (if it exists)
+  - (don't think we need anything else as pushing to gh will automatically trigger a new RTD build)
+- [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory. Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
+- [TODO] Can we refactor steps/*.py to have/use a common-base class? Might significantly reduce duplicate code associated with confirmation and return statuses.
+- [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
+- [TODO] Add a command-line parameter for verbosity (-v, -vv?)
+  - -v:
+    - print absolute paths associated with readme and pyproject.
+    - print package name and version found, how many recipes encountered etc.
+  - -vv:
+    - add explicit output of command executed (sorta like ~echo_stdout~~ parameter does)
+- [TODO] Can we refactor and dynamically create the ~GITHUB_PROJECT_RELEASE_HISTORY~ URL?
+  We know the package name (from pyproject.toml)    -  90% confidence
+  We know the user name (from another env variable  - 100% confidence
+  We can somewhat surely assume the default branch? -  50% confidence.
+- [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
+- [WORKING] Status of ongoing test development:
+  |--------+-----------------------------------|
+  | Status | Module                            |
+  |--------+-----------------------------------|
+  |     0% | ~build.py~                          |
+  |     0% | ~git_commit_version_files.py~       |
+  |     0% | ~git_create_release.py~             |
+  |     0% | ~git_create_tag.py~                 |
+  |     0% | ~git_push_to_github.py~             |
+  |     0% | ~poetry_bump_version.py~            |
+  |     0% | ~poetry_lock_check.py~              |
+  |     0% | ~poetry_lock_refresh.py~            |
+  |     0% | ~publish_to_pypi.py~                |
+  |     0% | ~run_pre_commit.py~                 |
+  |     0% | ~update_readme.py~                  |
+  |   100% | ~clean.py~                          |
+  |   100% | ~pandoc_convert_org_to_markdown.py~ |
+  |--------+-----------------------------------|
 ** Release History
 *** Unreleased
 
+*** v0.1.3 - 2023-07-09
+- ADDED: Two commands on behalf of poetry lock file management: ~poetry_lock_check~ and ~poetry_lock_refresh~ (meant to be used in that order) for good security practice.
 *** v0.1.2 - 2023-02-18
-    - ADDED: Command-line argument to display package' version and quit.
+- ADDED: Command-line argument to display package' version and quit.
 *** v0.1.1 - 2023-02-16
 *** v0.1.0 - 2023-02-16
-    - ADDED: Support for step-specific command-line overrides.
-      For example, when "bumping" the version number of a package, while the recipe's step may default to *patch*,
-      we can now specify *minor* (or any of the Poetry version labels) on the command-line instead, e.g. ~--poetry-version~.
-    - ADDED: Ability to override "confirm" recipe step attribute with command-line flag: ~--no-confirm~ or ~--confirm~.
+- ADDED: Support for step-specific command-line overrides.
+  For example, when "bumping" the version number of a package, while the recipe's step may default to *patch*,
+  we can now specify *minor* (or any of the Poetry version labels) on the command-line instead, e.g. ~--poetry-version~.
+- ADDED: Ability to override "confirm" recipe step attribute with command-line flag: ~--no-confirm~ or ~--confirm~.
 *** v0.0.14 - 2023-02-06
-    - ADDED: Ability for ~update_readme~ to take an argument specifying what format the project's README file is in, ie. 'md' for markdown (default) or 'org'. Optional argument is ~readme_format~.
+- ADDED: Ability for ~update_readme~ to take an argument specifying what format the project's README file is in, ie. 'md' for markdown (default) or 'org'. Optional argument is ~readme_format~.
 *** v0.0.13 - 2023-02-02
-    - ADDED: Ability to pass general "arguments" into steps that might require ~manage.yaml~ time configuration.
-      Example is a step to convert from org to markdown, arguments are used to pass the specific input & output paths.
-    - CHANGED: Added ability for built-in "show" target to render nested recipes.
+- ADDED: Ability to pass general "arguments" into steps that might require ~manage.yaml~ time configuration. Example is a step to convert from org to markdown, arguments are used to pass the specific input & output paths.
+- CHANGED: Added ability for built-in "show" target to render nested recipes.
 *** v0.0.12 - 2023-02-02
-    - ADDED: A step method that uses pandoc converter, for example to go from README.org to README.md.
-    - ADDED: The first draft of a better "show" target to document the current ~manage.yaml~ file.
-    - CHANGED Corrected data model: instead of ~method~ or ~step~ for a recipe, it's now ~method~ or /recipe/.
-    - CHANGED: Moved back to dynamically importing available step methods from manage.steps module.
+- ADDED: A step method that uses pandoc converter, for example to go from README.org to README.md.
+- ADDED: The first draft of a better "show" target to document the current ~manage.yaml~ file.
+- CHANGED Corrected data model: instead of ~method~ or ~step~ for a recipe, it's now ~method~ or /recipe/.
+- CHANGED: Moved back to dynamically importing available step methods from manage.steps module.
 *** v0.0.11 - 2023-01-29
-    - ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
-    - ADDED: A command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
-    - CHANGED: Back to YAML instead of TOML for recipe files (TOML nice for serialisation but too verbose for our use case).
-    - CHANGED: Default value for 'confirm' step option to True (as most of my steps are using True).
-    - CHANGED: To pydantic for stronger typing of Recipes and their associated steps.
-    - CHANGED: Sample recipe toml files to match pydantic-based data models (in particular, recipes are a dict!).
+- ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
+- ADDED: A command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
+- CHANGED: Back to YAML instead of TOML for recipe files (TOML nice for serialisation but too verbose for our use case).
+- CHANGED: Default value for 'confirm' step option to True (as most of my steps are using True).
+- CHANGED: To pydantic for stronger typing of Recipes and their associated steps.
+- CHANGED: Sample recipe toml files to match pydantic-based data models (in particular, recipes are a dict!).
 *** v0.0.10 - 2023-01-26
-    - ADDED: A "check" recipe/option to simply run the setup & validation steps only.
-    - ADDED: A validation that the version in ~pyproject.toml~ is consistent with the last release in the Release History of ~README.org~.
-    - CHANGED: Terminology from ~target~ to ~recipe~ and manage.toml to consisting of /recipes/.
-    - CHANGED: Steps to make them more "granular" and loaded from ~steps~ module.
-    - CHANGED: Over to TOML (tomli) instead of YAML for recipe files.
+- ADDED: A "check" recipe/option to simply run the setup & validation steps only.
+- ADDED: A validation that the version in ~pyproject.toml~ is consistent with the last release in the Release History of ~README.org~.
+- CHANGED: Terminology from ~target~ to ~recipe~ and manage.toml to consisting of /recipes/.
+- CHANGED: Steps to make them more "granular" and loaded from ~steps~ module.
+- CHANGED: Over to TOML (tomli) instead of YAML for recipe files.
 *** v0.0.9 - 2023-01-25
-    - CHANGED: To catch exception when manage.yaml can't be opened.
+- CHANGED: To catch exception when manage.yaml can't be opened.
 *** v0.0.8 - 2023-01-25
-    - ADDED: Missing /bin/manage script for execution after pip/poetry install.
+- ADDED: Missing /bin/manage script for execution after pip/poetry install.
 *** v0.0.7 - 2023-01-25
-    - ADDED: Assumptions and example configurations to README.org.
+- ADDED: Assumptions and example configurations to README.org.
 *** v0.0.6 - 2023-01-25
 *** v0.0.5 - 2023-01-25
 *** v0.0.4 - 2023-01-25
 *** v0.0.3 - 2023-01-25
 *** v0.0.2 - 2023-01-25
-    - Initial packaging.
+- Initial packaging.
