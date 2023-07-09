@@ -64,9 +64,9 @@
      Note: technically, we might be able to infer ~GITHUB_PROJECT_RELEASE_HISTORY~ based on the ~GITHUB_USER~ and project name but we'd have to infer the "mainline" branch, some have moved ~master~ to ~main~ and others to ~trunk~.
 ** Installation
    This isn't packaged for PyPI. However, distribution files are released to github.
-   - If you use ~poetry~, this should suffice (and is how I use it from other projects).
+   - If you use ~poetry~, this should suffice (and is how I use it from my projects). Specifically, we're installing the package's from it's github repository directly into our environment.
 #+begin_src bash
-poetry add git+https://github.com/PBorocz/manage
+poetry add git+https://github.com/PBorocz/manage --group dev
 #+end_src
    - Create your ~manage.yaml~ file, here's a sample one to start from:
 #+begin_src yaml
