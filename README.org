@@ -151,6 +151,8 @@ PATH_add "$VIRTUAL_ENV/bin"
   |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+
+*** v0.1.4 - 2023-07-10
 - ADDED: "print" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
 - ADDED: A simple "~git_add~" method that simply does a `git add {pathspec}` (or 'git add .' if pathspec is not provided).
 - ADDED: A "~run_command~" method to run an arbitrary local command.
