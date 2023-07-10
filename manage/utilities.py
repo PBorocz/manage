@@ -110,7 +110,7 @@ def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step"
         success()
         if step.echo_stdout:
             stdout = result.stdout.decode().strip()
-            print(f"[grey]{stdout}")
+            print(f"[grey]{stdout}[/]")
 
     return True, result.stdout.decode().strip()
 

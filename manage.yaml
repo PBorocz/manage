@@ -1,3 +1,10 @@
+# test:
+#   description: adsf asdfasdf
+#   steps:
+#     - method: run_command
+#       arguments:
+#         command: "ls -lR ."
+
 ################################################################################
 bump:
   description: Bump the version number to the next /patch/ level and commit locally
