@@ -140,14 +140,14 @@ def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | 
         except IndexError:
             ...
     if package is None:
-        messages.append("[yellow]No 'packages' entry foeund under \\[tool.poetry] in pyproject.toml.")
+        messages.append("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
 
     ################################################################################
     # Similarly, get our current version:
     ################################################################################
     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
     if version is None:
-        messages.append("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml.")
+        messages.append("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
 
     if not quiet:
         if package and version:

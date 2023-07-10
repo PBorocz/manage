@@ -36,12 +36,19 @@ build:
       confirm: false
       echo_stdout: true
 
+release:
+  description: Build our distribution(s) *and* release to "github" (not PyPI!)
+  steps:
+    - recipe: build
+
     - method: git_push_to_github
       confirm: false
       echo_stdout: true
+
 
 ################################################################################
 clean:
   description: Clean out our temp files and ALL previous builds.
   steps:
     - method: clean
+      confirm: false

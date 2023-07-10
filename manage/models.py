@@ -136,7 +136,7 @@ class Recipes(BaseModel):
 class Configuration(BaseModel):
     """Internal configuration/state."""
     version_: str | None = None
-    package: str | None = None
+    package_: str | None = None
 
     def version(self):
         """Return version number in "formal" format, usable (for instance) as git tag."""
@@ -146,10 +146,4 @@ class Configuration(BaseModel):
 def configuration_factory(args) -> Configuration | None:
     """Create a Configuration object, setting some attrs from pyproject.toml."""
     version, package = get_package_version_from_pyproject_toml()
-    if version is None or package is None:
-        return None
-
-    return Configuration(
-        version_=version,
-        package=package,
-    )
+    return Configuration(version_=version, package_=package)
