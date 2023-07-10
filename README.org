@@ -154,7 +154,8 @@ PATH_add "$VIRTUAL_ENV/bin"
   |--------+-----------------------------------|
 ** Release History
 *** Unreleased
-
+- ADDED: "print" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
+- CHANGED: Missing either [tool.poetry].version or [tool.poetry].package is now allowed (for those projects that don't need formal package release/build management).
 *** v0.1.3 - 2023-07-09
 - ADDED: Two commands on behalf of poetry lock file management: ~poetry_lock_check~ and ~poetry_lock_refresh~ (meant to be used in that order) for good security practice.
 *** v0.1.2 - 2023-02-18
