@@ -17,7 +17,8 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
 
     poetry_version = step.arguments.get('poetry_version')
     if poetry_version not in POETRY_VERSIONS:
-        print(f"[red]Sorry, {poetry_version} is not a valid poetry_version, must be one of: {smart_join(POETRY_VERSIONS)}.")
+        versions = smart_join(POETRY_VERSIONS, with_or=True)
+        print(f"[red]Sorry, {poetry_version} is not a valid poetry_version, must be one of \\[{versions}].")
         sys.exit(1)
 
     # Use poetry to get what our next version *should* be:

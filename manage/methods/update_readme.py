@@ -30,8 +30,8 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     ...
 
     """
-    # What's the default path we'll be working on? (note: this is primarily for testing purposes), manage is intended to be run
-    # from the project's top level directory)
+    # What's the default path we'll be working on? (note: this is primarily for testing
+    # purposes), manage is intended to be run from the project's top level directory)
     cwd = Path(step.arguments.get('cwd', Path.cwd()))
 
     # What file format are we working on?
@@ -43,7 +43,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     elif format_ == "org":
         header = "***"
     else:
-        print(f"[red]Sorry, we don't support readme_format {format_} yet, must be one of 'md' or 'org'!")
+        print(f"[red]Sorry, we don't support readme_format {format_} yet, must be one of \\['md', 'org'].")
         return False
 
     unreleased_header = f"{header} Unreleased"

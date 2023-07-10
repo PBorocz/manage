@@ -3,7 +3,7 @@ import unittest.mock as mock
 from pathlib import Path
 
 from manage.models import Configuration, Recipes, Step
-from manage.steps.clean import main as clean
+from manage.methods.clean import main as clean
 
 
 @pytest.fixture

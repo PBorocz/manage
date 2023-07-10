@@ -7,7 +7,7 @@ from typing import Callable, Final
 import yaml
 from rich import print
 
-from manage import steps as step_module
+from manage import methods as methods_module
 from manage.models import Configuration, Recipes, Recipe, Step
 from manage.utilities import message, success, failure, parse_dynamic_argument
 
@@ -162,23 +162,23 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
 #     return recipes
 
 
-def gather_available_steps() -> dict[str, Callable]:
+def gather_available_methods() -> dict[str, Callable]:
     """Read and return all the python-defined step methods available."""
 
-    def __gather_step_modules():
+    def __gather_methods_modules():
         """Iterate over all step modules (utility method)."""
-        for path in sorted((Path(__file__).parent / Path("steps")).glob("*.py")):
+        for path in sorted((Path(__file__).parent / Path("methods")).glob("*.py")):
             if path.name.startswith("__"):
                 continue
-            module = importlib.import_module(f"manage.steps.{path.stem}")
+            module = importlib.import_module(f"manage.methods.{path.stem}")
             yield path.stem, getattr(module, "main")
 
     # Get all the 'main" methods in each python file in the steps module:
     message("Reading recipe steps available")
-    methods = {method_name: method for method_name, method in __gather_step_modules()}
+    methods = {method_name: method for method_name, method in __gather_methods_modules()}
     if not methods:
         failure()
-        print("[red]Unable to find any valid command steps in manage/steps/*.py?")
+        print("[red]Unable to find any valid command steps in manage/methods/*.py?")
         sys.exit(1)
     success()
     return methods

@@ -65,7 +65,7 @@ def test_uptype_recipes(recipes):
     assert sum([len(recipe) for recipe in recipes]) == sum([len(recipe) for recipe in recipes_from_file])
     assert recipes == recipes_from_file
 
-def tst_parse_dynamic_arguments():
+def test_parse_dynamic_arguments():
     # FIXME: Implement me..
     ...
 
@@ -89,6 +89,6 @@ def tst_override_steps_from_args():
     # FIXME: Implement me..
     ...
 
-def tst_gather_available_steps():
+def tst_gather_available_methods():
     # FIXME: Implement me..
     ...

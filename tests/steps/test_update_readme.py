@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from manage.models import Configuration, Recipes, Step
-from manage.steps.update_readme import main as update_readme
+from manage.methods.update_readme import main as update_readme
 
 
 test_readme_md = """

@@ -14,9 +14,11 @@ from rich.console import Console
 TERMINAL_WIDTH: Final = 79
 
 
-def smart_join(lst: list[str]) -> str:
+def smart_join(lst: list[str], with_or: bool = False) -> str:
     """Essentially ', ' but with nicer formatting."""
-    return ', '.join(lst[:-1]) + " or " + lst[-1]
+    if with_or:
+        return ', '.join(lst[:-1]) + " or " + lst[-1]
+    return ', '.join(lst)
 
 
 def ask_confirm(text: str) -> bool:
@@ -136,14 +138,14 @@ def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | 
         except IndexError:
             ...
     if package is None:
-        messages.append("[yellow]No 'packages' entry found under \[tool.poetry] in pyproject.toml.")
+        messages.append("[yellow]No 'packages' entry foeund under \\[tool.poetry] in pyproject.toml.")
 
     ################################################################################
     # Similarly, get our current version:
     ################################################################################
     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
     if version is None:
-        messages.append("[yellow]No version label found entry under \[tool.poetry] in pyproject.toml.")
+        messages.append("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml.")
 
     if not quiet:
         if package and version:

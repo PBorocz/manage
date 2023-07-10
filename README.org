@@ -100,8 +100,6 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
 - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
-- [TODO] Fix bad language in message when only a single target is defined in a yaml file (e.g. "must be one of  or deploy").
-- [TODO] Loosen up the requirement for a "packages" entry in pyproject.toml for projects that AREN'T building/deploying packages!
 - [TODO] Build a simple "~git_add~" target that simply does a `git add .`.
 - [TODO] Build a "~run_local~" target that takes a local command to execute? (See ~optimus_ludos's~  manage.yaml for an example).
 - [TODO] Confirm that a non-zero exit status (eg. from ~poetry_lock_check~) is handled correctly.

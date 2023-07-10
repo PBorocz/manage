@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from manage.models import Configuration, Recipes, Step
-from manage.steps.pandoc_convert_org_to_markdown import main
+from manage.methods.pandoc_convert_org_to_markdown import main
 
 
 test_org_text = """

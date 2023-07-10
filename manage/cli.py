@@ -9,7 +9,7 @@ from rich import print
 from manage.dispatch import dispatch
 from manage.models import configuration_factory
 from manage.setup import (
-    gather_available_steps,
+    gather_available_methods,
     read_parse_recipes,
     uptype_recipes,
     validate_existing_version_numbers,
@@ -103,7 +103,7 @@ def get_all_other_args(
     # We have enough information now to validate the user's specific target requested:
     if args.target.casefold() not in available_targets + ["check", "show", "print"]:
         s_targets = [f"[italic]{id_}[/]" for id_ in available_targets]
-        print(f"Sorry, [red]{args.target}[/] is not a valid recipe, must be one of {smart_join(s_targets)}.")
+        print(f"Sorry, [red]{args.target}[/] is not a valid recipe, must be one of \\[{smart_join(s_targets)}].")
         sys.exit(1)
 
     return args
@@ -132,7 +132,7 @@ def main():
         sys.exit(1)
 
     # Gather all available steps
-    if not (methods := gather_available_steps()):
+    if not (methods := gather_available_methods()):
         sys.exit(1)
 
     # Validate and configure the specified recipe file into strongly-typed instances
