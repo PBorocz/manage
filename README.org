@@ -100,7 +100,6 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
 - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
 ** GTD
-- [TODO] Build a simple "~git_add~" target that simply does a `git add .`.
 - [TODO] Build a "~run_local~" target that takes a local command to execute? (See ~optimus_ludos's~  manage.yaml for an example).
 - [TODO] Confirm that a non-zero exit status (eg. from ~poetry_lock_check~) is handled correctly.
 - [TODO] Can we add to the existing help option that lists the targets available from the relevant ~manage.yaml~ file?
@@ -153,6 +152,8 @@ PATH_add "$VIRTUAL_ENV/bin"
 ** Release History
 *** Unreleased
 - ADDED: "print" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
+- ADDED: A simple "~git_add~" method that simply does a `git add {pathspec}` (or 'git add .' if pathspec is not provided).
+- ADDED: A "~run_command~" method to run an arbitrary local command.
 - CHANGED: Missing either [tool.poetry].version or [tool.poetry].package is now allowed (for those projects that don't need formal package release/build management).
 *** v0.1.3 - 2023-07-09
 - ADDED: Two commands on behalf of poetry lock file management: ~poetry_lock_check~ and ~poetry_lock_refresh~ (meant to be used in that order) for good security practice.
