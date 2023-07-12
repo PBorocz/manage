@@ -25,7 +25,7 @@ def recipes():
                           arg_2_bool=False,
                           arg_3_int=42),
                  ),
-            Step(method="show",
+            Step(method="print",
                  config=True,
                  confirm=True,
                  echo_stdout=True,
@@ -45,7 +45,7 @@ def recipes():
         "clean" : recipe_clean,
         "build" : recipe_build,
         "check" : Recipe(description="Check configuration only.", steps=[Step(method="check", confirm=False)]),
-        "show"  : Recipe(description="Show recipe file contents.", steps=[Step(method="show", confirm=False)]),
+        "print" : Recipe(description="Show/print recipe file contents.", steps=[Step(method="print", confirm=False)]),
     })
 
 

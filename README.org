@@ -143,8 +143,30 @@ The following recipes are built-in and available irrespective of your recipe fil
         ...
 #+end_src
 *** Available Methods
-We provide the following methods (listed alphabetically)
-**** *~build~*
+**** Summary
+We provide a summary of the methods supported (listed alphabetically):
+|--------------------------------+---------------+------------+-------------------|
+| Method Name                    | Confirmation? | Arguments? | Arguments         |
+|--------------------------------+---------------+------------+-------------------|
+| ~build~                          | Yes           | No         |                   |
+| ~clean~                          | Yes           | No         |                   |
+| ~git_add~                        | Yes           | Yes        | ~pathspec~          |
+| ~git_commit_version_files~       | Yes           | No         |                   |
+| ~git_create_release~             | Yes           | No         |                   |
+| ~git_create_tag~                 | Yes           | No         |                   |
+| ~git_push_to_github~             | Yes           | No         |                   |
+| ~pandoc_convert_org_to_markdown~ | No            | Yes        | ~path_md~, ~path_org~ |
+| ~poetry_bump_version~            | Yes           | Yes        | ~poetry_version~    |
+| ~poetry_lock_check~              | No            | No         |                   |
+| ~poetry_lock_refresh~            | Yes           | No         |                   |
+| ~publish_to_pypi~                | Yes           | No         |                   |
+| ~run_command~                    | Yes           | Yes        | ~command~           |
+| ~run_pre_commit~                 | No            | No         |                   |
+| ~update_readme~                  | Yes           | Yes        | ~readme_format~     |
+|--------------------------------+---------------+------------+-------------------|
+
+**** Details
+***** *build*
 Specialised command to 'poetry' build a package distribution, ie. `poetry build`.
 #+begin_src yaml
   build_my_package:
@@ -156,7 +178,7 @@ Specialised command to 'poetry' build a package distribution, ie. `poetry build`
         allow_error: true  # We don't care if no files are clean or if dirs don't exist.
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line.
-**** *~git_add~*
+***** *git_add*
 General command to perform a `git add <pathspec>` operation.
   #+begin_src yaml
     build_my_package:
@@ -168,9 +190,9 @@ General command to perform a `git add <pathspec>` operation.
         - method: ...
           ...
 #+end_src
-***** Arguments
+****** Arguments
 - ~pathspec~ Optional path specification of dir(s) and/or file(s) to stage. Default if not specified is `.`.
-**** *~git_commit_version_files~*
+***** *git_commit_version_files*
 Specialised command to git stage and commit two files relevant to my build process: ~pyproject.toml~ and ~README.(org|md)~. Other methods will update these files for version management and this method is provided to get them into git on behalf of a release.
   #+begin_src yaml
     build_my_package:
@@ -185,7 +207,7 @@ Specialised command to git stage and commit two files relevant to my build proce
           ...
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line.
-**** *~git_create_release~*
+***** *git_create_release*
 Specialised command to create a git *release* using the appropriate version string (from ~pyproject.toml~).
   #+begin_src yaml
     build_my_package:
@@ -200,7 +222,7 @@ Specialised command to create a git *release* using the appropriate version stri
           ...
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line.
-**** *~git_create_tag~*
+***** *git_create_tag*
 General command to create a local git *tag* using the appropriate version string (from ~pyproject.toml~).
   #+begin_src yaml
     build_my_package:
@@ -215,7 +237,7 @@ General command to create a local git *tag* using the appropriate version string
           ...
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line.
-**** *~git_push_to_github~*
+***** *git_push_to_github*
 General command to perform a `git push --follow-tags`.
   #+begin_src yaml
     build_my_package:
@@ -230,7 +252,7 @@ General command to perform a `git push --follow-tags`.
           ...
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line.
-**** *~pandoc_convert_org_to_markdown~*
+***** *pandoc_convert_org_to_markdown*
 Very specialised command to convert an emacs .org file to an markdown (.md) file using pandoc; specifically:
 
 "pandoc -f org -t markdown --wrap none --output {~path_md~} {~path_org~}"
@@ -245,10 +267,10 @@ Very specialised command to convert an emacs .org file to an markdown (.md) file
         - method: ...
           ...
 #+end_src
-***** Arguments
+****** Arguments
 - ~path_md~ Required, path specification input markdown file, e.g. ~./docs/my_doc.md~.
 - ~path_org~ Required, path specification resulting .org file to be created, e.g. ~./docs/my_doc.org~.
-**** *~poetry_bump_version~*
+***** *poetry_bump_version*
 Specialised command to "bump" the version of a project/package using Poetry's version command. This method takes one of the pre-defined version levels to bump and updates ~pyproject.toml~ with the new version value.
  #+begin_src yaml
    build_my_package:
@@ -264,9 +286,9 @@ Specialised command to "bump" the version of a project/package using Poetry's ve
        - method: ...
          ...
 #+end_src
-***** Arguments
+****** Arguments
 - ~poetry_version~ Required, the default level of version "bump" to perform. Must be one of 'patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor', 'prerelease' (see [[https://python-poetry.org/docs/cli/#version][Poetry version command]] for more information).
-**** *~poetry_lock_check~*
+***** *poetry_lock_check*
 General command to perform a poetry lock "check" to verify that ~poetry.lock~ is consistent with ~pyproject.toml~
   #+begin_src yaml
     build_my_package:
@@ -275,7 +297,7 @@ General command to perform a poetry lock "check" to verify that ~poetry.lock~ is
         - method: poetry_lock_check
 #+end_src
 This command takes *no* arguments and will *NOT* ask for confirmation.
-**** *~poetry_lock_refresh~*
+***** *poetry_lock_refresh*
 General command to update/refresh a poetry lock file.
 
   #+begin_src yaml
@@ -285,7 +307,7 @@ General command to update/refresh a poetry lock file.
         - method: poetry_lock_check
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current ~poetry.lock~ file.
-**** *~publish_to_pypi~*
+***** *publish_to_pypi*
 Specialised command to publish your package to PyPI.
 
   #+begin_src yaml
@@ -296,7 +318,7 @@ Specialised command to publish your package to PyPI.
 
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current ~poetry.lock~ file.
-**** *~run_command~*
+***** *run_command*
 General command to run essentially any local command for it's respective side-effects. In one of my projects, I don't use the version number in ~pyproject.toml~ but instead of an ~app/version.py~ that is updated from a small script (using the date & respective branch of the last git commit performed).
  #+begin_src yaml
    build_my_package:
@@ -311,9 +333,9 @@ General command to run essentially any local command for it's respective side-ef
            command: "./app/cli/update_settings.py"
 #+end_src
 This command *will* ask for confirmation unless `--no-confirm` is set on the command-line.
-***** Arguments
+****** Arguments
 - ~command~ Required, a string containing the full shell command to execute.
-**** *~run_pre_commit~*
+***** *run_pre_commit*
 General command to run the ~pre-commit~ tool (if you use it).
  #+begin_src yaml
    build_my_package:
@@ -323,7 +345,7 @@ General command to run the ~pre-commit~ tool (if you use it).
          allow_error: false
 #+end_src
 This command takes no argument and *will* ask for confirmation unless `--no-confirm` is set on the command-line.
-**** *~update_readme~*
+***** *update_readme*
 Very specialised command to move "Unreleased" items into a dedicated "release" section of a README file.
 
  #+begin_src yaml
@@ -337,11 +359,11 @@ Very specialised command to move "Unreleased" items into a dedicated "release" s
 
 This command takes no argument and *will* ask for confirmation unless `--no-confirm` is set on the command-line.
 
-***** Arguments
+****** Arguments
 - ~readme_format~ Required, a string that is one of ~org~ or ~md~.
 
-***** README files can be in one of two formats:
-****** ORG (.org) Format
+****** README files can be in one of two formats:
+******* ORG (.org) Format
 A supported README in org format might be:
  #+begin_src org
    ,* My Project
@@ -370,7 +392,7 @@ We use the ~Unreleased~ tag line and "create" a new release (using the current v
        - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
        ....
 #+end_src
-****** Markdown (.md) Format
+******* Markdown (.md) Format
 A supported README in markdown format might be:
  #+begin_src markdown
    # My Project

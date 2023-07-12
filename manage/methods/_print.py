@@ -4,7 +4,7 @@ from manage.models import Configuration, Recipes, Recipe, Step
 
 
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
-    """Show the recipes."""
+    """Show/print the recipes."""
     print("[yellow]The following recipes are currently defined (items in [bold]bold[/] differ from default!):")
     for id_, recipe in recipes:
         print_recipe(id_, recipes, recipe)

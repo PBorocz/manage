@@ -12,7 +12,7 @@ clean:
         arg_2_bool: false
         arg_3_int: 42
 
-    - method: show
+    - method: print
       confirm: true
       echo_stdout: true
       allow_error: true

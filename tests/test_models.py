@@ -11,7 +11,7 @@ def recipes():
         description="A Clean Recipe",
         steps=[
             Step(method="clean"),  # Test that defaults match those in yaml file..
-            Step(method="show",
+            Step(method="print",
                  config=True,
                  echo_stdout=True,
                  allow_error=True,
@@ -71,9 +71,9 @@ def test_recipe():
 def test_recipe_step_validation(recipes):
     # assert recipes.validate_step_actions({}) is not None
     methods = {
-        "clean" : lambda x: x,
-        "show" : lambda x: x,
-        "build": lambda x: x,
-        "another": lambda x: x,
+        "clean"   : lambda x: x,
+        "print"   : lambda x: x,
+        "build"   : lambda x: x,
+        "another" : lambda x: x,
     }
     assert not recipes.validate_methods_steps(methods)

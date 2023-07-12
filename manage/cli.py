@@ -101,8 +101,8 @@ def get_all_other_args(
     args = parser.parse_args()
 
     # We have enough information now to validate the user's specific target requested:
-    if args.target.casefold() not in available_targets + ["check", "show", "print"]:
-        s_targets = [f"[italic]{id_}[/]" for id_ in available_targets]
+    if args.target.casefold() not in available_targets + ["check", "print"]:
+        s_targets = [f"[italic]{id_}[/]" for id_ in available_targets + ["check", "print"]]
         print(f"Sorry, [red]{args.target}[/] is not a valid recipe, must be one of \\[{smart_join(s_targets)}].")
         sys.exit(1)
 

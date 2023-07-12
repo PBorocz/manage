@@ -144,8 +144,8 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
         "check",
         Recipe(description="Check configuration only.", steps=[Step(method="check", confirm=False)]))
     recipes.set(
-        "show",
-        Recipe(description="Show recipe file contents.", steps=[Step(method="show", confirm=False)]))
+        "print",
+        Recipe(description="Show/print recipe file contents.", steps=[Step(method="print", confirm=False)]))
     return recipes
 
 
@@ -170,8 +170,13 @@ def gather_available_methods() -> dict[str, Callable]:
         for path in sorted((Path(__file__).parent / Path("methods")).glob("*.py")):
             if path.name.startswith("__"):
                 continue
+
             module = importlib.import_module(f"manage.methods.{path.stem}")
-            yield path.stem, getattr(module, "main")
+
+            # Convert methods like "_check_" and "_print" to "check" and "print"
+            method_name = path.stem[1:] if path.stem.startswith("_") else path.stem
+
+            yield method_name, getattr(module, "main")
 
     # Get all the 'main" methods in each python file in the steps module:
     message("Reading recipe steps available")
