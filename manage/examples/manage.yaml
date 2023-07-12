@@ -1,4 +1,4 @@
-version:
+1_version:
   description: Bump the version number a single patch level and commit locally
   steps:
     - method: poetry_bump_version
@@ -9,7 +9,7 @@ version:
         readme_format: "md"
     - method: git_commit_version_files
 
-build:
+2_build:
   description: Build our distribution(s).
   steps:
     - method: run_pre_commit
@@ -19,7 +19,7 @@ build:
     - method: build
       echo_stdout: true
 
-publish:
+3_publish:
   description: Release a new version of our package to PyPI.
   steps:
     - method: git_create_tag

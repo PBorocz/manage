@@ -1,17 +1,18 @@
 * Manage
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project and the wonderful [[https://github.com/casey/just][Just command runner]], this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** What is it?
-   Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
+Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
 ** Design
-   - The exact steps necessary to complete a /recipe/ are specified in a local recipe file (default ~./manage.yaml~) that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
-   - A recipe file contains:
-     - A set of /targets/ aka recipes (think of as Makefile commands or justfile targets).
-     - Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
-     - Each step can refer either to a built-in method (e.g. ~clean~) or to the name of another recipe.
-     - Each step can have a user-confirmation before executing, e.g. "Are you sure? (~confirm~).
-     - Each step can be configured as to whether or not it's stdout is displayed (~echo_stdout~).
-     - Each step can be configured control whether errors encountered are fatal or not (~allow_error~).
-   - An example ~manage.yaml~ might look like this:
+- The exact steps necessary to complete a /recipe/ are specified in a local recipe file (default ~./manage.yaml~) that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
+- A recipe file contains:
+  - A set of /targets/ aka recipes (think of as Makefile commands or justfile targets).
+  - Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
+  - Each step can refer either to a built-in *method* (e.g. ~clean~) or to the name of another /recipe/.
+  - Most steps (specifically, those that can /change/ something) can have a user-confirmation before executing, e.g. "Are you sure? (~confirm~).
+  - Each step can be configured as to whether or not it's stdout is displayed (~echo_stdout~).
+  - Each step can be configured control whether errors encountered are fatal or not (~allow_error~).
+*** Example
+An example ~manage.yaml~ might look like this:
 #+begin_src yaml
   ################################################################################
   bump:
@@ -36,6 +37,57 @@
         echo_stdout: true
         allow_error: true  # We don't care if no files are clean or if dirs don't exist.
 #+end_src
+** Assumptions
+To the degree that your development/project/release environment strays from mine, the tool probably becomes less and less relevant!
+
+However, these are my common python project standards, allowing for the ability of this tool to work seamlessly:
+*** Tools
+- We assume [[https://github.com][Git/Github]] are used for code version management.
+- We assume [[https://python-poetry.org][poetry]] is used to manage package dependencies *and* build environment.
+- We assume that execution of this script is from the TOP level of a project, i.e. at the same level as pyproject.toml.
+- We assume that *version string* in ~pyproject.toml~ is the SINGLE and CANONICAL version string in our project/package. Specifically, there are no ~/module/__version__.py~'s or versions embedded in ~__init__.py~~ files (Should you want/need to have these, it's certainly possible to automate the creation of them based on the version from ~pyproject.toml~!).
+*** Versioning
+- We assume semantic versioning with ~poetry version~ to update/manage our version number. Specifically, this allows us to use ~poetry version~ command's keywords for version updates, ie. patch, minor, major etc.
+*** README Management
+- We assume that a README file exists and is in either [[https://orgmode.org/][Org]] or Markdown format.
+- We assume ~README.org~ / ~README.md~ is kept in the top-level directory.
+*** CHANGELOG/Release History Management
+- We do *not* use a stand-alone ~CHANGELOG~ file, instead we use a specific section in ~README.org/md~. We assume that list of completed but unreleased items exist under an "*Unreleased*" header. This format provides reasonably clean automation of version/release management within the README file.
+*** Configuration
+- We assume the following entries are available in our environment (either set in your respective shell or through .env):
+  |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
+  | ~GITHUB_USER~                    | Github user id                            | ~John-Jacob_JingleheimerSchmidt~                                           |
+  | ~GITHUB_API_TOKEN~               | Github personal API token                 | ~ghp_1234567890ABCDEFG1234567890~                                          |
+  | ~GITHUB_API_RELEASES~            | URL to Github release API                 | https://api.github.com/repos/<user>/<project>/releases                   |
+  | ~GITHUB_PROJECT_RELEASE_HISTORY~ | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
+  |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
+Note: technically, we might be able to infer ~GITHUB_PROJECT_RELEASE_HISTORY~ based on the ~GITHUB_USER~ and project name but I think we'd have to infer the name of the "mainline" branch, some have moved ~master~ to ~main~ and others to ~trunk~.
+** Installation
+This isn't packaged for PyPI. However, distribution files are released to github.
+
+If you use ~poetry~, this should suffice (and is how I use it from my projects). Specifically, we're installing the package's from it's github repository directly into our environment.
+#+begin_src shell
+  % poetry add git+https://github.com/PBorocz/manage --group dev
+#+end_src
+
+Create your ~manage.yaml~ file, here's a sample one to start from:
+#+begin_src yaml
+  clean:
+    description: Clean out our temp files and ALL previous builds.
+    steps:
+      - method: clean
+        echo_stdout: true
+
+  build:
+    description: Build our package.
+    steps:
+      - step: clean
+      - method: build
+        confirm: true
+        echo_stdout: true
+#+end_src
+
+At this point, you should be able to run: ~manage check~ (one of the built-in targets) against ~manage.yaml~ you just created. Note that ~poetry add~ will create a ~manage~ command into your respective python /bin environment (hopefully, your virtual env).
 ** Documentation
 *** Default Recipe Targets
 The following recipes are built-in and available irrespective of your recipe file:
@@ -164,7 +216,6 @@ We provide a summary of the methods supported (listed alphabetically):
 | ~run_pre_commit~                 | No            | No         |                   |
 | ~update_readme~                  | Yes           | Yes        | ~readme_format~     |
 |--------------------------------+---------------+------------+-------------------|
-
 **** Details
 ***** *build*
 Specialised command to 'poetry' build a package distribution, ie. `poetry build`.
@@ -431,101 +482,44 @@ We use the ~Unreleased~ tag line and "create" a new release (using the current v
        ....
 #+end_src
 
-** Fundamental Assumptions
-To the degree that your development/release environment stray from mine, the tool probably becomes less and less relevant! However, these are my common python project standards, allowing for the ability of this tool to work seamlessly:
-*** Tools
-- [[https://python-poetry.org][Poetry]] is used to manage package dependencies *and* build environment.
-- We assume that execution of this script is from the TOP level of a project, i.e. at the same level as pyproject.toml.
-- The version string in pyproject.toml is the SINGLE and CANONICAL version string in our project/package. In particular, there are no ~/module/__version__.py~'s or versions embedded in ~__init__.py~~ files.
-*** Versioning
-- We use semantic versioning with ~poetry version~ to update/manage our version number. Specifically, this allows us to use ~poetry version~ command's keywords for version updates, ie. patch, minor, major etc.
-*** README Management
-- We manage our README in an Org format (see [[https://orgmode.org/][Emacs Org Mode]] for details).
-- We assume ~README.org~ is kept in the top-level directory.
-*** CHANGELOG Management
-- We do *not* use a stand-alone ~CHANGELOG.md~ file.
-- We use a specific section in ~README.org~ called /Release History/.
-- We keep a list of completed but unreleased items in the /Release History/ under an "Unreleased" header. This allows us to easily update the version number associated with the set of changes to be released automatically.
-*** Configuration
-- We assume the following entries are available in our environment (either set in shell or through .env):
-     |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
-     | ~GITHUB_USER~                    | Github user id                            | ~John-Jacob_JingleheimerSchmidt~                                           |
-     | ~GITHUB_API_TOKEN~               | Github personal API token                 | ~ghp_1234567890ABCDEFG1234567890~                                          |
-     | ~GITHUB_API_RELEASES~            | URL to Github release API                 | https://api.github.com/repos/<user>/<project>/releases                   |
-     | ~GITHUB_PROJECT_RELEASE_HISTORY~ | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
-     |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
-
-Note: technically, we might be able to infer ~GITHUB_PROJECT_RELEASE_HISTORY~ based on the ~GITHUB_USER~ and project name but we'd have to infer the "mainline" branch, some have moved ~master~ to ~main~ and others to ~trunk~.
-** Installation
-This isn't packaged for PyPI. However, distribution files are released to github.
-
-If you use ~poetry~, this should suffice (and is how I use it from my projects). Specifically, we're installing the package's from it's github repository directly into our environment.
-#+begin_src bash
-poetry add git+https://github.com/PBorocz/manage --group dev
-#+end_src
-
-Create your ~manage.yaml~ file, here's a sample one to start from:
-#+begin_src yaml
-  clean:
-    description: Clean out our temp files and ALL previous builds.
-    steps:
-      - method: clean
-        echo_stdout: true
-
-  build:
-    description: Build our package.
-    steps:
-      - step: clean
-      - method: build
-        confirm: true
-        echo_stdout: true
-#+end_src
-
-At this point, you should be able to run: ~manage check~ (one of the built-in targets) against ~manage.yaml~ you just created. Note that ~poetry add~ will create a ~manage~ command into your respective python /bin environment (hopefully, your virtual env).
 ** Development
+If you want to help develop this, here's what might this might entail:
+
 - Confirm python version availability, I'm developing on 3.10.9 for now (and use [[https://github.com/pyenv/pyenv][pyenv]] to manage all my versions).
 - Setup a .venv using your virtual-env manager of choice (I use ~python -m venv .venv~).
 - Clone the repo.
 - ~poetry install~ to install requisite dependencies into your venv.
-- Set ~.envrc~ to point top-level directory (i.e. README and pyproject.toml), I use the wonderful [[https://direnv.net/][direnv]] package to take of this housekeeping. Here's why my ~.envrc~ contains, it not only sets the ~PYTHON_PATH~ appropriately but also takes care of automatically point me to my virtual-env:
+- Set ~.envrc~ to point top-level directory (i.e. README and pyproject.toml), I use the wonderful [[https://direnv.net/][direnv]] package to take of this housekeeping. Here's why my ~.envrc~ contains, it not only sets the ~PYTHON_PATH~ appropriately but also takes care of automatically point me to my virtual env:
 #+begin_src bash
 export PYTHONPATH=`pwd`
 export VIRTUAL_ENV=$PYTHONPATH/.venv
 PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
-- At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food).
+- At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food ;-).
 ** GTD
-- [TODO] Build a "~run_local~" target that takes a local command to execute? (See ~optimus_ludos's~  manage.yaml for an example).
+- [TODO] Add more in-depth help output the includes the description from each step in the respective manage.yaml specified.
+- [TODO] Do we want to have ALL methods have a confirmation and just set their "confirm" flag default accordingly?
+- [TODO] Fix bug in ~poetry_bump_version~ when parsing a markdown README file (is a line off trying to find "Unreleased").
 - [TODO] Confirm that a non-zero exit status (eg. from ~poetry_lock_check~) is handled correctly.
-- [TODO] Can we add to the existing help option that lists the targets available from the relevant ~manage.yaml~ file?
-- [TODO] Add all the commands currently implemented to this README for (my own) documentation.
-- Perhaps use something like [[https://towardsdatascience.com/how-i-turned-my-companys-docs-into-a-searchable-database-with-openai-4f2d34bd8736][this]] to create our index repository for searching?
-- [RESEARCH] Can we get the "help" to look like [[https://github.com/pycontribs/mk][this]]?
-- [TODO] Replace hard-coded emoji's with key-names? (minor)
-  [[https://unicode.org/emoji/charts/emoji-list.html]]
-  #+begin_src python
-    from rich.console import Console
-    console = Console()
-    console.print("Hello, [bold red]Rich[0/0] :snake:")
-    # grid.add_row("Raising shields", "[bold magenta]COMPLETED [green]:heavy_check_mark:")
-  #+end_src
-- [TODO] Handle steps to support Sphinx documentation management:
-  - Pull version from pyproject.toml and push to docs/source/conf.py (if it exists)
-  - (don't think we need anything else as pushing to gh will automatically trigger a new RTD build)
 - [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory. Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
-- [TODO] Can we refactor steps/*.py to have/use a common-base class? Might significantly reduce duplicate code associated with confirmation and return statuses.
-- [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
 - [TODO] Add a command-line parameter for verbosity (-v, -vv?)
   - -v:
     - print absolute paths associated with readme and pyproject.
     - print package name and version found, how many recipes encountered etc.
   - -vv:
-    - add explicit output of command executed (sorta like ~echo_stdout~~ parameter does)
+    - add explicit output of command executed (sorta like ~echo_stdout~ parameter does but for ALL methods/steps?)
+- [TODO] Can we refactor methods/*.py to have/use a common-base class?
+   Might significantly reduce duplicate code associated with confirmation and return statuses?
+- [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
+- [TODO] Handle steps to support Sphinx documentation management:
+  - Pull version from pyproject.toml and push to docs/source/conf.py (if it exists)
+  - (don't think we need anything else as pushing to gh will automatically trigger a new RTD build)
 - [TODO] Can we refactor and dynamically create the ~GITHUB_PROJECT_RELEASE_HISTORY~ URL?
   We know the package name (from pyproject.toml)    -  90% confidence
   We know the user name (from another env variable  - 100% confidence
   We can somewhat surely assume the default branch? -  50% confidence.
 - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
+- [RESEARCH] Can we get the "help" to look like [[https://github.com/pycontribs/mk][this]]?
 - [WORKING] Status of ongoing test development:
   |--------+-----------------------------------|
   | Status | Module                            |

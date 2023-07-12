@@ -37,17 +37,17 @@ def ask_confirm(text: str) -> bool:
 
 def success(color: str = "green") -> None:
     """Render/print a success symbol in the specified color."""
-    print(f"[{color}]✔")
+    print(f"[{color}]:heavy_check_mark:")
 
 
 def warning(color: str = "yellow") -> None:
     """Render/print a failure symbol (almost always in yellow but overrideable)."""
-    print(f"[{color}]⚠")
+    print(f"[{color}]:warning_sign:")
 
 
 def failure(color: str = "red") -> None:
     """Render/print a failure symbol (almost always in red but overrideable)."""
-    print(f"[{color}]✖")
+    print(f"[{color}]:heavy_multiplication_x:")
 
 
 def replace_rich_markup(string: str) -> str:
