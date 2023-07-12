@@ -6,7 +6,7 @@ from manage.utilities import ask_confirm, run
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Run a local command."""
     if not step.arguments or 'command' not in step.arguments:
-        print(f"[red]Sorry, we require a 'command' entry in the arguments for this method.")
+        print("[red]Sorry, we require a 'command' entry in the arguments for this method.")
         return False
 
     cmd = step.arguments.get('command')

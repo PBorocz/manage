@@ -2,7 +2,7 @@
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project and the wonderful [[https://github.com/casey/just][Just command runner]], this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** What is it?
    Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
-** Design:
+** Design
    - The exact steps necessary to complete a /recipe/ are specified in a local recipe file (default ~./manage.yaml~) that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
    - A recipe file contains:
      - A set of /targets/ aka recipes (think of as Makefile commands or justfile targets).
@@ -36,6 +36,172 @@
         echo_stdout: true
         allow_error: true  # We don't care if no files are clean or if dirs don't exist.
 #+end_src
+** Documentation
+*** Default Recipe Targets
+The following recipes are built-in and available irrespective of your recipe file:
+- ~check~ - Performs a validity check of your recipe file (ie. `manage.yaml`). For example:
+  #+begin_src shell
+    % python manage check
+    Reading recipes (manage.yaml)..................................................✔
+    Reading package & version (pyproject.toml).....................................✔
+    Checking consistency of versions (pyproject.toml & README).....................✔
+    Reading recipe steps available.................................................✔
+    Validating recipes.............................................................✔
+    %
+#+end_src
+- ~print~ - Does a "pretty-print" of your respective recipe file. For example:
+  #+begin_src shell
+    % python manage print
+    Recipes(
+        __root__={
+            'bump': Recipe(
+                description='Bump the version number to the next /patch/ level and commit locally',
+                steps=[
+                    Step(
+                        method='poetry_bump_version',
+                        recipe=None,
+                        confirm=True,
+                        echo_stdout=False,
+                        allow_error=False,
+                        quiet_mode=False,
+                        arguments={'poetry_version': 'patch'},
+                        callable_=<function main at 0x1084e1990>
+                    ),
+                    Step(
+                        method='update_readme',
+                        recipe=None,
+                        confirm=True,
+                        echo_stdout=False,
+                        allow_error=False,
+                        quiet_mode=False,
+                        arguments={'readme_format': 'org'},
+                        callable_=<function main at 0x1084e20e0>
+                    ),
+                    Step(
+                        method='git_commit_version_files',
+                        recipe=None,
+                        confirm=True,
+                        echo_stdout=False,
+                        allow_error=False,
+                        quiet_mode=False,
+                        arguments={},
+                        callable_=<function main at 0x10805beb0>
+                    )
+                ]
+            ),
+            'build': Recipe(
+                description='Build our distribution(s) and release to "github" (not PyPI!)',
+                steps=[
+                    Step(
+                        method='poetry_lock_check',
+                        recipe=None,
+                        confirm=False,
+                        echo_stdout=False,
+                        allow_error=False,
+                        quiet_mode=False,
+                        arguments={},
+                        callable_=<function main at 0x1084e1ab0>
+                    ),
+                    .....
+    %
+#+end_src
+*** Common Method Options
+- ~confirm~ - Ask for confirmation before executing the respective step, e.g. "Are you sure you want to ...?". Primarily on behalf of /write/-oriented steps, this option can be specified either on a step-by-step basis:
+  #+begin_src yaml
+    build_my_package:
+      description: Build my distribution package.
+      steps:
+        - method: build
+          confirm: True
+#+end_src
+  *or* for all confirm-able steps during a specific execution from the command-line (which will override any step-specific settings):
+  #+begin_src shell
+    % python manage my_recipe --confirm
+    ...
+    %
+  #+end_src
+- ~echo_stdout~ - Echo the stdout of the respective command.
+#+begin_src yaml
+  build_my_package:
+    description: Build my distribution package.
+    steps:
+      - method: ...
+        ...
+      - method: git_create_tag
+        echo_stdout: True
+      - method: ...
+        ...
+#+end_src
+- ~allow_error~ - If True, a non-zero exit code will stop execution of the respective recipe (default is False).
+#+begin_src yaml
+  build_my_package:
+    description: Build my distribution package.
+    steps:
+      - method: clean
+        allow_error: True
+      - method: ...
+        ...
+#+end_src
+*** Methods
+We provide the following methods (listed alphabetically)
+**** build
+Builds a package distribution using Poetry, ie. `poetry build`.
+
+There are *no* optional arguments to this command.
+
+Example:
+#+begin_src yaml
+  build_my_package:
+    description: Build my distribution package.
+    steps:
+      - method: build
+        confirm: false
+        echo_stdout: true
+        allow_error: true  # We don't care if no files are clean or if dirs don't exist.
+#+end_src
+**** check
+This can be directly invoked from the command-line
+
+There are *no* optional arguments to this command.
+
+Example:
+#+begin_src yaml
+  build_my_package:
+    description: Build my distribution package.
+    steps:
+      - method: build
+        confirm: false
+        echo_stdout: true
+        allow_error: true  # We don't care if no files are clean or if dirs don't exist.
+#+end_src
+**** ~git_add~
+Performs a `git add <pathspec>` operations.
+  #+begin_src yaml
+    build_my_package:
+      description: Build my distribution package.
+      steps:
+        - method: git_add
+          arguments:
+            pathspec: "app/version.py"
+        - method: ...
+          ...
+#+end_src
+***** Arguments
+- ~pathspec~ Optional path specification of dir(s) and/or file(s) to stage. Default if not specified is `.`.
+**** ~git_commit_version_files~
+**** ~git_create_release~
+**** ~git_create_tag~
+**** ~git_push_to_github~
+**** ~pandoc_convert_org_to_markdown~
+**** ~poetry_bump_version~
+**** ~poetry_lock_check~
+**** ~poetry_lock_refresh~
+**** ~publish_to_pypi~
+**** ~run_command~
+**** ~run_pre_commit~
+**** ~show~
+**** ~update_readme~
+
 ** Fundamental Assumptions
 To the degree that your development/release environment stray from mine, the tool probably becomes less and less relevant! However, these are my common python project standards, allowing for the ability of this tool to work seamlessly:
 *** Tools

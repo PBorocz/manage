@@ -14,8 +14,9 @@ TConfiguration = TypeVar("Configuration")
 class Step(BaseModel):
     """A step in a recipe."""
     # FROM inbound manage file:
-    method: str | None = None
-    recipe: str | None = None        # Reference to the id_ of another recipe
+    method: str | None = None   # Reference to the built-in method to run
+    recipe: str | None = None   # Reference to the id_ of another recipe.
+
     confirm: bool | None = True
     echo_stdout: bool | None = False
     allow_error: bool | None = False
@@ -27,7 +28,7 @@ class Step(BaseModel):
 
     @validator('recipe', always=True)
     def check_consistency(cls, v, field, values):
-        """Confirm that EITHER method or another recipe is specified on creation.
+        """Ensure that EITHER method or another recipe is specified on creation.
 
         NOTE: We use ~recipe~ here as it's *after* the ~method~ attribute in field definition order!
         """

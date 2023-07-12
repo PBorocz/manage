@@ -111,7 +111,7 @@ def get_all_other_args(
 
 def main():
 
-    # Before anything else, confirm we're working from the root-level of the target project
+    # Before anything else, make sure we're working from the root-level of the target project
     if not (Path.cwd() / "README.org").exists() and not (Path.cwd() / "README.md").exists():
         print("[red]Sorry, you need to run this from the same directory that your README file exists.")
         sys.exit(1)
