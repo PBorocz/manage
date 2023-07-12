@@ -17,5 +17,5 @@ def main(configuration: Configuration, _, step: dict) -> bool:
     try:
         return run(step, f"pandoc -f org -t markdown --wrap none --output {path_md} {path_org}")[0]
     except FileNotFoundError:
-        print(f"\n[red]Sorry, couldn't find a [italic]pandoc[/] executable on your path!")
+        print("\n[red]Sorry, couldn't find a [italic]pandoc[/] executable on your path!")
         return False

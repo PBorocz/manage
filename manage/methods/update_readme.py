@@ -29,7 +29,6 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
        - changed that
     ** vA.B.C - <older date>
     ...
-
     """
     # What's the default path we'll be working on? (note: this is primarily for testing
     # purposes), manage is intended to be run from the project's top level directory)
@@ -58,7 +57,6 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
         if not ask_confirm(msg):
             print("Nothing done (but pyproject.toml may still be on new version)")
             return False
-
     # Read and update the Changelog section embedded in our readme with the new version (leaving another
     # "Unreleased" header for future work)
     readme_contents = path_readme.read_text()

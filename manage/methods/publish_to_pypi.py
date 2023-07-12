@@ -3,7 +3,7 @@ from manage.utilities import ask_confirm, run
 
 
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
-    """Have poetry push/publish/upload to pypi"""
+    """Push/publish to PyPI using Poetry."""
     if step.confirm:
         if not ask_confirm("Ok to publish to PyPI?"):
             return False
