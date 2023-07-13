@@ -545,9 +545,9 @@ PATH_add "$VIRTUAL_ENV/bin"
   |--------+-----------------------------------|
 ** Release History
 *** Unreleased
-*** v1.9.11 - 2023-07-12
-*** v1.9.11 - 2023-07-12
-
+*** v0.1.5 - 2023-07-12
+- CHANGED: For method ~update_readme~, we relaxed the requirement on finding README files. Specifically, by default, we search for either README.org or README.md and use the first one found. You can also specify a path to a README file directly with a ~readme~ argument to the method (ie, instead of ~readme_format~).
+- CHANGED: We resolved difference between the built-in targets "show" and "print". It's not "print" consistently (no more "show" option).
 *** v0.1.4 - 2023-07-10
 - ADDED: "print" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
 - ADDED: A simple "~git_add~" method that simply does a `git add {pathspec}` (or 'git add .' if pathspec is not provided).
