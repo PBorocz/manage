@@ -2,6 +2,10 @@
   Inspired immensely by [[https://github.com/tfeldmann/organize/blob/main/manage.py][Thomas Feldman's manage.py]] script in his [[https://github.com/tfeldmann/organize][Organize]] project and the wonderful [[https://github.com/casey/just][Just command runner]], this package automates several common operations for poetry & org-based package management, particularly those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
 ** What is it?
 Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
+
+#+CAPTION: Sample Session
+[[file://Screenshot 2023-07-12 at 5.43.17 PM.png][Sample Session]]
+
 ** Design
 - The exact steps necessary to complete a /recipe/ are specified in a local recipe file (default ~./manage.yaml~) that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
 - A recipe file contains:
@@ -38,9 +42,7 @@ An example ~manage.yaml~ might look like this:
         allow_error: true  # We don't care if no files are clean or if dirs don't exist.
 #+end_src
 ** Assumptions
-To the degree that your development/project/release environment strays from mine, the tool probably becomes less and less relevant!
-
-However, these are my common python project standards, allowing for the ability of this tool to work seamlessly:
+These are my common python project standards, allowing for the ability of this tool to work seamlessly. To the degree that your development/project/release environment strays from mine, the tool probably becomes less relevant.
 *** Tools
 - We assume [[https://github.com][Git/Github]] are used for code version management.
 - We assume [[https://python-poetry.org][poetry]] is used to manage package dependencies *and* build environment.
@@ -50,7 +52,7 @@ However, these are my common python project standards, allowing for the ability 
 - We assume semantic versioning with ~poetry version~ to update/manage our version number. Specifically, this allows us to use ~poetry version~ command's keywords for version updates, ie. patch, minor, major etc.
 *** README Management
 - We assume that a README file exists and is in either [[https://orgmode.org/][Org]] or Markdown format.
-- We assume ~README.org~ / ~README.md~ is kept in the top-level directory.
+- We assume ~README.org/md~ is in the root directory of the project.
 *** CHANGELOG/Release History Management
 - We do *not* use a stand-alone ~CHANGELOG~ file, instead we use a specific section in ~README.org/md~. We assume that list of completed but unreleased items exist under an "*Unreleased*" header. This format provides reasonably clean automation of version/release management within the README file.
 *** Configuration
@@ -59,7 +61,7 @@ However, these are my common python project standards, allowing for the ability 
   | ~GITHUB_USER~                    | Github user id                            | ~John-Jacob_JingleheimerSchmidt~                                           |
   | ~GITHUB_API_TOKEN~               | Github personal API token                 | ~ghp_1234567890ABCDEFG1234567890~                                          |
   | ~GITHUB_API_RELEASES~            | URL to Github release API                 | https://api.github.com/repos/<user>/<project>/releases                   |
-  | ~GITHUB_PROJECT_RELEASE_HISTORY~ | URL to release history (for release body) | https://github.com/<user>/<project/blob/trunk/README.org#release-history |
+  | ~GITHUB_PROJECT_RELEASE_HISTORY~ | URL to release history (for release body) | https://github.com/<user>/<project>/blob/trunk/README.org#release-history |
   |--------------------------------+-------------------------------------------+--------------------------------------------------------------------------|
 Note: technically, we might be able to infer ~GITHUB_PROJECT_RELEASE_HISTORY~ based on the ~GITHUB_USER~ and project name but I think we'd have to infer the name of the "mainline" branch, some have moved ~master~ to ~main~ and others to ~trunk~.
 ** Installation
@@ -229,6 +231,20 @@ Specialised command to 'poetry' build a package distribution, ie. `poetry build`
         allow_error: true  # We don't care if no files are clean or if dirs don't exist.
 #+end_src
 This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line.
+***** *clean*
+General command to delete build artifacts, ie. `rm -rf build *.egg-info`.
+#+begin_src yaml
+  build_my_package:
+    description: Build my distribution package.
+    steps:
+      - method: clean
+        confirm: false
+        allow_error: true
+      - method: build
+        confirm: false
+        echo_stdout: true
+#+end_src
+This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line (confirm: false is set on the step).
 ***** *git_add*
 General command to perform a `git add <pathspec>` operation.
   #+begin_src yaml
