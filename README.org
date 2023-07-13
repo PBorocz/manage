@@ -3,8 +3,7 @@
 ** What is it?
 Single python script that "manages" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI "release".
 
-#+CAPTION: Sample Session
-[[file://Screenshot 2023-07-12 at 5.43.17 PM.png][Sample Session]]
+[[./Screenshot.png][Sample Session]]
 
 ** Design
 - The exact steps necessary to complete a /recipe/ are specified in a local recipe file (default ~./manage.yaml~) that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
