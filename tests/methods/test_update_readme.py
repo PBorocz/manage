@@ -8,24 +8,33 @@ from manage.methods.update_readme import main as update_readme
 
 
 test_readme_md = """
-## Release History
+# Release History
 
-### Unreleased
+## Unreleased
    - [[https://towardsdatascience.com/should-we-use-custom-exceptions-in-python-b4b4bca474ac][custom exceptions]]
 
-### v1.9.10
+## v1.9.10
    - open text open text open text open text open text open text open text open text open text open text open text.
 
-### v1.9.09
+## v1.9.09
    - open text open text open text open text open text open text open text open text open text open text open text.
 """
-
 
 test_readme_org = """
 ** Release History
 
 *** Unreleased
    - [[https://towardsdatascience.com/should-we-use-custom-exceptions-in-python-b4b4bca474ac][custom exceptions]]
+
+*** v1.9.10
+   - open text open text open text open text open text open text open text open text open text open text open text.
+
+*** v1.9.09
+   - open text open text open text open text open text open text open text open text open text open text open text.
+"""
+
+test_readme_org_no_header = """
+** Release History
 
 *** v1.9.10
    - open text open text open text open text open text open text open text open text open text open text open text.
@@ -50,10 +59,19 @@ def path_readme_org():
     if path_.exists():
         path_.unlink()
 
+@pytest.fixture
+def path_readme_org_no_header():
+    path_ = Path("/tmp/README.org")
+    path_.write_text(test_readme_org_no_header)
+    yield path_
+    if path_.exists():
+        path_.unlink()
+
 
 def test_md(path_readme_md):
+    """Test standard case with Markdown file."""
     # Setup
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme_format="md", cwd="/tmp"))
+    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme=str(path_readme_md)))
 
     # Test
     assert update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
@@ -62,13 +80,14 @@ def test_md(path_readme_md):
     assert path_readme_md.exists()
 
     readme = path_readme_md.read_text()
-    assert "### Unreleased" in readme
+    assert "## Unreleased" in readme  # Note: Second level header here!!
     assert "v1.9.11" in readme
 
 
 def test_org(path_readme_org):
+    """Test standard case with Org file."""
     # Setup
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme_format="org", cwd="/tmp"))
+    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme=str(path_readme_org)))
 
     # Test
     assert update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
@@ -77,5 +96,47 @@ def test_org(path_readme_org):
     assert path_readme_org.exists()
 
     readme = path_readme_org.read_text()
-    assert "*** Unreleased" in readme
+    assert "*** Unreleased" in readme  # Note: *THIRD* level header here!!
+    assert "v1.9.11" in readme
+
+
+def test_no_file_available():
+    """Test case where we don't have a README at all!"""
+    # Setup (note: we don't specify the name of the file here but we DO need to set cwd
+    # so we don't accidentally pick up the README file in our own project!)
+    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(cwd="/tmp"))
+
+    # Test
+    assert not update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+
+
+def test_file_not_found():
+    """Test case where we have a README specified but it doesn't actually exist."""
+    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme="/tmp/foobar"))
+
+    # Test
+    assert not update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+
+
+def test_no_unreleased_header(path_readme_org_no_header):
+    """Test case where we have a README specified but it doesn't actually exist."""
+    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme=str(path_readme_org)))
+
+    # Test
+    assert not update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+
+
+def test_file_from_default(path_readme_md):
+    """Test special case where we find a default README file (in this case, Markdown)."""
+    # Setup (note: we don't specify the name of the file here!
+    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(cwd="/tmp"))
+
+    # Test
+    assert update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+
+    # Confirm
+    assert path_readme_md.exists()
+
+    readme = path_readme_md.read_text()
+    assert "## Unreleased" in readme  # Note: Second level header here!!
     assert "v1.9.11" in readme

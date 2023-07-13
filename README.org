@@ -214,7 +214,7 @@ We provide a summary of the methods supported (listed alphabetically):
 | ~publish_to_pypi~                | Yes           | No         |                   |
 | ~run_command~                    | Yes           | Yes        | ~command~           |
 | ~run_pre_commit~                 | No            | No         |                   |
-| ~update_readme~                  | Yes           | Yes        | ~readme_format~     |
+| ~update_readme~                  | Yes           | Yes        | ~readme~            |
 |--------------------------------+---------------+------------+-------------------|
 **** Details
 ***** *build*
@@ -398,53 +398,58 @@ General command to run the ~pre-commit~ tool (if you use it).
 This command takes no argument and *will* ask for confirmation unless `--no-confirm` is set on the command-line.
 ***** *update_readme*
 Very specialised command to move "Unreleased" items into a dedicated "release" section of a README file.
-
  #+begin_src yaml
    build_my_package:
      description: Build my distribution package.
      steps:
        - method: update_readme
          arguments:
-           readme_format: org
+           readme: ./docs/README.txt
 #+end_src
 
-This command takes no argument and *will* ask for confirmation unless `--no-confirm` is set on the command-line.
+ #+begin_src yaml
+   build_my_package:
+     description: Build my distribution package.
+     steps:
+       - method: update_readme     # Will look for either README.org or README.md!
+#+end_src
+
+This command *will* ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ****** Arguments
-- ~readme_format~ Required, a string that is one of ~org~ or ~md~.
+- ~readme~ Optional, a string that represents a full path to your respective README.* file. If not specified, we search for ~./README.org~ and ~./README.md~.
 
-****** README files can be in one of two formats:
+****** README Formats
+README files are usually one of two formats, .org or .md. In either case, we assume that /Unreleased/ appears on a line by itself (irrespective of it's header depth).
 ******* ORG (.org) Format
-A supported README in org format might be:
+A README in org format might be:
  #+begin_src org
    ,* My Project
-   ,** Stuff...
-   ,** More Stuff...
-   ,** Releases
-   ,*** Unreleased
-       - FIX: Made the gizmo fit into the whatchamacallit.
-       - ADD: Capability to make time go backwards (required confirmation beforehand)
-   ,*** v1.5.10 - 2023-05-15
-       - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
-       ....
+   ,* Stuff...
+   ,* More Stuff...
+   ,* Releases
+   ,** Unreleased
+        - FIX: Made the gizmo fit into the whatchamacallit.
+        - ADD: Capability to make time go backwards (required confirmation beforehand)
+        - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+        ....
 #+end_src
 
 We use the ~Unreleased~ tag line and "create" a new release (using the current version number in ~pyproject.toml~ and today's date), transforming the file to look like the following:
  #+begin_src org
    ,* My Project
-   ,** Stuff...
-   ,** More Stuff...
-   ,** Releases
-   ,*** Unreleased
-   ,*** v1.5.11 - 2023-07-12
-       - FIX: Made the gizmo fit into the whatchamacallit.
-       - ADD: Capability to make time go backwards (required confirmation beforehand)
-   ,*** v1.5.10 - 2023-05-15
-       - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+   ,* Stuff...
+   ,* More Stuff...
+   ,* Releases
+   ,** Unreleased
+   ,** v1.5.11 - 2023-07-12
+      - FIX: Made the gizmo fit into the whatchamacallit.
+      - ADD: Capability to make time go backwards (required confirmation beforehand)
+      - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
        ....
 #+end_src
 ******* Markdown (.md) Format
-A supported README in markdown format might be:
+Similarly, a README in markdown format might be (note that the Unreleased line is at a different header level than the org-format example above!)
  #+begin_src markdown
    # My Project
 
@@ -540,6 +545,8 @@ PATH_add "$VIRTUAL_ENV/bin"
   |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+*** v1.9.11 - 2023-07-12
+*** v1.9.11 - 2023-07-12
 
 *** v0.1.4 - 2023-07-10
 - ADDED: "print" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
