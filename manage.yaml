@@ -1,39 +1,32 @@
 ################################################################################
-bump:
+1_bump:
   description: Bump the version number to the next /patch/ level and commit locally
   steps:
     - method: poetry_bump_version
       arguments:
         poetry_version: patch
-
     - method: update_readme
-      arguments:
-        readme_format: "org"
-
     - method: git_commit_version_files
 
 ################################################################################
-build:
+2_build:
   description: Build our distribution(s) and release to "github" (not PyPI!)
   steps:
     - method: poetry_lock_check
       confirm: false
-
     - method: poetry_lock_refresh
       confirm: false
-
     - recipe: clean
       confirm: false
-
     - method: build
       confirm: false
       echo_stdout: true
 
-release:
+################################################################################
+3_release:
   description: Build our distribution(s) *and* release to "github" (not PyPI!)
   steps:
-    - recipe: build
-
+    - recipe: 2_build
     - method: git_push_to_github
       confirm: false
       echo_stdout: true

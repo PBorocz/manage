@@ -5,8 +5,6 @@
       arguments:
         poetry_version: patch
     - method: update_readme
-      arguments:
-        readme_format: "md"
     - method: git_commit_version_files
 
 2_build:
