@@ -22,4 +22,4 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
         if not ask_confirm(confirm):
             return False
 
-    return run(step, f'git commit --message "Bump version to {message}" {pathspec}')[0]
+    return run(step, f'git commit --message "{message}" {pathspec}')[0]
