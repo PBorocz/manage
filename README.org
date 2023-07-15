@@ -597,7 +597,8 @@ PATH_add "$VIRTUAL_ENV/bin"
 *** Unreleased
 *** v0.1.6 - 2023-07-15
 - ADD: ~sass~ method to pre-process SCSS to CSS files.
-- ADD: general ~git_add~ method to stage file(s) to local repository.
+- ADD: General ~git_add~ method to stage file(s) to local repository.
+- FIX: Bug in identification of optionally-typed arguments (albeit not clear if used anywhere).
 *** v0.1.5 - 2023-07-12
 - CHANGED: For method ~update_readme~, we relaxed the requirement on finding README files. Specifically, by default, we search for either README.org or README.md and use the first one found. You can also specify a path to a README file directly with a ~readme~ argument to the method (ie, instead of ~readme_format~).
 - CHANGED: We resolved difference between the built-in targets "show" and "print". It's not "print" consistently (no more "show" option).

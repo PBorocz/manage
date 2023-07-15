@@ -80,7 +80,7 @@ def message(
 
 
 def parse_dynamic_argument(arg: str) -> [str, type]:
-    """Parse a dynamic argument name into a typed version.
+    """Use the argument name to identify what type of argument we MIGHT expect.
 
     Specifically:
     "anArgument"  -> ["anArgument", str]

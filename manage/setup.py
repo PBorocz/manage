@@ -29,7 +29,7 @@ def parse_dynamic_arguments(raw_recipes: dict) -> list[str, type]:
             for argument, value in step.get("arguments", {}).items():
                 name_, type_ = parse_dynamic_argument(argument)
                 if name_ in arguments:
-                    if type_ != arguments[name_]:
+                    if type_ != arguments[name_][1]:
                         errors.append(name_)
                 else:
                     arguments[name_] = (recipe_name, type_, value)
