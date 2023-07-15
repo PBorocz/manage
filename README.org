@@ -595,6 +595,7 @@ PATH_add "$VIRTUAL_ENV/bin"
   |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+*** v0.1.6 - 2023-07-15
 - ADD: ~sass~ method to pre-process SCSS to CSS files.
 - ADD: general ~git_add~ method to stage file(s) to local repository.
 *** v0.1.5 - 2023-07-12
