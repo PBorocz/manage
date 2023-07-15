@@ -37,17 +37,17 @@ def ask_confirm(text: str) -> bool:
 
 def success(color: str = "green") -> None:
     """Render/print a success symbol in the specified color."""
-    print(f"[{color}]:heavy_check_mark:")
+    print(f"[{color}]✔")
 
 
 def warning(color: str = "yellow") -> None:
     """Render/print a failure symbol (almost always in yellow but overrideable)."""
-    print(f"[{color}]:warning_sign:")
+    print(f"[{color}]⚠")
 
 
 def failure(color: str = "red") -> None:
     """Render/print a failure symbol (almost always in red but overrideable)."""
-    print(f"[{color}]:heavy_multiplication_x:")
+    print(f"[{color}]✖")
 
 
 def replace_rich_markup(string: str) -> str:
@@ -58,13 +58,23 @@ def replace_rich_markup(string: str) -> str:
     return return_
 
 
-def message(message: str, overhead: int = 0, color: str = 'blue', end_success: bool = False, end_failure: bool = False) -> str:
+def message(
+        message: str,
+        overhead: int = 0,
+        color: str = 'blue',
+        end_success: bool = False,
+        end_failure: bool = False,
+        end_warning: bool = False) -> str:
     """Create and print a message string, padded to width (minus markup) and in the specified color."""
     padding = TERMINAL_WIDTH - overhead - len(replace_rich_markup(message))
     formatted = f"[{color}]{message}{'.' * padding}"
+
     print(formatted, end="", flush=True)
+
     if end_success:
         success(color=color)
+    elif end_warning:
+        warning(color=color)
     elif end_failure:
         failure(color=color)
 
@@ -127,7 +137,6 @@ def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | 
 
     pyproject = toml.loads(path_pyproject.read_text())
 
-    messages = []
     ################################################################################
     # Lookup the package which "should" represent the current package we're working on:
     ################################################################################
@@ -139,23 +148,20 @@ def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | 
             package = package_include.get("include")
         except IndexError:
             ...
-    if package is None:
-        messages.append("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
+    if package is None and not quiet:
+        warning()
+        print("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
 
     ################################################################################
     # Similarly, get our current version:
     ################################################################################
     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-    if version is None:
-        messages.append("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
+    if version is None and not quiet:
+        warning()
+        print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
 
-    if not quiet:
-        if package and version:
-            success()
-        else:
-            warning()
-            for msg in messages:
-                print(msg)
+    if (package and version) and not quiet:
+        success()
 
     return version, package
 

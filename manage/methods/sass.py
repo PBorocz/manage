@@ -14,7 +14,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
 
     # Check for argument..
     if not step.arguments or 'pathspec' not in step.arguments:
-        message("Sorry, we require a 'pathspec' entry in the arguments for this method.", color="red", end_failure=True)
+        message("Sorry, the `sass` method requires a 'pathspec' argument.", color="red", end_failure=True)
         return False
 
     pathspec = step.arguments.get('pathspec')
