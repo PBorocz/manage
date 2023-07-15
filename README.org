@@ -203,23 +203,24 @@ The following recipes are built-in and available irrespective of your recipe fil
 **** Summary
 We provide a summary of the methods supported (listed alphabetically):
 |--------------------------------+---------------+------------+-------------------|
-| Method Name                    | Confirmation? | Arguments? | Arguments         |
+| Method Name                    | Confirmation? | Arguments? | Arguments..       |
 |--------------------------------+---------------+------------+-------------------|
 | ~build~                          | Yes           | No         |                   |
 | ~clean~                          | Yes           | No         |                   |
-| ~git_add~                        | Yes           | Yes        | ~pathspec~          |
+| ~git_add~                        | Yes           | Optional   | ~pathspec~          |
 | ~git_commit_version_files~       | Yes           | No         |                   |
 | ~git_create_release~             | Yes           | No         |                   |
 | ~git_create_tag~                 | Yes           | No         |                   |
 | ~git_push_to_github~             | Yes           | No         |                   |
-| ~pandoc_convert_org_to_markdown~ | No            | Yes        | ~path_md~, ~path_org~ |
-| ~poetry_bump_version~            | Yes           | Yes        | ~poetry_version~    |
+| ~pandoc_convert_org_to_markdown~ | No            | Required   | ~path_md~, ~path_org~ |
+| ~poetry_bump_version~            | Yes           | Required   | ~poetry_version~    |
 | ~poetry_lock_check~              | No            | No         |                   |
 | ~poetry_lock_refresh~            | Yes           | No         |                   |
 | ~publish_to_pypi~                | Yes           | No         |                   |
-| ~run_command~                    | Yes           | Yes        | ~command~           |
+| ~run_command~                    | Yes           | Required   | ~command~           |
 | ~run_pre_commit~                 | No            | No         |                   |
-| ~update_readme~                  | Yes           | Yes        | ~readme~            |
+| ~sass~                           | Yes           | Required   | pathspec          |
+| ~update_readme~                  | Yes           | Optional   | ~readme~            |
 |--------------------------------+---------------+------------+-------------------|
 **** Details
 ***** *build*
@@ -262,6 +263,22 @@ General command to perform a `git add <pathspec>` operation.
 #+end_src
 ****** Arguments
 - ~pathspec~ Optional path specification of dir(s) and/or file(s) to stage. Default if not specified is `.`.
+***** *git_commit*
+General command to perform a `git commit <pathspec>` operation.
+  #+begin_src yaml
+    build_my_package:
+      description: Build my distribution package.
+      steps:
+        - method: git_commit
+          arguments:
+            pathspec: "app/version.py" # Optional
+            message: "My commit"       # Optional
+        - method: ...
+          ...
+#+end_src
+****** Arguments
+- ~pathspec~ Optional path specification of dir(s) and/or file(s) to commit. Default if not specified is `.`.
+- ~message~ Optional commit message. Default if not specified is today's date (yyyymmddThhmm).
 ***** *git_commit_version_files*
 Specialised command to git stage and commit two files relevant to my build process: ~pyproject.toml~ and ~README.(org|md)~. Other methods will update these files for version management and this method is provided to get them into git on behalf of a release.
   #+begin_src yaml
@@ -415,6 +432,20 @@ General command to run the ~pre-commit~ tool (if you use it).
          allow_error: false
 #+end_src
 This command takes no argument and *will* ask for confirmation unless `--no-confirm` is set on the command-line.
+***** *sass*
+Specialised command to run a `sass` command to convert scss to css.
+  #+begin_src yaml
+    build_my_package:
+      description: Build my distribution package.
+      steps:
+        - method: sass
+          arguments:
+            pathspec: "./app/static/css/sass/mystyles.scss ./app/static/css/mystyles.css"
+        - method: ...
+          ...
+#+end_src
+****** Arguments
+- ~pathspec~ Required path specification of dir(s) and/or file(s) to run.
 ***** *update_readme*
 Very specialised command to move "Unreleased" items into a dedicated "release" section of a README file.
  #+begin_src yaml

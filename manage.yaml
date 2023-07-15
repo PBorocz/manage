@@ -10,7 +10,7 @@
 
 ################################################################################
 2_build:
-  description: Build our distribution(s) and release to "github" (not PyPI!)
+  description: Build our distribution(s)
   steps:
     - method: poetry_lock_check
       confirm: false
@@ -24,7 +24,7 @@
 
 ################################################################################
 3_release:
-  description: Build our distribution(s) *and* release to "github" (not PyPI!)
+  description: Release our distribution to github.
   steps:
     - recipe: 2_build
     - method: git_push_to_github
