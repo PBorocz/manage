@@ -3,11 +3,11 @@ import re
 import shlex
 import subprocess
 import sys
-import toml
 from importlib import metadata
 from pathlib import Path
 from typing import Final, Any
 
+import tomllib
 from rich import print
 from rich.console import Console
 
@@ -135,7 +135,7 @@ def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | 
     if not quiet:
         message(f"Reading package & version ({path_pyproject})")
 
-    pyproject = toml.loads(path_pyproject.read_text())
+    pyproject = tomllib.loads(path_pyproject.read_text())
 
     ################################################################################
     # Lookup the package which "should" represent the current package we're working on:

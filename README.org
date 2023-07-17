@@ -215,7 +215,6 @@ We provide a summary of the methods supported (listed alphabetically):
 | ~pandoc_convert_org_to_markdown~ | No            | Required   | ~path_md~, ~path_org~ |
 | ~poetry_bump_version~            | Yes           | Required   | ~poetry_version~    |
 | ~poetry_lock_check~              | No            | No         |                   |
-| ~poetry_lock_refresh~            | Yes           | No         |                   |
 | ~publish_to_pypi~                | Yes           | No         |                   |
 | ~run_command~                    | Yes           | Required   | ~command~           |
 | ~run_pre_commit~                 | No            | No         |                   |
@@ -376,24 +375,14 @@ Specialised command to "bump" the version of a project/package using Poetry's ve
 ****** Arguments
 - ~poetry_version~ Required, the default level of version "bump" to perform. Must be one of 'patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor', 'prerelease' (see [[https://python-poetry.org/docs/cli/#version][Poetry version command]] for more information).
 ***** *poetry_lock_check*
-General command to perform a poetry lock "check" to verify that ~poetry.lock~ is consistent with ~pyproject.toml~
+General command to perform a poetry lock "check" to verify that ~poetry.lock~ is consistent with ~pyproject.toml~. If it isn't, will update/refresh ~poetry.lock~ (after confirmation).
   #+begin_src yaml
     build_my_package:
       description: Build my distribution package.
       steps:
         - method: poetry_lock_check
 #+end_src
-This command takes *no* arguments and will *NOT* ask for confirmation.
-***** *poetry_lock_refresh*
-General command to update/refresh a poetry lock file.
-
-  #+begin_src yaml
-    build_my_package:
-      description: Build my distribution package.
-      steps:
-        - method: poetry_lock_check
-#+end_src
-This command takes *no* arguments but *will* ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current ~poetry.lock~ file.
+This command takes *no* arguments but *will* ask for confirmation before running `poetry lock` unless `--no-confirm` is set on the command-line.
 ***** *publish_to_pypi*
 Specialised command to publish your package to PyPI.
 
@@ -553,28 +542,79 @@ PATH_add "$VIRTUAL_ENV/bin"
 - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food ;-).
 ** GTD
 - [TODO] Add more in-depth help output the includes the description from each step in the respective manage.yaml specified.
-- [TODO] Do we want to have ALL methods have a confirmation and just set their "confirm" flag default accordingly?
-- [TODO] Fix bug in ~poetry_bump_version~ when parsing a markdown README file (is a line off trying to find "Unreleased").
-- [TODO] Confirm that a non-zero exit status (eg. from ~poetry_lock_check~) is handled correctly.
-- [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory. Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
+  We want our help to look like [[https://github.com/pycontribs/mk][this]] ... whereas right now it looks like this (ie. default argparse)
+  #+begin_src shell
+    usage: [-h] [--version] [-r RECIPES] [--confirm | --no-confirm] [--poetry_version POETRY_VERSION] target
+
+    positional arguments:
+      target                Please specify a specific recipe to run from your recipe file: 1_bump, 2_build, 3_release, clean
+
+    options:
+      -h, --help            show this help message and exit
+      --version
+      -r RECIPES, --recipes RECIPES
+                            Override default recipes yaml file, default is './manage.yaml'.
+      --confirm, --no-confirm
+                            Override recipe's 'confirm' setting to run all confirmable steps as either confirm or don't confirm, default is None.
+      --poetry_version POETRY_VERSION
+                            Str argument for recipe '1_bump', default is 'patch'.
+  #+end_src
+
+Usage: manage [OPTIONS] <target> ~METHOD__ARGS~
+
+Options
+--verbose    -v INTEGER Increase verbosity, default is 0 (Info).
+--version       Show program's version number and exit.
+--help       -h Show this help message and exit.
+--recipes    -r Override default recipes yaml file, default is './manage.yaml'.
+--no-confirm    Override recipe's 'confirm' setting to run all "confirmable" steps as either confirm or don't confirm, default is 'confirm'.
+
+Targets
+~1_bmp~   ....
+~2_build~ ....
+...
+
+Method Arguments
+--poetry-version  STRING argument for recipe '~1_bump~', default is 'patch'.
+
+
+- [TODO] Convert using git python API/library instead of command-line git?
+
+- [TODO] Confirm consistent usage of confirm, what's the default? where is it set? does each method has a different default?...
+
+- [TODO] Confirm consistent usage of messages and print commands in methods.
+
 - [TODO] Add a command-line parameter for verbosity (-v, -vv?)
   - -v:
     - print absolute paths associated with readme and pyproject.
     - print package name and version found, how many recipes encountered etc.
   - -vv:
     - add explicit output of command executed (sorta like ~echo_stdout~ parameter does but for ALL methods/steps?)
+
+- [TODO] Do we want to have ALL methods have a confirmation and just set their "confirm" flag default accordingly?
+
+- [TODO] Confirm that a non-zero exit status (eg. from ~poetry_lock_check~) is handled correctly.
+
+- [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory. Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)
+
+- [TODO] Confirm and fix bug in ~poetry_bump_version~ when parsing a markdown README file (is a line off trying to find "Unreleased").
+
 - [TODO] Can we refactor methods/*.py to have/use a common-base class?
    Might significantly reduce duplicate code associated with confirmation and return statuses?
+
 - [TODO] Would be nice on the "check" request to show statistics after the success() flags (and also on -v or -vv?)
+
 - [TODO] Handle steps to support Sphinx documentation management:
   - Pull version from pyproject.toml and push to docs/source/conf.py (if it exists)
   - (don't think we need anything else as pushing to gh will automatically trigger a new RTD build)
+
 - [TODO] Can we refactor and dynamically create the ~GITHUB_PROJECT_RELEASE_HISTORY~ URL?
   We know the package name (from pyproject.toml)    -  90% confidence
   We know the user name (from another env variable  - 100% confidence
   We can somewhat surely assume the default branch? -  50% confidence.
+
 - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
-- [RESEARCH] Can we get the "help" to look like [[https://github.com/pycontribs/mk][this]]?
+
 - [WORKING] Status of ongoing test development:
   |--------+-----------------------------------|
   | Status | Module                            |
@@ -595,6 +635,9 @@ PATH_add "$VIRTUAL_ENV/bin"
   |--------+-----------------------------------|
 ** Release History
 *** Unreleased
+- CHANGED: Removed method `poetry-lock-refresh`. The underlying command `poetry lock --no-update` will be done automatically (net of confirmation) as part of the `poetry-lock-check` method.
+- CHANGED: Moved up to python 3.11 (3.11.3 specifically) to take advantage of built-in TOML support.
+  Contact me if you think it's important to you that I support backwards compatibility with older python versions (that don't have tomllib built-in).
 *** v0.1.6 - 2023-07-15
 - ADD: ~sass~ method to pre-process SCSS to CSS files.
 - ADD: General ~git_add~ method to stage file(s) to local repository.

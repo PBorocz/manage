@@ -12,11 +12,10 @@ from manage.models import Configuration, Recipes, Recipe, Step
 from manage.utilities import message, success, failure, parse_dynamic_argument
 
 
-def read_parse_recipes(path_to_recipes: Path) -> [dict, list, list]:
+def read_parse_recipes(path_to_recipes: Path) -> [dict, list]:
     """Do the core TOML read of the user's specified Recipes file but don't convert into our object tree."""
-    raw_recipes = read_recipes_file(path_to_recipes)  # Will sys.exit(1) if file not available!
-
-    return raw_recipes, list(raw_recipes.keys()), parse_dynamic_arguments(raw_recipes)
+    raw_recipes = read_recipes_file(path_to_recipes)  # FIXME: Will sys.exit(1) if file not available!
+    return raw_recipes, parse_dynamic_arguments(raw_recipes)
 
 
 def parse_dynamic_arguments(raw_recipes: dict) -> list[str, type]:
