@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
-from manage.utilities import get_package_version_from_pyproject_toml
+from manage.utilities import get_package_version_from_pyproject_toml, message
 
 
 TStep = TypeVar("Step")
@@ -50,15 +50,14 @@ class Step(BaseModel):
 
     def reflect_runtime_arguments(self, args: argparse.Namespace) -> str:
         """Update the step based on any/all arguments received on the command-line."""
-        from manage.utilities import message, success
-
         # Common across all steps (for now, just the "confirm" flag):
         if args.confirm is not None:
 
             # Is the command-line setting DIFFERENT than that for the step?
             if self.confirm != args.confirm:
                 # FIXME: Verbose only?
-                msg = f"Overriding [italic]confirm[/] in {self.name()} from [italic]{self.confirm}[/] to [italic]{args.confirm}[/]"
+                msg = f"Overriding [italic]confirm[/] in {self.name()} from " \
+                    "[italic]{self.confirm}[/] to [italic]{args.confirm}[/]"
                 message(msg, color='light_slate_grey', end_success=True)
                 self.confirm = args.confirm
 
@@ -73,7 +72,8 @@ class Step(BaseModel):
                         # Yep!, Override it!!
                         self.arguments[step_arg] = runtime_arg_value
                         # FIXME: Verbose only?
-                        msg = f"Overriding: [italic]{step_arg}[/] in {self.name()} from [italic]{step_arg_value}[/] to [italic]{runtime_arg_value}[/]"
+                        msg = f"Overriding: [italic]{step_arg}[/] in {self.name()} from " \
+                            "[italic]{step_arg_value}[/] to [italic]{runtime_arg_value}[/]"
                         message(msg, color='light_slate_grey', end_success=True)
 
 
@@ -132,6 +132,25 @@ class Recipes(BaseModel):
                     if self.get(step.recipe) is None:
                         return_.append(f"Step: '{step.recipe}' in recipe={id_} can't be found in this file!")
         return return_
+
+
+class Argument(BaseModel):
+    """Possible argument for a method."""
+    name: str
+    type_: type
+    default: Any | None = None
+
+
+class Arguments(BaseModel):
+    """Collection of Arguments for a method."""
+    arguments: list[Argument] = []
+
+    def get_argument(self, argument_name: str) -> Argument | None:
+        """Lookup Argument by name."""
+        for arg in self.arguments:
+            if arg.name == argument_name:
+                return arg
+        return None
 
 
 class Configuration(BaseModel):

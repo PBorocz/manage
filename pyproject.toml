@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manage"
-version = "0.1.6"
+version = "0.1.7"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
@@ -21,6 +21,7 @@ pydantic = "^1.10.4"
 [tool.poetry.group.dev.dependencies]
 pysnooper = "^1.1.1"
 pytest = "^7.2.1"
+pytest-git = "^1.7.0"
 
 [build-system]
 requires = ["poetry-core"]

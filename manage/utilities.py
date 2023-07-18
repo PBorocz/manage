@@ -79,24 +79,6 @@ def message(
         failure(color=color)
 
 
-def parse_dynamic_argument(arg: str) -> [str, type]:
-    """Use the argument name to identify what type of argument we MIGHT expect.
-
-    Specifically:
-    "anArgument"  -> ["anArgument", str]
-    "an_argument" -> ["an_argument", str]
-    "aStrArg_str" -> ["aStrArg", str]
-    "another_int" -> ["another", int]
-    "yes_no_bool" -> ["yes_no", bool]
-    """
-    mapping = {"str": str, "int": int, "bool": bool}
-    pieces = arg.split("_")
-    if pieces[-1] in mapping:
-        type_ = mapping.get(pieces[-1])
-        return ["_".join(pieces[0:-1]), type_]
-    return [arg, str]
-
-
 def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step" but will create circular import!
     """Run the command for the specified Step, capturing output and signal success/failure."""
     if not step.quiet_mode:

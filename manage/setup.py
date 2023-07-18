@@ -2,47 +2,17 @@
 import importlib
 import sys
 from pathlib import Path
-from typing import Callable, Final
+from typing import Callable
 
 import yaml
 from rich import print
 
-from manage import methods as methods_module
 from manage.models import Configuration, Recipes, Recipe, Step
-from manage.utilities import message, success, failure, parse_dynamic_argument
+from manage.utilities import message, success, failure
 
 
-def read_parse_recipes(path_to_recipes: Path) -> [dict, list]:
-    """Do the core TOML read of the user's specified Recipes file but don't convert into our object tree."""
-    raw_recipes = read_recipes_file(path_to_recipes)  # FIXME: Will sys.exit(1) if file not available!
-    return raw_recipes, parse_dynamic_arguments(raw_recipes)
-
-
-def parse_dynamic_arguments(raw_recipes: dict) -> list[str, type]:
-    """Parse optional command-line arguments from the steps in this specific file."""
-    # Use a simple, *manual* parse of the recipe file provided!
-    arguments = dict()
-    errors = list()
-    for recipe_name, recipe in raw_recipes.items():
-        for step in recipe.get("steps", []):
-            for argument, value in step.get("arguments", {}).items():
-                name_, type_ = parse_dynamic_argument(argument)
-                if name_ in arguments:
-                    if type_ != arguments[name_][1]:
-                        errors.append(name_)
-                else:
-                    arguments[name_] = (recipe_name, type_, value)
-    if errors:
-        print("[red]Sorry, the following arguments in your recipes file have inconsistent types, please correct!")
-        for error in errors:
-            print(f"[red]{error}")
-        sys.exit(1)
-
-    return list(arguments.items())
-
-
-def read_recipes_file(path_recipes: Path) -> dict:
-    """Do a raw read of the specified recipe file path, doing no other processing!."""
+def read_recipes(path_recipes: Path) -> dict:
+    """Do a raw read of the specified recipe file path, doing *no* other processing!."""
     message(f"Reading recipes ({path_recipes})")
     if not path_recipes.exists():
         failure()
@@ -53,6 +23,50 @@ def read_recipes_file(path_recipes: Path) -> dict:
     raw_recipes = yaml.safe_load(path_recipes.read_text())
     success()
     return raw_recipes
+
+
+# def read_parse_recipes(path_to_recipes: Path) -> [dict, list]:
+#     """Do the core TOML read of the user's specified Recipes file but don't convert into our object tree."""
+#     raw_recipes = read_recipes_file(path_to_recipes)  # FIXME: Will sys.exit(1) if file not available!
+#     return raw_recipes, parse_dynamic_arguments(raw_recipes)
+#
+# def parse_dynamic_argument(arg: str) -> [str, type]:
+#     """Use the argument name to identify what type of argument we MIGHT expect.
+#     Specifically:
+#     "anArgument"  -> ["anArgument", str]
+#     "an_argument" -> ["an_argument", str]
+#     "aStrArg_str" -> ["aStrArg", str]
+#     "another_int" -> ["another", int]
+#     "yes_no_bool" -> ["yes_no", bool]
+#     """
+#     mapping = {"str": str, "int": int, "bool": bool}
+#     pieces = arg.split("_")
+#     if pieces[-1] in mapping:
+#         type_ = mapping.get(pieces[-1])
+#         return ["_".join(pieces[0:-1]), type_]
+#     return [arg, str]
+#
+# def parse_dynamic_arguments(raw_recipes: dict) -> list[str, type]:
+#     """Parse optional command-line arguments from the steps in this specific file."""
+#     # Use a simple, *manual* parse of the recipe file provided!
+#     arguments = dict()
+#     errors = list()
+#     for recipe_name, recipe in raw_recipes.items():
+#         for step in recipe.get("steps", []):
+#             for argument, value in step.get("arguments", {}).items():
+#                 name_, type_ = parse_dynamic_argument(argument)
+#                 if name_ in arguments:
+#                     if type_ != arguments[name_][1]:
+#                         errors.append(name_)
+#                 else:
+#                     arguments[name_] = (recipe_name, type_, value)
+#     if errors:
+#         print("[red]Sorry, the following arguments in your recipes file have inconsistent types, please correct!")
+#         for error in errors:
+#             print(f"[red]{error}")
+#         sys.exit(1)
+
+#     return list(arguments.items())
 
 
 def uptype_recipes(args, raw_recipes: dict, methods: dict[Callable] | None = None) -> Recipes:

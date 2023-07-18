@@ -14,8 +14,6 @@
   steps:
     - method: poetry_lock_check
       confirm: false
-    - method: poetry_lock_refresh
-      confirm: false
     - recipe: clean
       confirm: false
     - method: build
@@ -24,7 +22,7 @@
 
 ################################################################################
 3_release:
-  description: Release our distribution to github.
+  description: Release our distribution to our github repository
   steps:
     - recipe: 2_build
     - method: git_push_to_github
@@ -34,7 +32,7 @@
 
 ################################################################################
 clean:
-  description: Clean out our temp files and ALL previous builds.
+  description: Clean out our temp files and ALL previous builds
   steps:
     - method: clean
       confirm: false
