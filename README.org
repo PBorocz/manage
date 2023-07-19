@@ -636,7 +636,6 @@ PATH_add "$VIRTUAL_ENV/bin"
 - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
 ** Release History
 *** Unreleased
-*** v0.1.8 - 2023-07-18
 - INTERNAL: Added tests for ~git_add~ and ~git_commit~ methods.
 *** v0.1.7 - 2023-07-18
 - CHANGED: Removed method `poetry-lock-refresh`. The underlying command `poetry lock --no-update` will be done automatically (net of confirmation) as part of the `poetry-lock-check` method.
