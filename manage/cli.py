@@ -126,22 +126,22 @@ def do_help(path_recipes: Path, raw_recipes: dict):
 
     ################################################################################
     table = Table.grid(expand=True)
-    # table.add_row("--verbose/-v", "INTEGER Increase verbosity, default is 0 (Info)")
-    table.add_row(blue("--version"),    "Show program's version number and exit")
-    table.add_row(blue("--help/-h"),    "Show this help message and exit")
-    table.add_row(blue("--recipes/-r"), "Override default recipes yaml file, default is './manage.yaml'")
-    table.add_row(blue("--no-confirm"),
-                  "Override individual method 'confirm' setting to run [italic]confirmable[/] methods as "\
-                  "all confirm or all no confirm")
-    CONSOLE.print(Panel(table, title=green("OPTIONS"), title_align="left"))
-
-    ################################################################################
-    table = Table.grid(expand=True)
     for recipe_name in sorted(list(raw_recipes.keys())):
         recipe = raw_recipes[recipe_name]
         table.add_row(blue(recipe_name), recipe.get("description"))
-    CONSOLE.print(Panel(table, title=green(f"TARGETS (in {path_recipes.name})"), title_align="left"))
+    CONSOLE.print(Panel(table, title=green(f"TARGETS ({path_recipes})"), title_align="left"))
 
+
+    ################################################################################
+    table = Table.grid(expand=True)
+    # table.add_row("--verbose/-v", "INTEGER Increase verbosity, default is 0 (Info)")
+    table.add_row(blue("--version"),    "Show program's version number and exit.")
+    table.add_row(blue("--help/-h"),    "Show this help message and exit.")
+    table.add_row(blue("--recipes/-r"), "Override default recipes yaml file, default is './manage.yaml'.")
+    table.add_row(blue("--no-confirm"),
+                  "Override individual method 'confirm' setting to run [italic]confirmable[/] methods as "\
+                  "all confirm or all no confirm.")
+    CONSOLE.print(Panel(table, title=green("OPTIONS"), title_align="left"))
 
 def main():
 

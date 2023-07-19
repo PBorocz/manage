@@ -60,7 +60,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
 
     # Confirmation before we continue?
     if step.confirm:
-        msg = f"Ok to update {readme_name}'s 'Unreleased' header to {release_tag}?"
+        msg = f"Ok to update {readme_name}'s 'Unreleased' header to '{release_tag}'?"
         if not ask_confirm(msg):
             print("Nothing done")
             return False

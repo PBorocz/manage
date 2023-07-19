@@ -2,15 +2,15 @@
 1_bump:
   description: Bump the version number to the next /patch/ level and commit locally
   steps:
-    - method: poetry_bump_version
-      arguments:
-        poetry_version: patch
+    # - method: poetry_bump_version
+    #   arguments:
+    #     poetry_version: patch
 
-    - method: update_readme
+    # - method: update_readme
 
-    - method: git_add
-      arguments:
-        pathspec: "README.org pyproject.toml"
+    # - method: git_add
+    #   arguments:
+    #     pathspec: "README.org pyproject.toml"
 
     - method: git_commit
 
