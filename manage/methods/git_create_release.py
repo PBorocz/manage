@@ -12,9 +12,9 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Create github release."""
     now = datetime.now().strftime('%Y-%m-%dT%H%M')
 
-    if step.confirm:
-        if not ask_confirm(f"Ok to create github release using tag {configuration.version()}?"):
-            return False
+    confirm = f"Ok to create github release using tag '[italic]{configuration.version}[/]'?"
+    if step.confirm and not ask_confirm(confirm):
+        return False
 
     url = os.environ["GITHUB_API_RELEASES"]
     headers = {
@@ -23,13 +23,13 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
         "X-GitHub-Api-Version": "2022-11-28",
     }
     auth = (os.environ["GITHUB_USER"], os.environ["GITHUB_API_TOKEN"])
-    body = f"{configuration.version()} | {now}. Details: {os.environ['GITHUB_PROJECT_RELEASE_HISTORY']}"
+    body = f"{configuration.version} | {now}. Details: {os.environ['GITHUB_PROJECT_RELEASE_HISTORY']}"
     json = {
         "body": body,
         "draft": False,
-        "name": configuration.version(),
+        "name": configuration.version,
         "prerelease": False,
-        "tag_name": configuration.version(),
+        "tag_name": configuration.version,
         "target_commitish": "trunk",
     }
     response = requests.post(url, headers=headers, auth=auth, json=json)

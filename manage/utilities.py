@@ -81,7 +81,7 @@ def message(
 
 def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step" but will create circular import!
     """Run the command for the specified Step, capturing output and signal success/failure."""
-    if not step.quiet_mode:
+    if step.verbose:
         message(f"Running [italic]{command}[/]")
 
     result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -98,23 +98,22 @@ def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step"
     ################################################
     # Success:
     ################################################
-    if not step.quiet_mode:
+    if step.verbose:
         success()
-        if step.echo_stdout:
-            stdout = result.stdout.decode().strip()
-            print(f"[grey]{stdout}[/]")
+        stdout = result.stdout.decode().strip()
+        print(f"[grey]{stdout}[/]")
 
     # Most of the time, all we want is whether or not the command was successful but a few
     # methods *need* the actual result of the command for their use, thus, return both!
     return True, result.stdout.decode().strip()
 
 
-def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | None, str | None]:
+def get_package_version_from_pyproject_toml(verbose: bool) -> tuple[str | None, str | None]:
     """Read the pyproject.toml file to return *current* package and version we're working with."""
     # FIXME: Assume's we're always running from top-level/project directory!!
     path_pyproject = Path("./pyproject.toml")
 
-    if not quiet:
+    if verbose:
         message(f"Reading package & version ({path_pyproject})")
 
     pyproject = tomllib.loads(path_pyproject.read_text())
@@ -130,7 +129,7 @@ def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | 
             package = package_include.get("include")
         except IndexError:
             ...
-    if package is None and not quiet:
+    if package is None and verbose:
         warning()
         print("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
 
@@ -138,26 +137,26 @@ def get_package_version_from_pyproject_toml(quiet: bool = False) -> tuple[str | 
     # Similarly, get our current version:
     ################################################################################
     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-    if version is None and not quiet:
+    if version is None and verbose:
         warning()
         print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
 
-    if (package and version) and not quiet:
+    if (package and version) and verbose:
         success()
 
     return version, package
 
 
-def get_version():
-    """Return version from installed module or manually from pyproject.toml.
+def get_package_version():
+    """Return version of our own package from installed module or manually from pyproject.toml.
 
     This is a little subtle. If this is running from an "installed" environment,
     the importlib.metadata *should* work (by getting version from the "build"
-    environment used to package the 'manage' projec.
+    environment used to package the 'manage' project.
 
     However, if this is running in a/the development mode (where we're *not*
     "installed" per se), we simply cheat and use the pyproject.toml reader/parser
-    we already have but against *out own* pyproject.toml!...too subtle?
+    we already have but against *our own* pyproject.toml!...too subtle?
 
     FIXME: Instead of relying upon metadata not working, can we categorically
            know if we're running from a "build" environment??
@@ -165,5 +164,5 @@ def get_version():
     try:
         return metadata.version('manage')
     except metadata.PackageNotFoundError:
-        version, _ = get_package_version_from_pyproject_toml(quiet=True)
+        version, _ = get_package_version_from_pyproject_toml(verbose=False)
         return version

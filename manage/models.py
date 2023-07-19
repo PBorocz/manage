@@ -1,5 +1,7 @@
 """Core data types and recipe file read."""
-import argparse
+from copy import copy, deepcopy
+from pathlib import Path
+
 from typing import Any, Callable, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
@@ -8,39 +10,41 @@ from manage.utilities import get_package_version_from_pyproject_toml, message
 
 
 TStep = TypeVar("Step")
+TRecipes = TypeVar("Recipes")
 TConfiguration = TypeVar("Configuration")
 
 
 class Step(BaseModel):
     """A step in a recipe."""
     # FROM inbound manage file:
-    method: str | None = None   # Reference to the built-in method to run
-    recipe: str | None = None   # Reference to the id_ of another recipe.
+    method: str | None = None    # Reference to the built-in method to run
+    recipe: str | None = None    # Reference to the id_ of another recipe.
 
-    confirm: bool | None = True
-    echo_stdout: bool | None = False
+    confirm: bool | None = None  # Default value is a function of the respective method
+    verbose: bool | None = False
     allow_error: bool | None = False
-    quiet_mode: bool | None = False
+
     arguments: Dict[str, Any] = {}   # Supplemental arguments for the callable
 
     # NOT from inbound manage file:
     callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
 
     @validator('recipe', always=True)
+    @classmethod
     def check_consistency(cls, v, field, values):
         """Ensure that EITHER method or another recipe is specified on creation.
 
         NOTE: We use ~recipe~ here as it's *after* the ~method~ attribute in field definition order!
         """
-        if v is not None and values['method'] is not None:
-            raise ValueError('must not provide both method and recipe')
         if v is None and values['method'] is None:
             raise ValueError('must provide either method or recipe')
+        if v is not None and values['method'] is not None:
+            raise ValueError('must not provide both method and recipe')
         return v
 
-    def get_arg(self, arg_key: str) -> Any | None:
+    def get_arg(self, arg_key: str, default: Any | None = None) -> Any | None:
         """Return the value associated with the specified argument (or None)."""
-        return self.arguments.get(arg_key)
+        return self.arguments.get(arg_key, default)
 
     def name(self) -> str:
         """Return a description name for this step, i.e. either method or recipe."""
@@ -48,33 +52,52 @@ class Step(BaseModel):
             return self.method
         return self.recipe
 
-    def reflect_runtime_arguments(self, args: argparse.Namespace) -> str:
+    def reflect_runtime_arguments(self, configuration: TConfiguration, verbose: bool = True) -> str:
         """Update the step based on any/all arguments received on the command-line."""
-        # Common across all steps (for now, just the "confirm" flag):
-        if args.confirm is not None:
-
-            # Is the command-line setting DIFFERENT than that for the step?
-            if self.confirm != args.confirm:
-                # FIXME: Verbose only?
+        # For now, only 2 command-line args can trickle down to individual step execution:
+        # 'confirm/no-confirm' and 'verbose':
+        if configuration.confirm is not None and self.confirm != configuration.confirm:
+            if verbose:
                 msg = f"Overriding [italic]confirm[/] in {self.name()} from " \
-                    "[italic]{self.confirm}[/] to [italic]{args.confirm}[/]"
+                    "[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]"
                 message(msg, color='light_slate_grey', end_success=True)
-                self.confirm = args.confirm
+            self.confirm = configuration.confirm
+
+        if configuration.verbose is not None and self.verbose != configuration.verbose:
+            if verbose:
+                msg = f"Overriding [italic]verbose[/] in {self.name()} from " \
+                    "[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/]"
+                message(msg, color='light_slate_grey', end_success=True)
+            self.verbose = configuration.verbose
 
         # Those arguments that are *specific* to this step:
-        for step_arg, step_arg_value  in self.arguments.items():
-            # *Do* we potentially have a relevant command-line argument?
-            if hasattr(args, step_arg):
-                # Yes, what is it?
-                if (runtime_arg_value := getattr(args, step_arg)) is not None:
-                    # Is it different than what the step is configured for now?
-                    if step_arg_value != runtime_arg_value:
-                        # Yep!, Override it!!
-                        self.arguments[step_arg] = runtime_arg_value
-                        # FIXME: Verbose only?
-                        msg = f"Overriding: [italic]{step_arg}[/] in {self.name()} from " \
-                            "[italic]{step_arg_value}[/] to [italic]{runtime_arg_value}[/]"
-                        message(msg, color='light_slate_grey', end_success=True)
+        # for step_arg, step_arg_value  in self.arguments.items():
+        #     # *Do* we potentially have a relevant command-line argument?
+        #     if hasattr(configuration, step_arg):
+        #         # Yes, what is it?
+        #         if (runtime_arg_value := getattr(configuration, step_arg)) is not None:
+        #             # Is it different than what the step is configured for now?
+        #             if step_arg_value != runtime_arg_value:
+        #                 # Yep!, Override it!!
+        #                 self.arguments[step_arg] = runtime_arg_value
+        #                 msg = f"Overriding: [italic]{step_arg}[/] in {self.name()} from " \
+        #                     "[italic]{step_arg_value}[/] to [italic]{runtime_arg_value}[/]"
+        #                 message(msg, color='light_slate_grey', end_success=True)
+
+    def as_print(self) -> TStep:
+        """Return a 'cleaned-up' copy of this step for printing."""
+        step = deepcopy(self)
+
+        # We don't need this for printing..
+        delattr(step, "callable_")
+
+        # And one of these will be empty!
+        if step.method:
+            delattr(step, "recipe")
+        else:
+            delattr(step, "method")
+
+        return step.__dict__
 
 
 class Recipe(BaseModel):
@@ -116,9 +139,8 @@ class Recipes(BaseModel):
         return sorted(list(self.keys()))  # in self if not recipe.id_.startswith("__")])
 
     def check_target(self, recipe_target: str) -> bool:
-        """Is the target provide valid against our current recipes?"""
-        targets_defined_casefolded = [id_.casefold() for id_ in self.keys()]
-        return recipe_target.casefold() in targets_defined_casefolded
+        """Is the target provide valid against our current recipes? (on a case-folded basis)."""
+        return recipe_target.casefold() in [id_.casefold() for id_ in self.keys()]
 
     def validate_methods_steps(self, methods_available: dict[Callable]) -> list | None:
         """Each step in each recipe needs to be either a "built-in" method or refer to another valid step."""
@@ -132,6 +154,15 @@ class Recipes(BaseModel):
                     if self.get(step.recipe) is None:
                         return_.append(f"Step: '{step.recipe}' in recipe={id_} can't be found in this file!")
         return return_
+
+    def as_print(self) -> TRecipes:
+        """."""
+        recipes = deepcopy(self)
+        recipes.__root__ = deepcopy(self.__root__)
+        for name, recipe in self.__root__.items():
+            recipe.steps = [step.as_print() for step in recipe.steps]
+            recipes.__root__[name] = recipe
+        return recipes
 
 
 class Argument(BaseModel):
@@ -154,16 +185,36 @@ class Arguments(BaseModel):
 
 
 class Configuration(BaseModel):
-    """Internal configuration/state."""
-    version_: str | None = None
-    package_: str | None = None
+    """Configuration/state, primarily (but not solely) from command-line args."""
+    recipes: Path | None = None
+    target: str | None = None
+    verbose: bool | None = False
+    confirm: bool | None = None  # If set, override step confirmation instruction appropriately.
+    version_: str | None = None  # Note: This is the current version # of the project we're working on!
+    version: str | None = None   # " In nice format..
+    package_: str | None = None  # "
 
-    def version(self):
-        """Return version number in "formal" format, usable (for instance) as git tag."""
-        return f"v{self.version_}"
 
+def configuration_factory(args = None, **kwargs) -> Configuration | None:
+    """Create a Configuration object, setting some attrs from pyproject.toml.
 
-def configuration_factory(args) -> Configuration | None:
-    """Create a Configuration object, setting some attrs from pyproject.toml."""
-    version, package = get_package_version_from_pyproject_toml()
-    return Configuration(version_=version, package_=package)
+    We can either set from args (usual case) or from kwargs (primarily for testing).
+    """
+    if args:
+        version_, package = get_package_version_from_pyproject_toml(args.verbose)
+        config = Configuration(
+            recipes=args.recipes,
+            target=args.target,
+            verbose=args.verbose,
+            confirm=args.confirm,
+            version_=version_, # This is the "raw" value, e.g. 1.2.3
+            package_=package,
+        )
+    elif kwargs:
+        config = Configuration()
+        for key, value in kwargs.items():
+            setattr(config, key, value)
+
+    if config.version_:
+        config.version = f"v{config.version_}"  # This is the "nice" format, e.g. v1.2.3 for use in README's
+    return config

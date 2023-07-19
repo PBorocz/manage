@@ -11,17 +11,20 @@ from manage.models import Configuration, Recipes, Recipe, Step
 from manage.utilities import message, success, failure
 
 
-def read_recipes(path_recipes: Path) -> dict:
+def read_recipe_file(verbose: bool, path_recipes: Path) -> dict:
     """Do a raw read of the specified recipe file path, doing *no* other processing!."""
-    message(f"Reading recipes ({path_recipes})")
+    if verbose:
+        message(f"Reading recipes ({path_recipes})")
     if not path_recipes.exists():
-        failure()
-        print(f"[red]Sorry, unable to find {path_recipes} for recipes.")
+        if verbose:
+            failure()
+        print(f"[red]Sorry, unable to find recipe file on path: [bold]{path_recipes}[/]")
         sys.exit(1)
 
     # Read raw (safely!)...
     raw_recipes = yaml.safe_load(path_recipes.read_text())
-    success()
+    if verbose:
+        success()
     return raw_recipes
 
 
@@ -69,7 +72,7 @@ def read_recipes(path_recipes: Path) -> dict:
 #     return list(arguments.items())
 
 
-def uptype_recipes(args, raw_recipes: dict, methods: dict[Callable] | None = None) -> Recipes:
+def uptype_recipes(configuration: Configuration, raw_recipes: dict, methods: dict[Callable] | None = None) -> Recipes:
     """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
     # First, convert to strongly-typed dataclass instances
     d_recipes = dict()
@@ -86,7 +89,7 @@ def uptype_recipes(args, raw_recipes: dict, methods: dict[Callable] | None = Non
         recipes = _add_callables(recipes, methods)
 
         # Validate that each of the methods are valid.
-        if not _validate_recipe_methods(recipes, methods):
+        if not _validate_recipe_methods(configuration.verbose, recipes, methods):
             sys.exit(1)
 
     return recipes
@@ -118,27 +121,31 @@ def validate_existing_version_numbers(configuration: Configuration) -> bool:
                 return version
         return None
 
-    message("Checking consistency of versions (pyproject.toml & README)")
+    if configuration.verbose:
+        message("Checking consistency of versions (pyproject.toml & README)")
     last_release_version = __get_last_release_from_readme()
     if last_release_version != configuration.version_:
         failure()
         print(f"[red]Warning, pyproject.toml has version: {configuration.version_} "
               f"while last release in README is {last_release_version}!")
         return False
-    success()
+    if configuration.verbose:
+        success()
     return True
 
 
-def _validate_recipe_methods(recipes: Recipes, step_methods: dict[str, Callable]) -> bool:
+def _validate_recipe_methods(verbose: bool, recipes: Recipes, step_methods: dict[str, Callable]) -> bool:
     """Make sure all the the methods and steps from our recipes are defined and available."""
-    message("Validating recipes")
+    if verbose:
+        message("Validating recipes")
     if invalid_method_steps := recipes.validate_methods_steps(step_methods):
         print("\n[red]Sorry, we encountered the following errors in inbound recipe file:")
         for method_step in invalid_method_steps:
             print(f"[red]- {method_step}")
         failure()
         return False
-    success()
+    if verbose:
+        success()
     return True
 
 
@@ -175,7 +182,7 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
 #     return recipes
 
 
-def gather_available_methods() -> dict[str, Callable]:
+def gather_available_methods(verbose: bool) -> dict[str, Callable]:
     """Read and return all the python-defined step methods available."""
 
     def __gather_methods_modules():
@@ -192,11 +199,15 @@ def gather_available_methods() -> dict[str, Callable]:
             yield method_name, getattr(module, "main")
 
     # Get all the 'main" methods in each python file in the steps module:
-    message("Reading recipe steps available")
+    if verbose:
+        message("Initialising methods available")
+
     methods = {method_name: method for method_name, method in __gather_methods_modules()}
     if not methods:
         failure()
-        print("[red]Unable to find any valid command steps in manage/methods/*.py?")
+        print("[red]Unable to find [bold]any[/] valid methods steps in manage/methods/*.py?")
         sys.exit(1)
-    success()
+
+    if verbose:
+        success()
     return methods

@@ -1,9 +1,8 @@
-import os
+"""..."""
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import pydantic
 import pytest
 
 from manage.cli import main

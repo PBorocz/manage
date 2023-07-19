@@ -35,7 +35,7 @@ def test_normal_case(path_org, path_md):
 
     # Setup
     step = Step(
-        method="aMethod", confirm=False, quiet_mode=True,
+        method="aMethod", confirm=False, verbose=False,
         arguments=dict(path_org=path_org, path_md=path_md),
     )
 
@@ -53,8 +53,7 @@ def test_normal_case(path_org, path_md):
 def test_missing_arg_s(path_org, path_md):
 
     # Setup
-    step = Step(method="aMethod", confirm=False, quiet_mode=True)
+    step = Step(method="aMethod", confirm=False, verbose=False)
 
     # Test
-    with pytest.raises(AssertionError):
-        main(Configuration(), Recipes.parse_obj({}), step)
+    assert not main(Configuration(), Recipes.parse_obj({}), step)

@@ -9,7 +9,11 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     if not run(step, "poetry lock --check")[0]:
         warning()
         print("[yellow]poetry.lock is not consistent with pyproject.toml.[/]")
-        if step.confirm:
-            if not ask_confirm("Can we run `poetry lock --no-update` to fix it?"):
-                return False
-        return run(step, "poetry lock --no-update")[0]
+
+        # However, if not...we need to fix it!
+        cmd = "poetry lock --no-update"
+        confirm = "Can we run '[italic]{cmd}[/]' to fix it?"
+        if step.confirm and not ask_confirm(confirm):
+            return False
+
+        return run(step, cmd)[0]

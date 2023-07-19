@@ -4,9 +4,8 @@ clean:
   steps:
     - method: clean
       confirm: true             # All these are DEFAULT values!
-      echo_stdout: false
+      verbose: false
       allow_error: false
-      quiet_mode: false
       arguments:
         arg_1_str: arg_1_str_value
         arg_2_bool: false
@@ -14,9 +13,8 @@ clean:
 
     - method: print
       confirm: true
-      echo_stdout: true
+      verbose: true
       allow_error: true
-      quiet_mode: true
 
 build:
   description: A Build Recipe

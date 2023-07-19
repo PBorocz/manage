@@ -27,18 +27,16 @@ def main(configuration: Configuration, recipes: Recipes, step: dict, repo: Repo 
     repo = Repo(Path.cwd()) if not repo else repo
 
     # Get arguments...
-    if step.arguments and 'pathspec' in step.arguments:
-        s_pathspec = step.arguments.get("pathspec")
+    if s_pathspec := step.get_arg("pathspec"):
         pathspec = s_pathspec.split(" ")
-        confirm = f"Ok to git add '{','.join(pathspec)}'?"
+        confirm = f"Ok to '[italic]git add {','.join(pathspec)}[/]'?"
     else:
         pathspec = [args.get_argument("pathspec").default]
-        confirm = "Ok to git add all files?"
+        confirm = "Ok to '[italic]git add *[/]'?"
 
     # State changing commmand...confirm execution..
-    if step.confirm:
-        if not ask_confirm(escape(confirm)):
-            return False
+    if step.confirm and not ask_confirm(escape(confirm)):
+        return False
 
     # Do it..
     try:

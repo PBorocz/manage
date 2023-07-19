@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from manage.models import Configuration, Recipes, Step
+from manage.models import Recipes, Step, configuration_factory
 from manage.methods.update_readme import main as update_readme
 
 
@@ -71,10 +71,10 @@ def path_readme_org_no_header():
 def test_md(path_readme_md):
     """Test standard case with Markdown file."""
     # Setup
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme=str(path_readme_md)))
+    step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_md)))
 
     # Test
-    assert update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+    assert update_readme(configuration_factory(version_="1.9.11"), Recipes.parse_obj({}), step)
 
     # Confirm
     assert path_readme_md.exists()
@@ -87,10 +87,10 @@ def test_md(path_readme_md):
 def test_org(path_readme_org):
     """Test standard case with Org file."""
     # Setup
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme=str(path_readme_org)))
+    step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    assert update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+    assert update_readme(configuration_factory(version_="1.9.11"), Recipes.parse_obj({}), step)
 
     # Confirm
     assert path_readme_org.exists()
@@ -104,35 +104,35 @@ def test_no_file_available():
     """Test case where we don't have a README at all!"""
     # Setup (note: we don't specify the name of the file here but we DO need to set cwd
     # so we don't accidentally pick up the README file in our own project!)
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(cwd="/tmp"))
+    step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    assert not update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+    assert not update_readme(configuration_factory(version_="1.9.11"), Recipes.parse_obj({}), step)
 
 
 def test_file_not_found():
     """Test case where we have a README specified but it doesn't actually exist."""
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme="/tmp/foobar"))
+    step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme="/tmp/foobar"))
 
     # Test
-    assert not update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+    assert not update_readme(configuration_factory(version_="1.9.11"), Recipes.parse_obj({}), step)
 
 
 def test_no_unreleased_header(path_readme_org_no_header):
     """Test case where we have a README specified but it doesn't actually exist."""
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(readme=str(path_readme_org)))
+    step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    assert not update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+    assert not update_readme(configuration_factory(version_="1.9.11"), Recipes.parse_obj({}), step)
 
 
 def test_file_from_default(path_readme_md):
     """Test special case where we find a default README file (in this case, Markdown)."""
     # Setup (note: we don't specify the name of the file here!
-    step = Step(method="aMethod", confirm=False, quiet_mode=True, arguments=dict(cwd="/tmp"))
+    step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    assert update_readme(Configuration(version_="1.9.11"), Recipes.parse_obj({}), step)
+    assert update_readme(configuration_factory(version_="1.9.11"), Recipes.parse_obj({}), step)
 
     # Confirm
     assert path_readme_md.exists()

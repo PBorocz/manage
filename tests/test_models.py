@@ -13,10 +13,9 @@ def recipes():
             Step(method="clean"),  # Test that defaults match those in yaml file..
             Step(method="print",
                  config=True,
-                 echo_stdout=True,
-                 allow_error=True,
-                 quiet_mode=True),
-        ]
+                 verbose=True,
+                 allow_error=True),
+        ],
     )
 
     recipe_build = Recipe(
@@ -24,7 +23,7 @@ def recipes():
         steps=[
             Step(recipe="clean"),
             Step(method="build"),
-        ]
+        ],
     )
     return Recipes.parse_obj({
         "clean" : recipe_clean,

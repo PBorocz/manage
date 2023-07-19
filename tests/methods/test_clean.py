@@ -1,3 +1,4 @@
+"""."""
 import pytest
 import unittest.mock as mock
 from pathlib import Path
@@ -18,12 +19,12 @@ def recipes():
 
 @pytest.fixture
 def step_no_confirm():
-    return Step(method="aMethod", confirm=False, quiet_mode=True)
+    return Step(method="aMethod", confirm=False, verbose=False)
 
 
 @pytest.fixture
 def step_confirm():
-    return Step(method="aMethod", confirm=True, quiet_mode=False)
+    return Step(method="aMethod", confirm=True, verbose=True)
 
 
 @pytest.fixture

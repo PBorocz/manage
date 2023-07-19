@@ -4,8 +4,17 @@ from pathlib import Path
 
 from rich import print
 
-from manage.models import Configuration, Recipes
+from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import ask_confirm, message, failure, success
+
+# Metadata about arguments available...
+args = Arguments(arguments=[
+    Argument(
+        name="readme",
+        type_=str,
+        default=None,
+    ),
+])
 
 
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
@@ -32,10 +41,10 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """
     # What's the default path we'll be working on? (note: this is primarily for testing
     # purposes), manage is intended to be run from the project's top level directory!)
-    cwd = Path(step.arguments.get('cwd', Path.cwd()))
+    cwd = Path(step.get_arg('cwd', Path.cwd()))
 
     # Has the user provided an explicit path to the README file to work on?
-    if s_readme := step.arguments.get("readme"):
+    if s_readme := step.get_arg("readme"):
         # Yes, make sure we can find it..
         path_readme = Path(s_readme)
         if not path_readme.exists():
@@ -56,14 +65,12 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
             print("[red]Sorry, couldn't find either a README.org or README.md in the top-level directory!")
             return False
 
-    release_tag = f"{configuration.version()} - {datetime.now().strftime('%Y-%m-%d')}" # eg. "vA.B.C - 2023-05-15"
+    release_tag = f"{configuration.version} - {datetime.now().strftime('%Y-%m-%d')}" # eg. "vA.B.C - 2023-05-15"
 
     # Confirmation before we continue?
-    if step.confirm:
-        msg = f"Ok to update {readme_name}'s 'Unreleased' header to '{release_tag}'?"
-        if not ask_confirm(msg):
-            print("Nothing done")
-            return False
+    confirm = f"Ok to update {readme_name}'s '[italic]Unreleased[/]' header to '[italic]{release_tag}[/]'?"
+    if step.confirm and not ask_confirm(confirm):
+        return False
 
     # Read and update the changelog/release section embedded in our readme with the new version
     # (leaving another "Unreleased" header for future work)

@@ -94,6 +94,15 @@ Create your ~manage.yaml~ file, here's a sample one to start from:
 
 At this point, you should be able to run: ~manage check~ (one of the built-in targets) against ~manage.yaml~ you just created. Note that ~poetry add~ will create a ~manage~ command into your respective python /bin environment (hopefully, your virtual env).
 ** Documentation
+*** Command-Line Arguments
+**** -r/--recipe
+Use another recipe file instead of the default ~./manage.yaml~.
+**** --confirm
+Override any ~confirm: False~ entries in your recipe.file and force all methods with confirmation (ie. state-change) to do so.
+**** --noconfirm
+Override any ~confirm: True~ entries in your recipe.file and force all confirmation methods to *NOT* require (ie. skip) confirmation.
+**** --verbose
+Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
 *** Default Recipe Targets
 The following recipes are built-in and available irrespective of your recipe file:
 - ~check~ - Performs a validity check of your recipe file (ie. `manage.yaml`). For example:
@@ -105,7 +114,7 @@ The following recipes are built-in and available irrespective of your recipe fil
     Reading recipe steps available.................................................✔
     Validating recipes.............................................................✔
     %
-#+end_src
+ #+end_src
 - ~print~ - Does a "pretty-print" of your respective recipe file. For example:
   #+begin_src shell
     % python manage print
@@ -279,7 +288,7 @@ General command to perform a `git commit <pathspec>` operation.
 - ~pathspec~ Optional path specification of dir(s) and/or file(s) to commit. Default if not specified is `.`.
 - ~message~ Optional commit message. Default if not specified is today's date (yyyymmddThhmm).
 ***** *git_commit_version_files*
-Specialised command to git stage and commit two files relevant to my build process: ~pyproject.toml~ and ~README.(org|md)~. Other methods will update these files for version management and this method is provided to get them into git on behalf of a release.
+Specialised command to git stage and commit two files relevant to my build process: ~pyproject.toml~ and ~README.(org|md)~. Other methods will update these files for version management and this method is provided to get them into git on behalf of a release. Alternately, you can use the more general ~git_commit~ method, specifying these two files to be added.
   #+begin_src yaml
     build_my_package:
       description: Build my distribution package.
@@ -577,8 +586,6 @@ PATH_add "$VIRTUAL_ENV/bin"
   Method Arguments
   --poetry-version  STRING argument for recipe '~1_bump~', default is 'patch'.
 
-- [WORKING] Convert using git python API/library instead of command-line git?
-
 - [WORKING] Status of ongoing test development:
   |--------+--------------------------------|
   | Status | Module                         |
@@ -636,11 +643,12 @@ PATH_add "$VIRTUAL_ENV/bin"
 - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
 ** Release History
 *** Unreleased
+- CHANGED: Removed argument "pathspec" from ~git_commit~, all staged items are now committed (only argument is optional commit message).
+- INTERNAL: Add more consistency obo use of ~verbose~ and ~confirm~ options.
 - INTERNAL: Added tests for ~git_add~ and ~git_commit~ methods.
 *** v0.1.7 - 2023-07-18
 - CHANGED: Removed method `poetry-lock-refresh`. The underlying command `poetry lock --no-update` will be done automatically (net of confirmation) as part of the `poetry-lock-check` method.
-- CHANGED: Moved up to python 3.11 (specifically 3.11.3) to take advantage of built-in TOML support.
-  Contact me if you think it's important to you that I support backwards compatibility with older python versions (that don't have tomllib built-in).
+- CHANGED: Moved up to python 3.11 (specifically 3.11.3) to take advantage of built-in TOML support. Contact me if you think it's important to you that I support backwards compatibility with older python versions (that don't have tomllib built-in).
 - CHANGED: Pulled (limited) support for method-specific command-line argument setting until we deal with method meta-data better (was only used for 1 argument: ~poetry_version~ to bump).
 - INTERNAL: Incorporate use of [[https://pypi.org/project/pytest-git/][pytest-git]] to begin structured testing of git methods.
 *** v0.1.6 - 2023-07-15

@@ -1,9 +1,18 @@
 """Method to run SASS pre-processor."""
 import shutil
 
-from manage.models import Configuration, Recipes
+from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import ask_confirm, message, run
 
+
+# Metadata about arguments available...
+args = Arguments(arguments=[
+    Argument(
+        name="pathspec",
+        type_=str,
+        default=None,
+    ),
+])
 
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """Run a SASS pre-processor command on the required pathspec."""
@@ -13,15 +22,12 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
         return False
 
     # Check for argument..
-    if not step.arguments or 'pathspec' not in step.arguments:
+    if not (pathspec := step.get_arg('pathspec')):
         message("Sorry, the `sass` method requires a 'pathspec' argument.", color="red", end_failure=True)
         return False
 
-    pathspec = step.arguments.get('pathspec')
-
-    if step.confirm:
-        confirm = f"Ok to run [italic]`sass {pathspec}`[/]?"
-        if not ask_confirm(confirm):
-            return False
+    confirm = f"Ok to run '[italic]sass {pathspec}[/]'?"
+    if step.confirm and not ask_confirm(confirm):
+        return False
 
     return run(step, f"sass {pathspec}")[0]

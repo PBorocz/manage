@@ -26,25 +26,22 @@ def main(configuration: Configuration, recipes: Recipes, step: dict, repo: Repo 
     repo = Repo(Path.cwd()) if not repo else repo
 
     # Get argument...
-    if step.arguments and "message" in step.arguments:
-        commit_message = step.arguments.get("message")
-    else:
+    if not (commit_message := step.get_arg("message")):
         commit_message = args.get_argument("message").default
 
     # State changing commmand...confirm execution..
-    if step.confirm:
-        confirm = f"Ok to `git commit -m '{commit_message}'?"
-        if not ask_confirm(confirm):
+    confirm = f"Ok to '[italic]git commit -m \"{commit_message}\"[/]'?"
+    if step.confirm and not ask_confirm(confirm):
             return False
 
     # Do it..
     try:
-        results = repo.index.commit(commit_message)
-        # FIXME: This is displaying ALL entries in the tree, not just the ones committed!!
-        for blob in results.tree:
-            message(f"git commit -m {blob.name}", color="green", end_success=True)
+        repo.index.commit(commit_message)
+        commit = repo.head.commit
+        for file_, diff in commit.stats.files.items():
+            message(f"git commit -m {file_}", color="green", end_success=True)
         return True
     except OSError:
-        if not step.quiet_mode:
-            message(f"Unable to `git commit -m {message}`", color="red", end_failure=True)
+        if step.verbose:
+            message(f"Unable to '[italic]git commit -m \"{message}\"[/]", color="red", end_failure=True)
         return False

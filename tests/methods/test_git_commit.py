@@ -13,7 +13,7 @@ def test_git_commit(git_repo):
     repo.index.add([file_path])
 
     # Test!
-    step = Step(method="aMethod", confirm=False, quiet_mode=False, arguments=dict(message=COMMIT_MESSAGE))
+    step = Step(method="aMethod", confirm=False, verbose=True, arguments=dict(message=COMMIT_MESSAGE))
     assert git_commit(Configuration(), Recipes.parse_obj({}), step, repo=repo)
 
     # Confirm: 1 - Did we get a commit?
