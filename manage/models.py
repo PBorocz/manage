@@ -57,17 +57,17 @@ class Step(BaseModel):
         # For now, only 2 command-line args can trickle down to individual step execution:
         # 'confirm/no-confirm' and 'verbose':
         if configuration.confirm is not None and self.confirm != configuration.confirm:
-            if verbose:
-                msg = f"Overriding [italic]confirm[/] in {self.name()} from " \
-                    "[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]"
-                message(msg, color='light_slate_grey', end_success=True)
+            # if verbose:
+            #     msg = f"Overriding [italic]confirm[/] in {self.name()} from " \
+            #         f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]"
+            #     message(msg, color='light_slate_grey', end_success=True)
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
-            if verbose:
-                msg = f"Overriding [italic]verbose[/] in {self.name()} from " \
-                    "[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/]"
-                message(msg, color='light_slate_grey', end_success=True)
+            # if verbose:
+            #     msg = f"Overriding [italic]verbose[/] in {self.name()} from " \
+            #         f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/]"
+            #     message(msg, color='light_slate_grey', end_success=True)
             self.verbose = configuration.verbose
 
         # Those arguments that are *specific* to this step:

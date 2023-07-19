@@ -29,10 +29,10 @@ def main(configuration: Configuration, recipes: Recipes, step: dict, repo: Repo 
     # Get arguments...
     if s_pathspec := step.get_arg("pathspec"):
         pathspec = s_pathspec.split(" ")
-        confirm = f"Ok to '[italic]git add {','.join(pathspec)}[/]'?"
+        confirm = f"Ok to 'git add {','.join(pathspec)}'?"
     else:
         pathspec = [args.get_argument("pathspec").default]
-        confirm = "Ok to '[italic]git add *[/]'?"
+        confirm = "Ok to 'git add *'?"
 
     # State changing commmand...confirm execution..
     if step.confirm and not ask_confirm(escape(confirm)):

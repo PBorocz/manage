@@ -19,6 +19,7 @@
   description: Release our distribution to our github repository
   steps:
     - recipe: build
+
     - method: git_push_to_github
       confirm: false
       echo_stdout: true
@@ -29,8 +30,10 @@ build:
   steps:
     - method: poetry_lock_check
       confirm: false
+
     - recipe: clean
       confirm: false
+
     - method: build
       confirm: false
       echo_stdout: true
