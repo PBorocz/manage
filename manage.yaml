@@ -5,11 +5,26 @@
     - method: poetry_bump_version
       arguments:
         poetry_version: patch
+
     - method: update_readme
-    - method: git_commit_version_files
+
+    - method: git_add
+      arguments:
+        pathspec: "README.org pyproject.toml"
+
+    - method: git_commit
 
 ################################################################################
-2_build:
+2_release:
+  description: Release our distribution to our github repository
+  steps:
+    - recipe: build
+    - method: git_push_to_github
+      confirm: false
+      echo_stdout: true
+
+################################################################################
+build:
   description: Build our distribution(s)
   steps:
     - method: poetry_lock_check
@@ -19,16 +34,6 @@
     - method: build
       confirm: false
       echo_stdout: true
-
-################################################################################
-3_release:
-  description: Release our distribution to our github repository
-  steps:
-    - recipe: 2_build
-    - method: git_push_to_github
-      confirm: false
-      echo_stdout: true
-
 
 ################################################################################
 clean:

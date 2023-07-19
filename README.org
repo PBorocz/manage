@@ -205,20 +205,20 @@ We provide a summary of the methods supported (listed alphabetically):
 |--------------------------------+---------------+------------+-------------------|
 | Method Name                    | Confirmation? | Arguments? | Arguments..       |
 |--------------------------------+---------------+------------+-------------------|
-| ~build~                          | Yes           | No         |                   |
-| ~clean~                          | Yes           | No         |                   |
+| ~build~                          | Yes           | -          |                   |
+| ~clean~                          | Yes           | -          |                   |
 | ~git_add~                        | Yes           | Optional   | ~pathspec~          |
-| ~git_commit~                     | Yes           | No         |                   |
-| ~git_create_release~             | Yes           | No         |                   |
-| ~git_create_tag~                 | Yes           | No         |                   |
-| ~git_push_to_github~             | Yes           | No         |                   |
+| ~git_commit~                     | Yes           | Optional   | ~message~           |
+| ~git_create_release~             | Yes           | -          |                   |
+| ~git_create_tag~                 | Yes           | -          |                   |
+| ~git_push_to_github~             | Yes           | -          |                   |
 | ~pandoc_convert_org_to_markdown~ | No            | Required   | ~path_md~, ~path_org~ |
 | ~poetry_bump_version~            | Yes           | Required   | ~poetry_version~    |
-| ~poetry_lock_check~              | No            | No         |                   |
-| ~publish_to_pypi~                | Yes           | No         |                   |
+| ~poetry_lock_check~              | No            | -          |                   |
+| ~publish_to_pypi~                | Yes           | -          |                   |
 | ~run_command~                    | Yes           | Required   | ~command~           |
-| ~run_pre_commit~                 | No            | No         |                   |
-| ~sass~                           | Yes           | Required   | pathspec          |
+| ~run_pre_commit~                 | No            | -          |                   |
+| ~sass~                           | Yes           | Required   | ~pathspec~          |
 | ~update_readme~                  | Yes           | Optional   | ~readme~            |
 |--------------------------------+---------------+------------+-------------------|
 **** Details
@@ -586,7 +586,7 @@ PATH_add "$VIRTUAL_ENV/bin"
   |     0% | ~build~                          |
   |   100% | ~clean~                          |
   |   100% | ~git_add~                        |
-  |     0% | ~git_commit~                     |
+  |   100% | ~git_commit~                     |
   |     0% | ~git_create_release~             |
   |     0% | ~git_create_tag~                 |
   |     0% | ~git_push_to_github~             |
@@ -636,6 +636,8 @@ PATH_add "$VIRTUAL_ENV/bin"
 - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
 ** Release History
 *** Unreleased
+*** v0.1.8 - 2023-07-18
+- INTERNAL: Added tests for ~git_add~ and ~git_commit~ methods.
 *** v0.1.7 - 2023-07-18
 - CHANGED: Removed method `poetry-lock-refresh`. The underlying command `poetry lock --no-update` will be done automatically (net of confirmation) as part of the `poetry-lock-check` method.
 - CHANGED: Moved up to python 3.11 (specifically 3.11.3) to take advantage of built-in TOML support.
