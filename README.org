@@ -643,6 +643,7 @@ PATH_add "$VIRTUAL_ENV/bin"
 - [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
 ** Release History
 *** Unreleased
+*** v0.1.8 - 2023-07-19
 - CHANGED: Removed argument "pathspec" from ~git_commit~, all staged items are now committed (only argument is optional commit message).
 - INTERNAL: Add more consistency obo use of ~verbose~ and ~confirm~ options.
 - INTERNAL: Added tests for ~git_add~ and ~git_commit~ methods.
