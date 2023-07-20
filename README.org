@@ -550,6 +550,24 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
 - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food ;-).
 ** GTD
+*** [TODO] Maybe make print also take a target to print (instead of the whole enchilada?)
+*** [TODO] Argghh..print is broken? (at least in optimus-ludos):
+#+begin_src shell
+…/10.01 optimus_ludos  main !  🐍  .venv  12:11  manage print
+Traceback (most recent call last):
+  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/bin/manage", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/lib/python3.11/site-packages/manage/cli.py", line 182, in main
+    dispatch(configuration, recipes)
+  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/lib/python3.11/site-packages/manage/dispatch.py", line 16, in dispatch
+    return _print(configuration, recipes, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/lib/python3.11/site-packages/manage/methods/_print.py", line 9, in main
+    if step.verbose:
+       ^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'verbose'
+#+end_src shell
 *** [TODO] Add back ability to take and reflect command-line options obo method arguments, eg. ~poetry_version~ for ~update_readme~.
 Make use of method's "arguments" meta-data now available.
 *** [TODO] Create a ~sample~ recipe to create an example ~manage.yaml~ in the current project directory. Essentially a copy of ~manage/examples/manage.yaml~ to ~$HOME_DIR~ (while checking to not overwrite any existing file)

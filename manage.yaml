@@ -16,7 +16,7 @@
 
 ################################################################################
 2_release:
-  description: Release our distribution to our github repository
+  description: Release current version's distribution to our github repository
   steps:
     - recipe: build
 

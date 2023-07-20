@@ -6,7 +6,7 @@ from manage.utilities import message
 
 def main(configuration: Configuration, recipes: Recipes, step: dict = None) -> bool:
     """Show/print the recipes."""
-    if step.verbose:
+    if configuration.verbose:  # Can't use step.verbose here as we haven't reflected runtime args yet!
         message(
             f"The following recipes are currently defined in [italic]{configuration.recipes}[/]:",
             color="green",
