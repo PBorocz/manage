@@ -101,7 +101,8 @@ def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step"
     if step.verbose:
         success()
         stdout = result.stdout.decode().strip()
-        print(f"[grey]{stdout}[/]")
+        if stdout:
+            print(f"[grey]{stdout}[/]")
 
     # Most of the time, all we want is whether or not the command was successful but a few
     # methods *need* the actual result of the command for their use, thus, return both!
