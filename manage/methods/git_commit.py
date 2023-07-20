@@ -37,11 +37,11 @@ def main(configuration: Configuration, recipes: Recipes, step: dict, repo: Repo 
     # Do it..
     try:
         repo.index.commit(commit_message)
-        commit = repo.head.commit
-        for file_, diff in commit.stats.files.items():
-            message(f"git commit -m {file_}", color="green", end_success=True)
+        if step.verbose:
+            commit = repo.head.commit
+            for file_, diff in commit.stats.files.items():
+                message(f"git commit -m {file_}", color="green", end_success=True)
         return True
     except OSError:
-        if step.verbose:
-            message(f"Unable to '[italic]git commit -m \"{message}\"[/]", color="red", end_failure=True)
+        message(f"Unable to '[italic]git commit -m \"{message}\"[/]", color="red", end_failure=True)
         return False

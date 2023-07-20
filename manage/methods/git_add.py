@@ -41,8 +41,9 @@ def main(configuration: Configuration, recipes: Recipes, step: dict, repo: Repo 
     # Do it..
     try:
         results = repo.index.add(pathspec)
-        for base_index_entry in results:
-            message(f"git add {base_index_entry.path}", color="green", end_success=True)
+        if step.verbose:
+            for base_index_entry in results:
+                message(f"git add {base_index_entry.path}", color="green", end_success=True)
         return True
     except OSError:
         message(f"Unable to `git add {pathspec=}`", color="red", end_failure=True)
