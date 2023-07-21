@@ -550,7 +550,7 @@ PATH_add "$VIRTUAL_ENV/bin"
 #+end_src
 - At this point, you should be able to run: ~python manage check~ against the default ~manage.yaml~ in the root folder (yes, I do eat my own dog-food ;-).
 ** GTD
-*** [TODO] Maybe make print also take a target to print (instead of the whole enchilada?)
+*** [TODO] Maybe make print also take a target to print (instead of always printing the whole enchilada?)
 *** [TODO] Argghh..print is broken? (at least in optimus-ludos):
 #+begin_src shell
 …/10.01 optimus_ludos  main !  🐍  .venv  12:11  manage print
@@ -603,6 +603,8 @@ Might significantly reduce duplicate code associated with confirmation and retur
 *** [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
 ** Release History
 *** Unreleased
+*** v0.1.9 - 2023-07-20
+- FIXED: Add missing "main" dependency on ~gitpython~ (was coming implicitly from pytest-git but we need it for releases explicitly).
 *** v0.1.8 - 2023-07-19
 - CHANGED: Removed argument "pathspec" from ~git_commit~, all staged items are now committed (only argument is optional commit message).
 - INTERNAL: Add more consistency obo use of ~verbose~ and ~confirm~ options.
