@@ -30,7 +30,7 @@ def main(configuration: Configuration, _, step: dict) -> bool:
         message("Sorry, command requires a supplemental argument for 'path_org'", color="red", end_failure=True)
         return False
 
-    cmd = f"pandoc -f org -t markdown --wrap none --output {path_md} {path_org}"
+    cmd = f"pandoc -f org -t markdown-smart --wrap none --output {path_md} {path_org}"
     confirm = f"Ok to run '[italic]{cmd}[/]'?"
 
     if step.confirm and not ask_confirm(confirm):
