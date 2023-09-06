@@ -603,6 +603,7 @@ Might significantly reduce duplicate code associated with confirmation and retur
 *** [IDEA] Replace requests and vcrpy with [[https://github.com/guilatrova/gracy][Gracy]]?
 ** Release History
 *** Unreleased
+- FIXED: Address vulnerability of gitpython (CVE-2023-40590).
 *** v0.1.10 - 2023-08-17
 - FIXED: Address removal of e-Tugra root certificate from certifi library (CVE-2023-37920).
 *** v0.1.9 - 2023-07-20
