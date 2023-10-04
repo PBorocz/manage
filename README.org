@@ -538,7 +538,7 @@ We use the ~Unreleased~ tag line and "create" a new release (using the current v
 ** Development
 If you want to help develop this, here's what might this might entail:
 
-- Confirm python version availability, I'm developing on 3.10.9 for now (and use [[https://github.com/pyenv/pyenv][pyenv]] to manage all my versions).
+- Confirm python version availability, I'm developing on 3.11+ for now (and use [[https://github.com/pyenv/pyenv][pyenv]] to manage all my versions).
 - Setup a .venv using your virtual-env manager of choice (I use ~python -m venv .venv~).
 - Clone the repo.
 - ~poetry install~ to install requisite dependencies into your venv.
