@@ -1,32 +1,43 @@
 # Manage
 
-Inspired immensely by [Thomas Feldman\'s manage.py](https://github.com/tfeldmann/organize/blob/main/manage.py) script in his [Organize](https://github.com/tfeldmann/organize) project and the wonderful [Just command runner](https://github.com/casey/just), this package automates several common operations for poetry & org-based package management, particularly those that I don\'t perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do them!)
+## Introduction
 
-## What is it?
+In learning how to perform releases to PyPI, I became somewhat "disenchanted" by all the various manual steps and required.
 
-Single python script that \"manages\" everything over and above standard magit code commands. Primarily oriented around the myriad number of commands/steps necessary to perform a PyPI \"release\".
+In the spirit of GTD, a Makefile (or personal favorite [Justfile](https://github.com/casey/just)) was a good starting point.
 
-```{=html}
-<p align="center">
-  <img src="./Screenshot.png" alt="Sample Session">
-</p>
-```
+However, even these left something to be desired which led me to [Thomas Feldman\'s manage.py](https://github.com/tfeldmann/organize/blob/main/manage.py) environment. I wanted to combine the best of Justfile's and Thomas' environment through a stand-alone package that I could easily apply to my myriad python projects (irrespective of whether they're released as formal packages).
+
+Thus, this package automates all the common operations for [Poetry](https://python-poetry.org/) & README-based project/package management that I perform on a day-to-day basis. In particular, those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do!)
+
+Here's an example of building and releasing a python package:
+
+![Sample Session](screenshot.png)
+
 ## Design
 
-- The exact steps necessary to complete a *recipe* are specified in a local recipe file (default `./manage.yaml`) that is specific to your project (think of it as a set of recipes, one of which you desire to prepare where one recipe may use another).
+- Every granular command that might need to be performed on behalf of project/package management is packaged as a `method` (eg. poetry build, git commit etc.)
 
-- A recipe file contains:
+- These granular methods are combined into `recipes` to perform a particular task (eg. build my project, update my release notes etc.)
 
-    - A set of *targets* aka recipes (think of as Makefile commands or justfile targets).
-	
+- Recipes are stored in a local recipe file (default `./manage.yaml`) that is _specific to your project_.
+
+- Recipes can be _nested_ (analogous to cooking recipes where one recipe may refer to another for a component).
+
+- A recipe file (or `manage.yaml` file) contains:
+
+    - A set of *targets* aka recipes (terminology synonymous with Makefile/Justfile targets).
+
     - Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
-	
+
     - Each step can refer either to a built-in **method** (e.g. `clean`) or to the name of another *recipe*.
-	
-    - Most steps (specifically, those that can *change* something) can have a user-confirmation before executing, e.g. \"Are you sure? (`confirm`).
-	
+
+- Each step in a target is also described by the following:
+
+    - Steps that have a side-effect (ie. those that can *change* something) can have a user-confirmation before executing, eg. "Are you sure? (`confirm`).
+
     - Each step can be configured as to whether or not it\'s stdout is displayed (`echo_stdout`).
-	
+
     - Each step can be configured control whether errors encountered are fatal or not (`allow_error`).
 
 ### Example
@@ -47,15 +58,16 @@ clean:
   description: Clean out our temp files and ALL previous builds.
   steps:
     - method: clean
+      echo_stdout: false                # Run quietly
 
 ################################################################################
 build:
   description: Build our distribution(s).
   steps:
     - method: build
-      confirm: false
-      echo_stdout: true
-      allow_error: true  # We don't care if no files are clean or if dirs don't exist.
+      confirm: false                    # Ok to build without confirmation
+      echo_stdout: true                 # We want to see the output of our build!
+      allow_error: true                 # We don't care if no files are clean or if dirs don't exist.
 ```
 
 ## Assumptions
@@ -73,39 +85,34 @@ These are my common python project standards, allowing for the ability of this t
 
 - We assume semantic versioning with `poetry version` to update/manage our version number. Specifically, this allows us to use `poetry version` command\'s keywords for version updates, ie. patch, minor, major etc.
 
-### README Management
-
-- We assume that a README file exists and is in either [Org](https://orgmode.org/) or Markdown format.
-- We assume `README.org/md` is in the root directory of the project.
-
 ### CHANGELOG/Release History Management
 
-- We do **not** use a stand-alone `CHANGELOG` file, instead we use a specific section in `README.org/md`. We assume that list of completed but unreleased items exist under an \"**Unreleased**\" header. This format provides reasonably clean automation of version/release management within the README file.
+- We do **not** use a stand-alone `CHANGELOG` file, instead we use a specific section in `README.org/md`. We assume that list of completed but unreleased items exist under an "**Unreleased**" header. This format provides reasonably clean automation of version/release management within the README file.
 
 ### Configuration
 
-- We assume the following entries are available in our environment (either set in your respective shell or through .env):
+- We assume the following GitHub entries are available in our environment (either set in your respective shell or through .env):
 
-      ---------------------------------- ------------------------------------------- ---------------------------------------------------------------------------------
-      `GITHUB_USER`                      Github user id                              `John-Jacob_JingleheimerSchmidt`
-      `GITHUB_API_TOKEN`                 Github personal API token                   `ghp_1234567890ABCDEFG1234567890`
-      `GITHUB_API_RELEASES`              URL to Github release API                   <https://api.github.com/repos/>\<user\>/\<project\>/releases
-      `GITHUB_PROJECT_RELEASE_HISTORY`   URL to release history (for release body)   <https://github.com/>\<user\>/\<project\>/blob/trunk/README.org#release-history
-      ---------------------------------- ------------------------------------------- ---------------------------------------------------------------------------------
+| Environment Variable               | Explanation            | Example
+| ---------------------------------- | ---------------------- | --------------------------------------------------------------------------------
+| `GITHUB_USER`                      | User id                | `John-Jacob_JingleheimerSchmidt`
+| `GITHUB_API_TOKEN`                 | Personal API token     | `ghp_1234567890ABCDEFG1234567890`
+| `GITHUB_API_RELEASES`              | URL to release API     | `https://api.github.com/repos/><user>/<project>/releases`
+| `GITHUB_PROJECT_RELEASE_HISTORY`   | URL to release history | `https://github.com/<user>/<project>/blob/trunk/README.org#release-history`
 
-Note: technically, we might be able to infer `GITHUB_PROJECT_RELEASE_HISTORY` based on the `GITHUB_USER` and project name but I think we\'d have to infer the name of the \"mainline\" branch, some have moved `master` to `main` and others to `trunk`.
+Note: technically, we might be able to infer `GITHUB_PROJECT_RELEASE_HISTORY` based on the `GITHUB_USER` and project name but I think we'd have to infer the name of the "mainline" branch, some have moved `master` to `main` and others to `trunk`.
 
 ## Installation
 
-This isn\'t packaged for PyPI. However, distribution files are released to github.
+This isn't packaged for PyPI. However, distribution files are released to github.
 
-If you use `poetry`, this should suffice (and is how I use it from my projects). Specifically, we\'re installing the package\'s from it\'s github repository directly into our environment.
+If you use `poetry`, this should suffice (and is how I use it from my projects). Specifically, we're installing the package's from it's github repository directly into our environment.
 
 ``` shell
 % poetry add git+https://github.com/PBorocz/manage --group dev
 ```
 
-Create your `manage.yaml` file, here\'s a sample one to start from:
+Create your `manage.yaml` file, here's a sample one to start from:
 
 ``` yaml
 clean:
@@ -126,7 +133,8 @@ build:
 At this point, you should be able to run: `manage check` (one of the built-in targets) against `manage.yaml` you just created. Note that `poetry add` will create a `manage` command into your respective python /bin environment (hopefully, your virtual env).
 
 ## Documentation
-(This section is *big* and should probably be moved to stand-alone documentation!)
+*NB: This section is **big** and should probably be moved to stand-alone documentation!*
+
 ### Command-Line Arguments
 
 1.  -r/--recipe
@@ -143,13 +151,13 @@ At this point, you should be able to run: `manage check` (one of the built-in ta
 
 4.  --verbose
 
-    Provide an extra-level of output regarding method execution (for example, including a method command\'s stdout stream if available)
+    Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
 
 ### Default Recipe Targets
 
 The following recipes are built-in and available irrespective of your recipe file:
 
-- `check` - Performs a validity check of your recipe file (ie. \`manage.yaml\`). For example:
+- `check` - Performs a validity check of your recipe file (ie. `manage.yaml`). For example:
 
     ``` shell
     % python manage check
@@ -161,7 +169,7 @@ The following recipes are built-in and available irrespective of your recipe fil
     %
     ```
 
-- `print` - Does a \"pretty-print\" of your respective recipe file. For example:
+- `print` - Does a "pretty-print" of your respective recipe file. For example:
 
     ``` shell
     % python manage print
@@ -221,7 +229,7 @@ The following recipes are built-in and available irrespective of your recipe fil
 
 ### Common Method Options
 
-- `confirm` - Ask for confirmation before executing the respective step, e.g. \"Are you sure you want to ...?\". Primarily on behalf of *write*-oriented steps, this option can be specified either on a step-by-step basis:
+- `confirm` - Ask for confirmation before executing the respective step, e.g. "Are you sure you want to ...?". Primarily on behalf of *write*-oriented steps, this option can be specified either on a step-by-step basis:
 
     ``` yaml
     build_my_package:
@@ -270,29 +278,28 @@ build_my_package:
 
 We provide a summary of the methods supported (listed alphabetically):
 
-| Method Name                      | Confirmation? | Arguments? | Arguments.. 
+| Method Name                      | Confirmation? | Arguments? | Arguments
 |----------------------------------|---------------|------------|-------------
-| `build`                          | Yes           | \-         |             
-| `clean`                          | Yes           | \-         |             
-| `git_add`                        | Yes           | Optional   | `pathspec`  
-| `git_commit`                     | Yes           | Optional   | `message`   
-| `git_create_release`             | Yes           | \-         |             
-| `git_create_tag`                 | Yes           | \-         |             
-| `git_push_to_github`             | Yes           | \-         |             
-| `pandoc_convert_org_to_markdown` | No            | Required   | `path_md`, `path_org` 
-| `poetry_bump_version`            | Yes           | Required   | `poetry_version` 
-| `poetry_lock_check`              | No            | \-         |             
-| `publish_to_pypi`                | Yes           | \-         |             
-| `run_command`                    | Yes           | Required   | `command`   
-| `run_pre_commit`                 | No            | \-         |             
-| `sass`                           | Yes           | Required   | `pathspec`  
-| `update_readme`                  | Yes           | Optional   | `readme`    
+| `build`                          | Yes           | \-         |
+| `clean`                          | Yes           | \-         |
+| `git_add`                        | Yes           | Optional   | `pathspec`
+| `git_commit`                     | Yes           | Optional   | `pathspec, message`
+| `git_commitversionfiles`         | No            | \-         |
+| `git_create_release`             | Yes           | \-         |
+| `git_create_tag`                 | Yes           | \-         |
+| `git_push_to_github`             | Yes           | \-         |
+| `pandoc_convert_org_to_markdown` | No            | Required   | `path_md, path_org`
+| `poetry_bump_version`            | Yes           | Required   | `poetry_version`
+| `poetry_lock_check`              | No            | \-         |
+| `publish_to_pypi`                | Yes           | \-         |
+| `run_command`                    | Yes           | Required   | `command`
+| `run_pre_commit`                 | No            | \-         |
+| `sass`                           | Yes           | Required   | `pathspec`
+| `update_readme`                  | Yes           | Optional   | `readme`
 
 #### Details
-
 ##### **build**
-
-Specialised command to "poetry" build a package distribution, ie. \`poetry build\`.
+Method to "poetry" build a package distribution, ie. `poetry build`.
 
 ``` yaml
 build_my_package:
@@ -304,12 +311,10 @@ build_my_package:
       allow_error: true  # We don't care if no files are clean or if dirs don't exist.
 ```
 
-This command takes **no** arguments but **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
+This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **clean**
-
-General command to delete build artifacts, ie. \`rm -rf build \*.egg-info\`.
-
+Method to delete build artifacts, ie. `rm -rf build \*.egg-info`.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -317,17 +322,12 @@ build_my_package:
     - method: clean
       confirm: false
       allow_error: true
-    - method: build
-      confirm: false
-      echo_stdout: true
 ```
 
-This command takes **no** arguments but **will** ask for confirmation unless \`--no-confirm\` is set on the command-line (confirm: false is set on the step).
+This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line (confirm: false is set on the step).
 
 ##### **git_add**
-
-General command to perform a \`git add \<pathspec\>\` operation.
-
+Method to perform a `git add <pathspec>` operation.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -339,14 +339,11 @@ build_my_package:
       ...
 ```
 
-1.  Arguments
-
-- `pathspec` Optional path specification of dir(s) and/or file(s) to stage. Default if not specified is \`.\`.
+###### Arguments
+- `pathspec` Optional path specification of dir(s) and/or file(s) to stage. Default if not specified is `.`.
 
 ##### **git_commit**
-
-General command to perform a \`git commit \<pathspec\>\` operation.
-
+Method to perform a `git commit <pathspec>` operation.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -358,16 +355,14 @@ build_my_package:
     - method: ...
       ...
 ```
-
-1.  Arguments
-
-            - `pathspec` Optional path specification of dir(s) and/or file(s) to commit. Default if not specified is \`.\`.
-            - `message` Optional commit message. Default if not specified is today\'s date (yyyymmddThhmm).
+###### Arguments
+* `pathspec` Optional path specification of dir(s) and/or file(s) to commit. Default if not specified is `.`.
+* `message` Optional commit message. Default if not specified is today's date (in format: ~yyyymmddThhmm~).
 
 ##### **git_commitversionfiles**
+Specialised method (really a customised version of `git_commit`) to git stage and git commit two files relevant to the build process: `pyproject.toml` and `README.(org|md)`.
 
-Specialised command to git stage and commit two files relevant to my build process: `pyproject.toml` and `README.(org|md)`. Other methods will update these files for version management and this method is provided to get them into git on behalf of a release. Alternately, you can use the more general `git_commit` method, specifying these two files to be added.
-
+Specifically, other methods will update these files for version management and this method is provided to get them into git on behalf of a release. Alternately, you can use the more general `git_commit` method, specifying these two files to be added.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -381,12 +376,10 @@ build_my_package:
       ...
 ```
 
-This command takes **no** arguments but **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
+This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **git_createrelease**
-
-Specialised command to create a git **release** using the appropriate version string (from `pyproject.toml`).
-
+Method to create a git **release** using the appropriate version string (from `pyproject.toml`).
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -399,13 +392,10 @@ build_my_package:
     - method: ...
       ...
 ```
-
-This command takes **no** arguments but **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
+This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **git_createtag**
-
-General command to create a local git **tag** using the appropriate version string (from `pyproject.toml`).
-
+Method to create a local git **tag** using the appropriate version string (from `pyproject.toml`).
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -418,13 +408,10 @@ build_my_package:
     - method: ...
       ...
 ```
-
-This command takes **no** arguments but **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
+This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **git_pushtogithub**
-
-General command to perform a \`git push --follow-tags\`.
-
+Method command to perform a `git push --follow-tags`.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -437,14 +424,14 @@ build_my_package:
     - method: ...
       ...
 ```
-
-This command takes **no** arguments but **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
+This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **pandoc_convertorgtomarkdown**
+Specialised method to convert an emacs .org file to an markdown (.md) file using pandoc; specifically:
 
-Very specialised command to convert an emacs .org file to an markdown (.md) file using pandoc; specifically:
-
-\"pandoc -f org -t markdown --wrap none --output {`path_md`} {`path_org`}\"
+```shell
+pandoc -f org -t markdown --wrap none --output <path_md> <path_org>
+```
 
 ``` yaml
 build_my_package:
@@ -456,16 +443,12 @@ build_my_package:
     - method: ...
       ...
 ```
-
-1.  Arguments
-
-- `path_md` Required, path specification input markdown file, e.g. `./docs/my_doc.md`.
-- `path_org` Required, path specification resulting .org file to be created, e.g. `./docs/my_doc.org`.
+###### Arguments
+* `path_md` Required, path specification input markdown file, e.g. `./docs/my_doc.md`.
+* `path_org` Required, path specification resulting .org file to be created, e.g. `./docs/my_doc.org`.
 
 ##### **poetry_bumpversion**
-
-Specialised command to \"bump\" the version of a project/package using Poetry\'s version command. This method takes one of the pre-defined version levels to bump and updates `pyproject.toml` with the new version value.
-
+Specialised method to "bump" the version of a project/package using Poetry's version command. Takes one of three pre-defined version levels to bump and updates `pyproject.toml` with the new version value.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -475,45 +458,38 @@ build_my_package:
 
     - method: poetry_bump_version
       arguments:
-        poetry_version: patch
+        poetry_version: patch   # Could also be minor or major.
 
     - method: ...
       ...
 ```
-
-1.  Arguments
-
-- `poetry_version` Required, the default level of version \"bump\" to perform. Must be one of \'patch\', \'minor\', \'major\', \'prepatch\', \'preminor\', \'premajor\', \'prerelease\' (see [Poetry version command](https://python-poetry.org/docs/cli/#version) for more information).
+###### Arguments
+* `poetry_version` Required, the default level of version "bump" to perform. Must be one of 'patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor', 'prerelease' (see [Poetry version command](https://python-poetry.org/docs/cli/#version) for more information).
 
 ##### **poetry_lockcheck**
-
-General command to perform a poetry lock \"check\" to verify that `poetry.lock` is consistent with `pyproject.toml`. If it isn\'t, will update/refresh `poetry.lock` (after confirmation).
-
+Method to perform a poetry lock "check" to verify that `poetry.lock` is consistent with `pyproject.toml`. If it isn't, will update/refresh `poetry.lock` (after confirmation).
 ``` yaml
 build_my_package:
   description: Build my distribution package.
   steps:
     - method: poetry_lock_check
 ```
-
-This command takes **no** arguments but **will** ask for confirmation before running \`poetry lock\` unless \`--no-confirm\` is set on the command-line.
+This command takes **no** arguments but **will** ask for confirmation before running `poetry lock` unless `--no-confirm` is set on the command-line.
 
 ##### **publish_topypi**
-
-        Specialised command to publish your package to PyPI.
-
+Method to publish your package to PyPI.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
   steps:
     - method: publish_to_pypi
 ```
-
-This command takes **no** arguments but **will** ask for confirmation unless \`--no-confirm\` is set on the command-line as it will update the current `poetry.lock` file.
+This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current `poetry.lock` file.
 
 ##### **run_command**
+General method to run essentially any local command for it's respective side-effects. 
 
-General command to run essentially any local command for it\'s respective side-effects. In one of my projects, I don\'t use the version number in `pyproject.toml` but instead of an `app/version.py` that is updated from a small script (using the date & respective branch of the last git commit performed).
+For example, in one of my projects, I don't use the version number in `pyproject.toml` but instead in an `app/version.py` that is updated from a small script (using the date & respective branch of the last git commit performed).
 
 ``` yaml
 build_my_package:
@@ -527,17 +503,13 @@ build_my_package:
       arguments:
         command: "./app/cli/update_settings.py"
 ```
+This command **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
-This command **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
-
-        1.  Arguments
-
-            - `command` Required, a string containing the full shell command to execute.
+###### Arguments
+* `command` Required, a string containing the full shell command to execute.
 
 ##### **run_precommit**
-
-General command to run the `pre-commit` tool (if you use it).
-
+Method to run the `pre-commit` tool (if you use it).
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -545,13 +517,10 @@ build_my_package:
     - method: run_pre_commit
       allow_error: false
 ```
-
-This command takes no argument and **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
+This command takes no argument and **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **sass**
-
-Specialised command to run a \`sass\` command to convert scss to css.
-
+Method to run a `sass` command to convert scss to css.
 ``` yaml
 build_my_package:
   description: Build my distribution package.
@@ -562,14 +531,14 @@ build_my_package:
     - method: ...
       ...
 ```
-
-1.  Arguments
-
-- `pathspec` Required path specification of dir(s) and/or file(s) to run.
+###### Arguments
+* `pathspec` Required path specification of dir(s) and/or file(s) to run.
 
 ##### **update_readme**
+Specialised method to move "Unreleased" items into a dedicated release section of a README file.
 
-Very specialised command to move \"Unreleased\" items into a dedicated \"release\" section of a README file.
+- README file can be in either [Org](https://orgmode.org/) or Markdown format, ie. `README.md` or `README.org`.
+- We assume `README.org/md` is in the same directory as your `pyproject.toml` and `manage.yaml`. This is almost always the root directory of your project.
 
 ``` yaml
 build_my_package:
@@ -586,18 +555,26 @@ build_my_package:
   steps:
     - method: update_readme     # Will look for either README.org or README.md!
 ```
+This command **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
-This command **will** ask for confirmation unless \`--no-confirm\` is set on the command-line.
+###### Arguments
+* `readme` Optional, a string that represents a full path to your respective README.\* file. If not specified, we search for `./README.org` and `./README.md` in the same directory as your `pyproject.toml`.
 
-1.  Arguments
+### README Files
+One of the core time-saving's feature of release automation is the stage change of outstanding items addressed in a release to a "completed" state. Since we're not assuming the use of any particular ticket tracking environment, we allow for change management tracking within a README file. Specifically:
 
-- `readme` Optional, a string that represents a full path to your respective README.\* file. If not specified, we search for `./README.org` and `./README.md`.
+* Tracking of closed (but not released) items in an "Unreleased" section of a README.
+* Tracking of previous releases and their associated change items by date and release version.
 
-2.  README Formats
+The workflow I use is the following:
 
-README files are usually one of two formats, .org or .md. In either case, we assume that *Unreleased* appears on a line by itself (irrespective of it\'s header depth).
+* I keep track of all items outstanding using a GTD approach, keeping this list either within a README file or another dedicated environment (usually a .ORG file).
+* During development, as GTD items are addressed and committed (also tested, ruff'ed, etc..), I move their entries to the *Unreleased* section of the README file.
+* Through a master "release" recipe (or set of recipes), I include the `update_readme` recipe that relabels the *Unreleased* items to the specific release version with today's date (note: doing a `poetry_bump_version` before `update_readme` is important as otherwise, an old version identifier will be used!).
 
-1.  ORG (.org) Format
+README files are usually one of two formats, .org or .md. In either case, we assume that *Unreleased* appears on a line by itself (irrespective of it's header depth).
+
+#### ORG (.org) Format
 
 A README in org format might be:
 
@@ -607,13 +584,15 @@ A README in org format might be:
 * More Stuff...
 * Releases
 ** Unreleased
-     - FIX: Made the gizmo fit into the whatchamacallit.
-     - ADD: Capability to make time go backwards (required confirmation beforehand)
-     - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
-     ....
+   - FIX: Made the gizmo fit into the whatchamacallit.
+   - ADD: Capability to make time go backwards (required confirmation beforehand)
+   - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+** v1.5.10 - 2023-05-15
+   - FIX: blah blah..
+   ....
 ```
 
-We use the `Unreleased` tag line and \"create\" a new release (using the current version number in `pyproject.toml` and today\'s date), transforming the file to look like the following:
+The `update_readme` recipt will use the `Unreleased` tag line and allow subsequent entries to "create" a new release (using the current version number in `pyproject.toml` and today's date), transforming the file to look like the following:
 
 ``` org
 * My Project
@@ -623,14 +602,16 @@ We use the `Unreleased` tag line and \"create\" a new release (using the current
 ** Unreleased
 ** v1.5.11 - 2023-07-12
    - FIX: Made the gizmo fit into the whatchamacallit.
-   - ADD: Capability to make time go backwards (required confirmation beforehand)
+   - ADD: Capability to make time go backwards (requires confirmation beforehand)
    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
-    ....
+   ....
+** v1.5.10 - 2023-05-15
+   - FIX: blah blah..
+   ....
 ```
 
-2.  Markdown (.md) Format
-
-Similarly, a README in markdown format might be (note that the Unreleased line is at a different header level than the org-format example above!)
+#### Markdown (.md) Format
+Similarly, a README in Markdown format might look like the following (note that the Unreleased line is at a different header level than the org-format example above!):
 
 ``` markdown
 # My Project
@@ -642,14 +623,15 @@ Similarly, a README in markdown format might be (note that the Unreleased line i
 
 ### Unreleased
     - FIX: Made the gizmo fit into the whatchamacallit.
-    - ADD: Capability to make time go backwards (required confirmation beforehand)
+    - ADD: Capability to make time go backwards (requires confirmation beforehand)
+    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 
 ### v1.5.10 - 2023-05-15
-    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+    - FIX: blah blah..
     ....
 ```
 
-We use the `Unreleased` tag line and \"create\" a new release (using the current version number in `pyproject.toml` and today\'s date), transforming the file to look like the following:
+We use the `Unreleased` tag line and "create" a new release (using the current version number in `pyproject.toml` and today's date), transforming the file to look like the following:
 
 ``` markdown
 # My Project
@@ -664,17 +646,18 @@ We use the `Unreleased` tag line and \"create\" a new release (using the current
 ### v1.5.11 - 2023-07-12
     - FIX: Made the gizmo fit into the whatchamacallit.
     - ADD: Capability to make time go backwards (required confirmation beforehand)
+    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 
 ### v1.5.10 - 2023-05-15
-    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+    - FIX: blah blah..
     ....
 ```
 
 ## Development
 
-If you want to help develop this, here\'s what might this might entail:
+If you want to help develop this, here's what might this might entail:
 
-- Confirm python version availability, I\'m developing on 3.11+ for now (and use [pyenv](https://github.com/pyenv/pyenv) to manage all my versions).
+- Confirm python version availability, I'm developing on 3.11+ for now (and use [pyenv](https://github.com/pyenv/pyenv) to manage all my versions).
 
 - Setup a .venv using your virtual-env manager of choice (I use `python -m venv .venv`).
 
@@ -682,7 +665,7 @@ If you want to help develop this, here\'s what might this might entail:
 
 - `poetry install` to install requisite dependencies into your venv.
 
-- Set `.envrc` to point top-level directory (i.e. README and pyproject.toml), I use the wonderful [direnv](https://direnv.net/) package to take of this housekeeping. Here\'s what my
+- Set `.envrc` to point top-level directory (i.e. README and pyproject.toml), I use the wonderful [direnv](https://direnv.net/) package to take of this housekeeping. Here's what my
 `.envrc` contains, it not only sets the `PYTHON_PATH` appropriately but also takes care of automatically point me to my virtual env:
 
 ``` bash
@@ -693,9 +676,14 @@ PATH_add "$VIRTUAL_ENV/bin"
 
 - At this point, you should be able to run: `python manage check` against the default `manage.yaml` in the root folder (yes, I do eat my own dog-food ;-).
 
-## GTD
+## Project GTD
 ### Add a --dry-run or --live option?
-Along with support for a [tool.manager.options] in pyproject.toml where the default action would be either "live" or "dry-run" and the command-line option would be the override to whatever's set there.
+- Along with support for a [tool.manager.options] in pyproject.toml where the default action would be either "live" or "dry-run" and the command-line option would be the override to whatever's set there.
+
+- Dry-run would actually list the command to be executed.
+
+### Could the contents of manage.yaml actually BE in pyproject.toml? [tool.manager.configuration]
+Or at least, be available there and it not, look to a standalone manage.yaml file as a backup?
 ### Maybe make print also take a target to print (instead of always printing the whole enchilada?)
 ### Arghhh : Print is broken? (at least in optimus-ludos):
 
@@ -715,12 +703,11 @@ Traceback (most recent call last):
        ^^^^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'verbose'
 ```
+### When/if we ever release, add support for user/project specific method to be added
 ### Add back ability to take and reflect command-line options obo method arguments.
-For example, `poetry_version` for `update_readme`. Make use of method\'s \"arguments\" meta-data now available.
+For example, `poetry_version` for `update_readme`. Make use of method's "arguments" meta-data now available.
 
 Another example is from raindrop-io-py where we'd like to make the patch, minor, major version bump a single step (right now, we need a unique step for each one :-()
-### Could the contents of manage.yaml actually BE in pyproject.toml? [tool.manager.configuration]
-Or at least, be available there and it not, look to a standalone manage.yaml file as a backup?
 ### Create a `sample` recipe to create an example `manage.yaml` in the current project directory.
 Thist be essentially a copy of `manage/examples/manage.yaml` to `$HOME_DIR` (while checking to not overwrite any existing file)
 ### Is it worth refactoring methods to use a common-base class?
@@ -737,29 +724,29 @@ Mighnificantly reduce duplicate code associated with confirmation and return sta
 We khe package name (from pyproject.toml) - 90% confidence We know the user name (from another env variable) - 100% confidence We can somewhat surely assume the default branch? - 50% confidence.
 
 ### Replace requests and vcrpy with [Gracy](https://github.com/guilatrova/gracy)?
-### ONGOING Status of ongoing test development:
+### Status of ONGOING test development:
 
-  Status   Module
-  -------- ----------------------------------
-  0%       `build`
-  100%     `clean`
-  100%     `git_add`
-  100%     `git_commit`
-  0%       `git_create_release`
-  0%       `git_create_tag`
-  0%       `git_push_to_github`
-  100%     `pandoc_convert_org_to_markdown`
-  0%       `poetry_bump_version`
-  0%       `poetry_lock_check`
-  0%       `publish_to_pypi`
-  0%       `run_command`
-  0%       `run_pre_commit`
-  0%       `sass`
-  100%     `update_readme`
+  | Status   | Module
+  | -------- | ----------------------------------
+  | 0%       | `build`
+  | 100%     | `clean`
+  | 100%     | `git_add`
+  | 100%     | `git_commit`
+  | 0%       | `git_create_release`
+  | 0%       | `git_create_tag`
+  | 0%       | `git_push_to_github`
+  | 100%     | `pandoc_convert_org_to_markdown`
+  | 0%       | `poetry_bump_version`
+  | 0%       | `poetry_lock_check`
+  | 0%       | `publish_to_pypi`
+  | 0%       | `run_command`
+  | 0%       | `run_pre_commit`
+  | 0%       | `sass`
+  | 100%     | `update_readme`
+  | -------- | ----------------------------------
 
 ## Release History
 ### Unreleased
-
 ### v0.1.11 - 2023-09-06
 
 - FIXED: Address vulnerability of gitpython (CVE-2023-40590).
@@ -770,18 +757,18 @@ We khe package name (from pyproject.toml) - 90% confidence We know the user name
 
 ### v0.1.9 - 2023-07-20
 
-- FIXED: Add missing \"main\" dependency on `gitpython` (was coming implicitly from pytest-git but we need it for releases explicitly).
+- FIXED: Add missing "main" dependency on `gitpython` (was coming implicitly from pytest-git but we need it for releases explicitly).
 
 ### v0.1.8 - 2023-07-19
 
-- CHANGED: Removed argument \"pathspec\" from `git_commit`, all staged items are now committed (only argument is optional commit message).
+- CHANGED: Removed argument "pathspec" from `git_commit`, all staged items are now committed (only argument is optional commit message).
 - INTERNAL: Add more consistency obo use of `verbose` and `confirm` options.
 - INTERNAL: Added tests for `git_add` and `git_commit` methods.
 
 ### v0.1.7 - 2023-07-18
 
-- CHANGED: Removed method \`poetry-lock-refresh\`. The underlying command \`poetry lock --no-update\` will be done automatically (net of confirmation) as part of the \`poetry-lock-check\` method.
-- CHANGED: Moved up to python 3.11 (specifically 3.11.3) to take advantage of built-in TOML support. Contact me if you think it\'s important to you that I support backwards compatibility with older python versions (that don\'t have tomllib built-in).
+- CHANGED: Removed method `poetry-lock-refresh`. The underlying command `poetry lock --no-update` will be done automatically (net of confirmation) as part of the `poetry-lock-check` method.
+- CHANGED: Moved up to python 3.11 (specifically 3.11.3) to take advantage of built-in TOML support. Contact me if you think it's important to you that I support backwards compatibility with older python versions (that don't have tomllib built-in).
 - CHANGED: Pulled (limited) support for method-specific command-line argument setting until we deal with method meta-data better (was only used for 1 argument: `poetry_version` to bump).
 - INTERNAL: Incorporate use of [pytest-git](https://pypi.org/project/pytest-git/) to begin structured testing of git methods.
 
@@ -794,14 +781,14 @@ We khe package name (from pyproject.toml) - 90% confidence We know the user name
 ### v0.1.5 - 2023-07-12
 
 - CHANGED: For method `update_readme`, we relaxed the requirement on finding README files. Specifically, by default, we search for either README.org or README.md and use the first one found. You can also specify a path to a README file directly with a `readme` argument to the method (ie, instead of `readme_format`).
-- CHANGED: We resolved difference between the built-in targets \"show\" and \"print\". It\'s not \"print\" consistently (no more \"show\" option).
+- CHANGED: We resolved difference between the built-in targets "show" and "print". It's not "print" consistently (no more "show" option).
 
 ### v0.1.4 - 2023-07-10
 
-- ADDED: \"print\" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
-- ADDED: A simple \"`git_add`\" method that simply does a \`git add {pathspec}\` (or \'git add .\' if pathspec is not provided).
-- ADDED: A \"`run_command`\" method to run an arbitrary local command.
-- CHANGED: Missing either \[tool.poetry\].version or \[tool.poetry\].package is now allowed (for those projects that don\'t need formal package release/build management).
+- ADDED: "print" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
+- ADDED: A simple "`git_add`" method that simply does a `git add {pathspec}` (or 'git add .' if pathspec is not provided).
+- ADDED: A "`run_command`" method to run an arbitrary local command.
+- CHANGED: Missing either \[tool.poetry\].version or \[tool.poetry\].package is now allowed (for those projects that don't need formal package release/build management).
 
 ### v0.1.3 - 2023-07-09
 
@@ -809,51 +796,51 @@ We khe package name (from pyproject.toml) - 90% confidence We know the user name
 
 ### v0.1.2 - 2023-02-18
 
-- ADDED: Command-line argument to display package\' version and quit.
+- ADDED: Command-line argument to display package' version and quit.
 
 ### v0.1.1 - 2023-02-16
 
 ### v0.1.0 - 2023-02-16
 
-- ADDED: Support for step-specific command-line overrides. For example, when \"bumping\" the version number of a package, while the recipe\'s step may default to **patch**, we can now specify **minor** (or any of the Poetry version labels) on the command-line instead, e.g. `--poetry-version`.
-- ADDED: Ability to override \"confirm\" recipe step attribute with command-line flag: `--no-confirm` or `--confirm`.
+- ADDED: Support for step-specific command-line overrides. For example, when "bumping" the version number of a package, while the recipe's step may default to **patch**, we can now specify **minor** (or any of the Poetry version labels) on the command-line instead, e.g. `--poetry-version`.
+- ADDED: Ability to override "confirm" recipe step attribute with command-line flag: `--no-confirm` or `--confirm`.
 
 ### v0.0.14 - 2023-02-06
 
-- ADDED: Ability for `update_readme` to take an argument specifying what format the project\'s README file is in, ie. \'md\' for markdown (default) or \'org\'. Optional argument is `readme_format`.
+- ADDED: Ability for `update_readme` to take an argument specifying what format the project's README file is in, ie. 'md' for markdown (default) or 'org'. Optional argument is `readme_format`.
 
 ### v0.0.13 - 2023-02-02
 
-- ADDED: Ability to pass general \"arguments\" into steps that might require `manage.yaml` time configuration. Example is a step to convert from org to markdown, arguments are used to pass the specific input & output paths.
-- CHANGED: Added ability for built-in \"show\" target to render nested recipes.
+- ADDED: Ability to pass general "arguments" into steps that might require `manage.yaml` time configuration. Example is a step to convert from org to markdown, arguments are used to pass the specific input & output paths.
+- CHANGED: Added ability for built-in "show" target to render nested recipes.
 
 ### v0.0.12 - 2023-02-02
 
 - ADDED: A step method that uses pandoc converter, for example to go from README.org to README.md.
-- ADDED: The first draft of a better \"show\" target to document the current `manage.yaml` file.
-- CHANGED Corrected data model: instead of `method` or `step` for a recipe, it\'s now `method` or *recipe*.
+- ADDED: The first draft of a better "show" target to document the current `manage.yaml` file.
+- CHANGED Corrected data model: instead of `method` or `step` for a recipe, it's now `method` or *recipe*.
 - CHANGED: Moved back to dynamically importing available step methods from manage.steps module.
 
 ### v0.0.11 - 2023-01-29
 
-- ADDED: A \'quiet-mode\' step configuration option to remove all extraneous non-failure associated terminal output.
+- ADDED: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
 - ADDED: A command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
 - CHANGED: Back to YAML instead of TOML for recipe files (TOML nice for serialisation but too verbose for our use case).
-- CHANGED: Default value for \'confirm\' step option to True (as most of my steps are using True).
+- CHANGED: Default value for 'confirm' step option to True (as most of my steps are using True).
 - CHANGED: To pydantic for stronger typing of Recipes and their associated steps.
 - CHANGED: Sample recipe toml files to match pydantic-based data models (in particular, recipes are a dict!).
 
 ### v0.0.10 - 2023-01-26
 
-- ADDED: A \"check\" recipe/option to simply run the setup & validation steps only.
+- ADDED: A "check" recipe/option to simply run the setup & validation steps only.
 - ADDED: A validation that the version in `pyproject.toml` is consistent with the last release in the Release History of `README.org`.
 - CHANGED: Terminology from `target` to `recipe` and manage.toml to consisting of *recipes*.
-- CHANGED: Steps to make them more \"granular\" and loaded from `steps` module.
+- CHANGED: Steps to make them more "granular" and loaded from `steps` module.
 - CHANGED: Over to TOML (tomli) instead of YAML for recipe files.
 
 ### v0.0.9 - 2023-01-25
 
-- CHANGED: To catch exception when manage.yaml can\'t be opened.
+- CHANGED: To catch exception when manage.yaml can't be opened.
 
 ### v0.0.8 - 2023-01-25
 
