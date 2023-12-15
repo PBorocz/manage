@@ -278,27 +278,28 @@ build_my_package:
 
 We provide a summary of the methods supported (listed alphabetically):
 
-| Method Name                      | Confirmation? | Arguments? | Arguments
-|----------------------------------|---------------|------------|-------------
-| `build`                          | Yes           | \-         |
-| `clean`                          | Yes           | \-         |
-| `git_add`                        | Yes           | Optional   | `pathspec`
-| `git_commit`                     | Yes           | Optional   | `pathspec, message`
-| `git_commitversionfiles`         | No            | \-         |
-| `git_create_release`             | Yes           | \-         |
-| `git_create_tag`                 | Yes           | \-         |
-| `git_push_to_github`             | Yes           | \-         |
-| `pandoc_convert_org_to_markdown` | No            | Required   | `path_md, path_org`
-| `poetry_bump_version`            | Yes           | Required   | `poetry_version`
-| `poetry_lock_check`              | No            | \-         |
-| `publish_to_pypi`                | Yes           | \-         |
-| `run_command`                    | Yes           | Required   | `command`
-| `run_pre_commit`                 | No            | \-         |
-| `sass`                           | Yes           | Required   | `pathspec`
-| `update_readme`                  | Yes           | Optional   | `readme`
+| Method Name | Confirmation? | Arguments? | Arguments
+|-------------|---------------|------------|-------------
+| [`build`](#build)														| Yes | \-         |
+| [`clean`](#clean)														| Yes | \-         |
+| [`git_add`](#git_add)													| Yes | Optional   | `pathspec`
+| [`git_commit`](#git_commit)											| Yes | Optional   | `pathspec, message`
+| [`git_commit_version_files`](#git_commit_version_files)				| No  | \-         |
+| [`git_create_release`](#git_create_release)							| Yes | \-         |
+| [`git_create_tag`](#git_create_tag)									| Yes | \-         |
+| [`git_push_to_github`](#git_push_to_github)							| Yes | \-         |
+| [`pandoc_convert_org_to_markdown`](#pandoc_convert_org_to_markdown)   | No  | Required   | `path_md, path_org`
+| [`poetry_bump_version`](#poetry_bump_version)							| Yes | Required   | `poetry_version`
+| [`poetry_lock_check`](#poetry_lock_check)								| No  | \-         |
+| [`publish_to_pypi`](#publish_to_pypi)									| Yes | \-         |
+| [`run_command`](#run_command)											| Yes | Required   | `command`
+| [`run_pre_commit`](#run_precommit)									| No  | \-         |
+| [`sass`](#sass)														| Yes | Required   | `pathspec`
+| [`update_readme`](#update_readme)										| Yes | Optional   | `readme`
 
 #### Details
 ##### **build**
+<a id="build"></a>
 Method to "poetry" build a package distribution, ie. `poetry build`.
 
 ``` yaml
@@ -314,6 +315,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **clean**
+<a id="clean"></a>
 Method to delete build artifacts, ie. `rm -rf build \*.egg-info`.
 ``` yaml
 build_my_package:
@@ -327,6 +329,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line (confirm: false is set on the step).
 
 ##### **git_add**
+<a id="git_add"></a>
 Method to perform a `git add <pathspec>` operation.
 ``` yaml
 build_my_package:
@@ -343,6 +346,7 @@ build_my_package:
 - `pathspec` Optional path specification of dir(s) and/or file(s) to stage. Default if not specified is `.`.
 
 ##### **git_commit**
+<a id="git_commit"></a>
 Method to perform a `git commit <pathspec>` operation.
 ``` yaml
 build_my_package:
@@ -359,7 +363,8 @@ build_my_package:
 * `pathspec` Optional path specification of dir(s) and/or file(s) to commit. Default if not specified is `.`.
 * `message` Optional commit message. Default if not specified is today's date (in format: ~yyyymmddThhmm~).
 
-##### **git_commitversionfiles**
+##### **git_commit_version_files**
+<a id="git_commit_version_files"></a>
 Specialised method (really a customised version of `git_commit`) to git stage and git commit two files relevant to the build process: `pyproject.toml` and `README.(org|md)`.
 
 Specifically, other methods will update these files for version management and this method is provided to get them into git on behalf of a release. Alternately, you can use the more general `git_commit` method, specifying these two files to be added.
@@ -378,7 +383,8 @@ build_my_package:
 
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
-##### **git_createrelease**
+##### **git_create_release**
+<a id="git_create_release"></a>
 Method to create a git **release** using the appropriate version string (from `pyproject.toml`).
 ``` yaml
 build_my_package:
@@ -394,7 +400,8 @@ build_my_package:
 ```
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
-##### **git_createtag**
+##### **git_create_tag**
+<a id="gitcreate_tag"></a>
 Method to create a local git **tag** using the appropriate version string (from `pyproject.toml`).
 ``` yaml
 build_my_package:
@@ -410,7 +417,8 @@ build_my_package:
 ```
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
-##### **git_pushtogithub**
+##### **git_push_to_github**
+<a id="gitpush_to_github"></a>
 Method command to perform a `git push --follow-tags`.
 ``` yaml
 build_my_package:
@@ -426,8 +434,9 @@ build_my_package:
 ```
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
-##### **pandoc_convertorgtomarkdown**
-Specialised method to convert an emacs .org file to an markdown (.md) file using pandoc; specifically:
+##### **pandoc_convert_org_to_markdown**
+<a id="pandoc_convert_org_to_markdown"></a>
+Specialised method to convert an emacs .org file to a markdown (.md) file using pandoc; specifically:
 
 ```shell
 pandoc -f org -t markdown --wrap none --output <path_md> <path_org>
@@ -447,7 +456,8 @@ build_my_package:
 * `path_md` Required, path specification input markdown file, e.g. `./docs/my_doc.md`.
 * `path_org` Required, path specification resulting .org file to be created, e.g. `./docs/my_doc.org`.
 
-##### **poetry_bumpversion**
+##### **poetry_bump_version**
+<a id="poetry_bump_version"></a>
 Specialised method to "bump" the version of a project/package using Poetry's version command. Takes one of three pre-defined version levels to bump and updates `pyproject.toml` with the new version value.
 ``` yaml
 build_my_package:
@@ -466,7 +476,8 @@ build_my_package:
 ###### Arguments
 * `poetry_version` Required, the default level of version "bump" to perform. Must be one of 'patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor', 'prerelease' (see [Poetry version command](https://python-poetry.org/docs/cli/#version) for more information).
 
-##### **poetry_lockcheck**
+##### **poetry_lock_check**
+<a id="poetry_lock_check"></a>
 Method to perform a poetry lock "check" to verify that `poetry.lock` is consistent with `pyproject.toml`. If it isn't, will update/refresh `poetry.lock` (after confirmation).
 ``` yaml
 build_my_package:
@@ -476,7 +487,8 @@ build_my_package:
 ```
 This command takes **no** arguments but **will** ask for confirmation before running `poetry lock` unless `--no-confirm` is set on the command-line.
 
-##### **publish_topypi**
+##### **publish_to_pypi**
+<a id="publish_to_pypi"></a>
 Method to publish your package to PyPI.
 ``` yaml
 build_my_package:
@@ -487,6 +499,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current `poetry.lock` file.
 
 ##### **run_command**
+<a id="run_command"></a>
 General method to run essentially any local command for it's respective side-effects. 
 
 For example, in one of my projects, I don't use the version number in `pyproject.toml` but instead in an `app/version.py` that is updated from a small script (using the date & respective branch of the last git commit performed).
@@ -509,6 +522,7 @@ This command **will** ask for confirmation unless `--no-confirm` is set on the c
 * `command` Required, a string containing the full shell command to execute.
 
 ##### **run_precommit**
+<a id="run_precommit"></a>
 Method to run the `pre-commit` tool (if you use it).
 ``` yaml
 build_my_package:
@@ -520,6 +534,7 @@ build_my_package:
 This command takes no argument and **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **sass**
+<a id="sass"></a>
 Method to run a `sass` command to convert scss to css.
 ``` yaml
 build_my_package:
@@ -535,6 +550,7 @@ build_my_package:
 * `pathspec` Required path specification of dir(s) and/or file(s) to run.
 
 ##### **update_readme**
+<a id="update_readme"></a>
 Specialised method to move "Unreleased" items into a dedicated release section of a README file.
 
 - README file can be in either [Org](https://orgmode.org/) or Markdown format, ie. `README.md` or `README.org`.
