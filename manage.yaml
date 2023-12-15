@@ -1,3 +1,4 @@
+# -*- mode: yaml-ts;-*-
 ################################################################################
 1_bump:
   description: Bump the version number to the next /patch/ level and commit locally
