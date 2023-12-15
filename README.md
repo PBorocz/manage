@@ -12,7 +12,7 @@ Thus, this package automates all the common operations for [Poetry](https://pyth
 
 Here's an example of building and releasing a python package:
 
-![Sample Session](screenshot.png)
+![Sample Session](Screenshot.png)
 
 ## Design
 
