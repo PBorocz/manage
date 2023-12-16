@@ -601,14 +601,18 @@ PATH_add "$VIRTUAL_ENV/bin"
 ### WORKING: Convert the manage.yaml file to actually BE in pyproject.toml? [tool.manager.recipes]
 Or at least, be available there and it not, look to a standalone manage.yaml file as a backup?
 
-### Add a --dry-run or --live option?
+### WORKING: Add a --dry-run or --live option?
 - Along with support for a [tool.manager.options] in pyproject.toml where the default action would be either "live" or "dry-run" and the command-line option would be the override to whatever's set there.
 
 - Dry-run would actually list the command to be executed.
 
+### Add `pre-commit` for ruff lint and formatting (minimally)
+
 ### Maybe make print also take a target to print (instead of always printing the whole enchilada?)
-What the heck does this mean??
-### When/if we ever release, add support for user/project specific method to be added
+What the heck does this mean?? Oh, maybe a particular target/recipe?
+
+### When/if we ever release, add support for user/project specific method to be added.
+
 ### Add back ability to take and reflect command-line options obo method arguments.
 For example, `poetry_version` for `update_readme`. Make use of method's "arguments" meta-data now available.
 
@@ -618,7 +622,6 @@ Another example is from raindrop-io-py where we'd like to make the patch, minor,
 This be essentially a copy of `manage/examples/manage.yaml` to `$HOME_DIR` (while checking to not overwrite any existing file)
 
 ### Is it worth refactoring methods to use a common-base class?
-
 Might significantly reduce duplicate code associated with confirmation and return statuses?
 
 ### Handle steps to support Sphinx documentation management:
