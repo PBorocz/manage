@@ -3,11 +3,11 @@ import re
 import shlex
 import subprocess
 import sys
+import tomllib
 from importlib import metadata
 from pathlib import Path
 from typing import Final, Any
 
-import tomllib
 from rich import print
 from rich.console import Console
 
@@ -109,19 +109,9 @@ def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step"
     return True, result.stdout.decode().strip()
 
 
-def get_package_version_from_pyproject_toml(verbose: bool) -> tuple[str | None, str | None]:
+def get_package_version_from_pyproject_toml(verbose: bool, pyproject: dict) -> tuple[str | None, str | None]:
     """Read the pyproject.toml file to return *current* package and version we're working with."""
-    # FIXME: Assume's we're always running from top-level/project directory!!
-    path_pyproject = Path("./pyproject.toml")
-
-    if verbose:
-        message(f"Reading package & version ({path_pyproject})")
-
-    pyproject = tomllib.loads(path_pyproject.read_text())
-
-    ################################################################################
     # Lookup the package which "should" represent the current package we're working on:
-    ################################################################################
     package = None
     if packages := pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
         try:
@@ -148,7 +138,7 @@ def get_package_version_from_pyproject_toml(verbose: bool) -> tuple[str | None, 
     return version, package
 
 
-def get_package_version():
+def get_package_version(pyproject: dict) -> str:
     """Return version of our own package from installed module or manually from pyproject.toml.
 
     This is a little subtle. If this is running from an "installed" environment,
@@ -165,5 +155,5 @@ def get_package_version():
     try:
         return metadata.version('manage')
     except metadata.PackageNotFoundError:
-        version, _ = get_package_version_from_pyproject_toml(verbose=False)
+        version, _ = get_package_version_from_pyproject_toml(False, pyproject)
         return version

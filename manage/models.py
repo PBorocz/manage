@@ -1,4 +1,5 @@
 """Core data types and recipe file read."""
+from argparse import Namespace
 from copy import copy, deepcopy
 from pathlib import Path
 
@@ -186,35 +187,51 @@ class Arguments(BaseModel):
 
 class Configuration(BaseModel):
     """Configuration/state, primarily (but not solely) from command-line args."""
-    recipes: Path | None = None
+    verbose: bool | None = None
     target: str | None = None
-    verbose: bool | None = False
+    dry_run: bool | None = None
     confirm: bool | None = None  # If set, override step confirmation instruction appropriately.
     version_: str | None = None  # Note: This is the current version # of the project we're working on!
     version: str | None = None   # " In nice format..
     package_: str | None = None  # "
 
 
-def configuration_factory(args = None, **kwargs) -> Configuration | None:
+    def set_value(self, attr: str, value: any, source: str) -> None:
+        """."""
+        if self.verbose:
+            msg = f"Setting [italic]{attr}[/] to {value} {source}."
+            message(msg, color='light_slate_grey', end_success=True)
+        setattr(self, attr, value)
+
+
+def configuration_factory(args: Namespace | None, parameters: dict | None, pyproject: dict, **kwargs) -> Configuration | None:
     """Create a Configuration object, setting some attrs from pyproject.toml.
 
-    We can either set from args (usual case) or from kwargs (primarily for testing).
+    We can either set from args (usual case) or pyproject.toml or from kwargs (primarily for testing).
     """
-    if args:
-        version_, package = get_package_version_from_pyproject_toml(args.verbose)
-        config = Configuration(
-            recipes=args.recipes,
-            target=args.target,
-            verbose=args.verbose,
-            confirm=args.confirm,
-            version_=version_, # This is the "raw" value, e.g. 1.2.3
-            package_=package,
-        )
-    elif kwargs:
-        config = Configuration()
-        for key, value in kwargs.items():
-            setattr(config, key, value)
+    def _resolve_parameter(attr: str, config: Configuration) -> Configuration:
+        # First, get from the pyproject.toml:
+        if attr in parameters:
+            config.set_value(attr, parameters[attr], "from pyproject.toml")
 
-    if config.version_:
-        config.version = f"v{config.version_}"  # This is the "nice" format, e.g. v1.2.3 for use in README's
+        # Then, from command-line args (which *override* pyproject.toml!)
+        if value := getattr(args, attr, None):
+            config.set_value(attr, value, "from command-line")
+
+        return config
+
+    version_, package = get_package_version_from_pyproject_toml(args.verbose, pyproject)
+    config = Configuration(
+        version_ = version_,        # This is the "raw" value, e.g. 1.2.3
+        version  = f"v{version_}",  # This is the "nice" format, e.g. v1.2.3 for use in README's
+        package_ =package,
+    )
+
+    for attr in ["verbose", "dry_run", "confirm", "target"]:
+        config = _resolve_parameter(attr, config)
+
+    if kwargs:
+        for attr, value in kwargs.items():
+            config.set_value(attr, value, "from direct kwargs")
+
     return config

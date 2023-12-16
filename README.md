@@ -1,5 +1,4 @@
 # Manage
-
 ## Introduction
 
 In learning how to perform releases to PyPI, I became somewhat "disenchanted" by all the various manual steps and required.
@@ -299,7 +298,7 @@ We provide a summary of the methods supported (listed alphabetically):
 
 #### Details
 ##### **build**
-<a id="build"></a>
+
 Method to "poetry" build a package distribution, ie. `poetry build`.
 
 ``` yaml
@@ -315,7 +314,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **clean**
-<a id="clean"></a>
+
 Method to delete build artifacts, ie. `rm -rf build \*.egg-info`.
 ``` yaml
 build_my_package:
@@ -329,7 +328,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line (confirm: false is set on the step).
 
 ##### **git_add**
-<a id="git_add"></a>
+
 Method to perform a `git add <pathspec>` operation.
 ``` yaml
 build_my_package:
@@ -346,7 +345,7 @@ build_my_package:
 - `pathspec` Optional path specification of dir(s) and/or file(s) to stage. Default if not specified is `.`.
 
 ##### **git_commit**
-<a id="git_commit"></a>
+
 Method to perform a `git commit <pathspec>` operation.
 ``` yaml
 build_my_package:
@@ -364,7 +363,7 @@ build_my_package:
 * `message` Optional commit message. Default if not specified is today's date (in format: ~yyyymmddThhmm~).
 
 ##### **git_commit_version_files**
-<a id="git_commit_version_files"></a>
+
 Specialised method (really a customised version of `git_commit`) to git stage and git commit two files relevant to the build process: `pyproject.toml` and `README.(org|md)`.
 
 Specifically, other methods will update these files for version management and this method is provided to get them into git on behalf of a release. Alternately, you can use the more general `git_commit` method, specifying these two files to be added.
@@ -384,7 +383,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **git_create_release**
-<a id="git_create_release"></a>
+
 Method to create a git **release** using the appropriate version string (from `pyproject.toml`).
 ``` yaml
 build_my_package:
@@ -401,7 +400,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **git_create_tag**
-<a id="gitcreate_tag"></a>
+
 Method to create a local git **tag** using the appropriate version string (from `pyproject.toml`).
 ``` yaml
 build_my_package:
@@ -418,7 +417,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **git_push_to_github**
-<a id="gitpush_to_github"></a>
+
 Method command to perform a `git push --follow-tags`.
 ``` yaml
 build_my_package:
@@ -435,7 +434,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **pandoc_convert_org_to_markdown**
-<a id="pandoc_convert_org_to_markdown"></a>
+
 Specialised method to convert an emacs .org file to a markdown (.md) file using pandoc; specifically:
 
 ```shell
@@ -457,7 +456,7 @@ build_my_package:
 * `path_org` Required, path specification resulting .org file to be created, e.g. `./docs/my_doc.org`.
 
 ##### **poetry_bump_version**
-<a id="poetry_bump_version"></a>
+
 Specialised method to "bump" the version of a project/package using Poetry's version command. Takes one of three pre-defined version levels to bump and updates `pyproject.toml` with the new version value.
 ``` yaml
 build_my_package:
@@ -477,7 +476,7 @@ build_my_package:
 * `poetry_version` Required, the default level of version "bump" to perform. Must be one of 'patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor', 'prerelease' (see [Poetry version command](https://python-poetry.org/docs/cli/#version) for more information).
 
 ##### **poetry_lock_check**
-<a id="poetry_lock_check"></a>
+
 Method to perform a poetry lock "check" to verify that `poetry.lock` is consistent with `pyproject.toml`. If it isn't, will update/refresh `poetry.lock` (after confirmation).
 ``` yaml
 build_my_package:
@@ -488,7 +487,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation before running `poetry lock` unless `--no-confirm` is set on the command-line.
 
 ##### **publish_to_pypi**
-<a id="publish_to_pypi"></a>
+
 Method to publish your package to PyPI.
 ``` yaml
 build_my_package:
@@ -499,7 +498,7 @@ build_my_package:
 This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current `poetry.lock` file.
 
 ##### **run_command**
-<a id="run_command"></a>
+
 General method to run essentially any local command for it's respective side-effects. 
 
 For example, in one of my projects, I don't use the version number in `pyproject.toml` but instead in an `app/version.py` that is updated from a small script (using the date & respective branch of the last git commit performed).
@@ -522,7 +521,7 @@ This command **will** ask for confirmation unless `--no-confirm` is set on the c
 * `command` Required, a string containing the full shell command to execute.
 
 ##### **run_precommit**
-<a id="run_precommit"></a>
+
 Method to run the `pre-commit` tool (if you use it).
 ``` yaml
 build_my_package:
@@ -534,7 +533,7 @@ build_my_package:
 This command takes no argument and **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ##### **sass**
-<a id="sass"></a>
+
 Method to run a `sass` command to convert scss to css.
 ``` yaml
 build_my_package:
@@ -550,7 +549,6 @@ build_my_package:
 * `pathspec` Required path specification of dir(s) and/or file(s) to run.
 
 ##### **update_readme**
-<a id="update_readme"></a>
 Specialised method to move "Unreleased" items into a dedicated release section of a README file.
 
 - README file can be in either [Org](https://orgmode.org/) or Markdown format, ie. `README.md` or `README.org`.
@@ -576,99 +574,6 @@ This command **will** ask for confirmation unless `--no-confirm` is set on the c
 ###### Arguments
 * `readme` Optional, a string that represents a full path to your respective README.\* file. If not specified, we search for `./README.org` and `./README.md` in the same directory as your `pyproject.toml`.
 
-### README Files
-One of the core time-saving's feature of release automation is the stage change of outstanding items addressed in a release to a "completed" state. Since we're not assuming the use of any particular ticket tracking environment, we allow for change management tracking within a README file. Specifically:
-
-* Tracking of closed (but not released) items in an "Unreleased" section of a README.
-* Tracking of previous releases and their associated change items by date and release version.
-
-The workflow I use is the following:
-
-* I keep track of all items outstanding using a GTD approach, keeping this list either within a README file or another dedicated environment (usually a .ORG file).
-* During development, as GTD items are addressed and committed (also tested, ruff'ed, etc..), I move their entries to the *Unreleased* section of the README file.
-* Through a master "release" recipe (or set of recipes), I include the `update_readme` recipe that relabels the *Unreleased* items to the specific release version with today's date (note: doing a `poetry_bump_version` before `update_readme` is important as otherwise, an old version identifier will be used!).
-
-README files are usually one of two formats, .org or .md. In either case, we assume that *Unreleased* appears on a line by itself (irrespective of it's header depth).
-
-#### ORG (.org) Format
-
-A README in org format might be:
-
-``` org
-* My Project
-* Stuff...
-* More Stuff...
-* Releases
-** Unreleased
-   - FIX: Made the gizmo fit into the whatchamacallit.
-   - ADD: Capability to make time go backwards (required confirmation beforehand)
-   - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
-** v1.5.10 - 2023-05-15
-   - FIX: blah blah..
-   ....
-```
-
-The `update_readme` recipt will use the `Unreleased` tag line and allow subsequent entries to "create" a new release (using the current version number in `pyproject.toml` and today's date), transforming the file to look like the following:
-
-``` org
-* My Project
-* Stuff...
-* More Stuff...
-* Releases
-** Unreleased
-** v1.5.11 - 2023-07-12
-   - FIX: Made the gizmo fit into the whatchamacallit.
-   - ADD: Capability to make time go backwards (requires confirmation beforehand)
-   - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
-   ....
-** v1.5.10 - 2023-05-15
-   - FIX: blah blah..
-   ....
-```
-
-#### Markdown (.md) Format
-Similarly, a README in Markdown format might look like the following (note that the Unreleased line is at a different header level than the org-format example above!):
-
-``` markdown
-# My Project
-
-## Stuff
-    ...
-
-## Releases
-
-### Unreleased
-    - FIX: Made the gizmo fit into the whatchamacallit.
-    - ADD: Capability to make time go backwards (requires confirmation beforehand)
-    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
-
-### v1.5.10 - 2023-05-15
-    - FIX: blah blah..
-    ....
-```
-
-We use the `Unreleased` tag line and "create" a new release (using the current version number in `pyproject.toml` and today's date), transforming the file to look like the following:
-
-``` markdown
-# My Project
-
-## Stuff
-   ...
-
-## Releases
-
-### Unreleased
-
-### v1.5.11 - 2023-07-12
-    - FIX: Made the gizmo fit into the whatchamacallit.
-    - ADD: Capability to make time go backwards (required confirmation beforehand)
-    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
-
-### v1.5.10 - 2023-05-15
-    - FIX: blah blah..
-    ....
-```
-
 ## Development
 
 If you want to help develop this, here's what might this might entail:
@@ -693,42 +598,28 @@ PATH_add "$VIRTUAL_ENV/bin"
 - At this point, you should be able to run: `python manage check` against the default `manage.yaml` in the root folder (yes, I do eat my own dog-food ;-).
 
 ## Project GTD
+### WORKING: Convert the manage.yaml file to actually BE in pyproject.toml? [tool.manager.recipes]
+Or at least, be available there and it not, look to a standalone manage.yaml file as a backup?
+
 ### Add a --dry-run or --live option?
 - Along with support for a [tool.manager.options] in pyproject.toml where the default action would be either "live" or "dry-run" and the command-line option would be the override to whatever's set there.
 
 - Dry-run would actually list the command to be executed.
 
-### Could the contents of manage.yaml actually BE in pyproject.toml? [tool.manager.configuration]
-Or at least, be available there and it not, look to a standalone manage.yaml file as a backup?
 ### Maybe make print also take a target to print (instead of always printing the whole enchilada?)
-### Arghhh : Print is broken? (at least in optimus-ludos):
-
-``` shell
-% manage print
-Traceback (most recent call last):
-  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/bin/manage", line 10, in <module>
-    sys.exit(main())
-             ^^^^^^
-  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/lib/python3.11/site-packages/manage/cli.py", line 182, in main
-    dispatch(configuration, recipes)
-  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/lib/python3.11/site-packages/manage/dispatch.py", line 16, in dispatch
-    return _print(configuration, recipes, None)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/peter/Repository/10-19 Development/10 Development/10.01 optimus_ludos/.venv/lib/python3.11/site-packages/manage/methods/_print.py", line 9, in main
-    if step.verbose:
-       ^^^^^^^^^^^^
-AttributeError: 'NoneType' object has no attribute 'verbose'
-```
+What the heck does this mean??
 ### When/if we ever release, add support for user/project specific method to be added
 ### Add back ability to take and reflect command-line options obo method arguments.
 For example, `poetry_version` for `update_readme`. Make use of method's "arguments" meta-data now available.
 
 Another example is from raindrop-io-py where we'd like to make the patch, minor, major version bump a single step (right now, we need a unique step for each one :-()
+
 ### Create a `sample` recipe to create an example `manage.yaml` in the current project directory.
-Thist be essentially a copy of `manage/examples/manage.yaml` to `$HOME_DIR` (while checking to not overwrite any existing file)
+This be essentially a copy of `manage/examples/manage.yaml` to `$HOME_DIR` (while checking to not overwrite any existing file)
+
 ### Is it worth refactoring methods to use a common-base class?
 
-Mighnificantly reduce duplicate code associated with confirmation and return statuses?
+Might significantly reduce duplicate code associated with confirmation and return statuses?
 
 ### Handle steps to support Sphinx documentation management:
 
@@ -763,6 +654,9 @@ We khe package name (from pyproject.toml) - 90% confidence We know the user name
 
 ## Release History
 ### Unreleased
+
+- CHANGED: Move from standalone `manage.yaml` to reading targets & recipes directly into project's respective `pyproject.toml`.
+
 ### v0.1.11 - 2023-09-06
 
 - FIXED: Address vulnerability of gitpython (CVE-2023-40590).
@@ -869,3 +763,97 @@ We khe package name (from pyproject.toml) - 90% confidence We know the user name
 ### v0.0.2 - 2023-01-25
 
 - Initial packaging.
+
+## APPENDIX: README Files & Formats
+One of the core time-saving's feature of release automation is the stage change of outstanding items addressed in a release to a "completed" state. Since we're not assuming the use of any particular ticket tracking environment, we allow for change management tracking within a README file. Specifically:
+
+* Tracking of closed (but not released) items in an "Unreleased" section of a README.
+* Tracking of previous releases and their associated change items by date and release version.
+
+The workflow I use is the following:
+
+* I keep track of all items outstanding using a GTD approach, keeping this list either within a README file or another dedicated environment (usually a .ORG file).
+* During development, as GTD items are addressed and committed (also tested, ruff'ed, etc..), I move their entries to the *Unreleased* section of the README file.
+* Through a master "release" recipe (or set of recipes), I include the `update_readme` recipe that relabels the *Unreleased* items to the specific release version with today's date (note: doing a `poetry_bump_version` before `update_readme` is important as otherwise, an old version identifier will be used!).
+
+README files are usually one of two formats, .org or .md. In either case, we assume that *Unreleased* appears on a line by itself (irrespective of it's header depth).
+
+### ORG (.org) Format
+
+A README in org format might be:
+
+``` org
+* My Project
+* Stuff...
+* More Stuff...
+* Releases
+** Unreleased
+   - FIX: Made the gizmo fit into the whatchamacallit.
+   - ADD: Capability to make time go backwards (required confirmation beforehand)
+   - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+** v1.5.10 - 2023-05-15
+   - FIX: blah blah..
+   ....
+```
+
+The `update_readme` recipt will use the `Unreleased` tag line and allow subsequent entries to "create" a new release (using the current version number in `pyproject.toml` and today's date), transforming the file to look like the following:
+
+``` org
+* My Project
+* Stuff...
+* More Stuff...
+* Releases
+** Unreleased
+** v1.5.11 - 2023-07-12
+   - FIX: Made the gizmo fit into the whatchamacallit.
+   - ADD: Capability to make time go backwards (requires confirmation beforehand)
+   - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+   ....
+** v1.5.10 - 2023-05-15
+   - FIX: blah blah..
+   ....
+```
+
+### Markdown (.md) Format
+Similarly, a README in Markdown format might look like the following (note that the Unreleased line is at a different header level than the org-format example above!):
+
+``` markdown
+# My Project
+
+## Stuff
+    ...
+
+## Releases
+
+### Unreleased
+    - FIX: Made the gizmo fit into the whatchamacallit.
+    - ADD: Capability to make time go backwards (requires confirmation beforehand)
+    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+
+### v1.5.10 - 2023-05-15
+    - FIX: blah blah..
+    ....
+```
+
+We use the `Unreleased` tag line and "create" a new release (using the current version number in `pyproject.toml` and today's date), transforming the file to look like the following:
+
+``` markdown
+# My Project
+
+## Stuff
+   ...
+
+## Releases
+
+### Unreleased
+
+### v1.5.11 - 2023-07-12
+    - FIX: Made the gizmo fit into the whatchamacallit.
+    - ADD: Capability to make time go backwards (required confirmation beforehand)
+    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+
+### v1.5.10 - 2023-05-15
+    - FIX: blah blah..
+    ....
+```
+

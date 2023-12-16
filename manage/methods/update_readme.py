@@ -1,4 +1,4 @@
-"""Change the local README.org to update the version number (and date) for Unreleased changes."""
+"""Change the local README to update the version number (and date) for Unreleased changes."""
 from datetime import datetime
 from pathlib import Path
 
@@ -54,7 +54,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
 
         readme_name = path_readme.name
     else:
-        # Not specified, look for default of README.org or README.md
+        # Not specified, look for default README
         for format_ in ("org", "md"):
             readme_name = f"README.{format_}"
             path_readme = cwd / readme_name

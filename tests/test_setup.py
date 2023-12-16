@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from manage.models import Step, Recipe, Recipes
-from manage.setup import read_recipe_file, uptype_recipes
+from manage.setup import read_pyproject, uptype_recipes
 
 
 class Namespace:
@@ -15,11 +15,11 @@ class Namespace:
 
 @pytest.fixture
 def recipes():
-    # NOTE: Must match contents of tests/test_models.yaml!
+    # NOTE: Must match contents of tests/test_models.toml!
     recipe_clean = Recipe(
         description="A Clean Recipe",
         steps=[
-            Step(method="clean",  # Test that defaults match those in yaml file..
+            Step(method="clean",  # Test that defaults match those in toml file..
                  confirm=True,
                  verbose=False,
                  allow_error=False,
@@ -50,18 +50,21 @@ def recipes():
     })
 
 
-def test_read_recipe_file(recipes):
-    args = Namespace(recipes=Path("tests/test_models.yaml"), no_confirm=None)
-    raw_recipes = read_recipe_file(False, args.recipes)
-    assert raw_recipes is not None
-    assert type(raw_recipes) == dict
-    assert len(raw_recipes) == 2
+def test_read_pyproject(recipes):
+    args = Namespace(recipes=Path("tests/test_models.toml"), no_confirm=None)
+    raw_pyproject = read_pyproject(False, args.recipes)
+    assert raw_pyproject is not None
+    assert isinstance(raw_pyproject, dict)
+    assert len(raw_pyproject) == 1
+    assert "tool" in raw_pyproject
+    assert "manage" in raw_pyproject.get("tool")
+    assert "recipes" in raw_pyproject.get("tool").get("manage")
 
 
 def test_uptype_recipes(recipes):
-    args = Namespace(recipes=Path("tests/test_models.yaml"), no_confirm=None)
-    raw_recipes = read_recipe_file(False, args.recipes)
-    recipes_from_file = uptype_recipes(args, raw_recipes, None)
+    args = Namespace(recipes=Path("tests/test_models.toml"), no_confirm=None)
+    raw_pyproject = read_pyproject(False, args.recipes)
+    recipes_from_file = uptype_recipes(args, raw_pyproject, None)
     assert len(recipes) == len(recipes_from_file)
     assert sum([len(recipe) for recipe in recipes]) == sum([len(recipe) for recipe in recipes_from_file])
     assert recipes == recipes_from_file

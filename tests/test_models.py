@@ -1,3 +1,4 @@
+
 import pydantic
 import pytest
 
@@ -6,11 +7,11 @@ from manage.models import Step, Recipe, Recipes
 
 @pytest.fixture
 def recipes():
-    # NOTE: Must match contents of tests/test_models.yaml!
+    # NOTE: Must match contents of tests/test_models.toml!
     recipe_clean = Recipe(
         description="A Clean Recipe",
         steps=[
-            Step(method="clean"),  # Test that defaults match those in yaml file..
+            Step(method="clean"),  # Test that defaults match those in toml file..
             Step(method="print",
                  config=True,
                  verbose=True,
@@ -57,7 +58,7 @@ def test_step_args():
     # Confirm
     assert step.arguments == test_args
     assert step.get_arg("arg_1_str") == "arg_1_str_value"
-    assert step.get_arg("arg_2_bool") == True
+    assert step.get_arg("arg_2_bool") is True
     assert step.get_arg("arg_3_int") == 42
 
 

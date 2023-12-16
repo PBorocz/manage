@@ -1,6 +1,7 @@
 """Setup functions, not meant for direct calling from recipe file."""
 import importlib
 import sys
+import tomllib
 from pathlib import Path
 from typing import Callable
 
@@ -11,21 +12,14 @@ from manage.models import Configuration, Recipes, Recipe, Step
 from manage.utilities import message, success, failure
 
 
-def read_recipe_file(verbose: bool, path_recipes: Path) -> dict:
+def read_pyproject(verbose: bool, path_pyproject: Path) -> dict:
     """Do a raw read of the specified recipe file path, doing *no* other processing!."""
     if verbose:
-        message(f"Reading recipes ({path_recipes})")
-    if not path_recipes.exists():
-        if verbose:
-            failure()
-        print(f"[red]Sorry, unable to find recipe file on path: [bold]{path_recipes}[/]")
-        sys.exit(1)
-
-    # Read raw (safely!)...
-    raw_recipes = yaml.safe_load(path_recipes.read_text())
+        message(f"Reading {path_pyproject}")
+    raw_pyproject = tomllib.loads(path_pyproject.read_text())
     if verbose:
         success()
-    return raw_recipes
+    return raw_pyproject
 
 
 # def read_parse_recipes(path_to_recipes: Path) -> [dict, list]:
@@ -72,16 +66,20 @@ def read_recipe_file(verbose: bool, path_recipes: Path) -> dict:
 #     return list(arguments.items())
 
 
-def uptype_recipes(configuration: Configuration, raw_recipes: dict, methods: dict[Callable] | None = None) -> Recipes:
+def uptype_recipes(
+        configuration: Configuration,
+        raw_pyproject: dict,
+        methods: dict[Callable] | None = None) -> Recipes:
     """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
     # First, convert to strongly-typed dataclass instances
     d_recipes = dict()
+    raw_recipes = raw_pyproject.get("tool", {}).get("manage", {}).get("recipes", {})
     for id_, raw_recipe in raw_recipes.items():
         recipe = Recipe(**raw_recipe)
         d_recipes[id_] = recipe
     recipes = Recipes.parse_obj(d_recipes)
 
-    # Add system recipe target(s)
+    # Add system recipe target(s) (only time we don't is for testing)
     recipes = _add_system_recipe_s(recipes)
 
     if methods:
@@ -97,33 +95,9 @@ def uptype_recipes(configuration: Configuration, raw_recipes: dict, methods: dic
 
 def validate_existing_version_numbers(configuration: Configuration) -> bool:
     """Check that the last released version in README is consistent with canonical version in pyproject.toml."""
-
-    def __get_last_release_from_readme() -> str:
-        """Mini state-machine to find last "release" in our changelog embedded within our README."""
-        path_readme = Path.cwd() / "README.md"
-        header = "###"
-        if not path_readme.exists():
-            path_readme = Path.cwd() / "README.org"
-            header = "***"
-            if not path_readme.exists():
-                print("[red]Sorry, unable to open EITHER README.md or README.org from the current directory.")
-                return None
-
-        unreleased_header = f"{header} Unreleased"
-        take_next_release = False
-        for line in path_readme.read_text().split("\n"):
-            if line.startswith(unreleased_header):
-                take_next_release = True
-                continue
-            if take_next_release and line.startswith(header):  # eg "*** vX.Y.Z - <aDate>"
-                tag = line.split()[1]
-                version = tag[1:]
-                return version
-        return None
-
     if configuration.verbose:
         message("Checking consistency of versions (pyproject.toml & README)")
-    last_release_version = __get_last_release_from_readme()
+    last_release_version = __get_last_release_from_readme(configuration.verbose)
     if last_release_version != configuration.version_:
         failure()
         print(f"[red]Warning, pyproject.toml has version: {configuration.version_} "
@@ -132,6 +106,63 @@ def validate_existing_version_numbers(configuration: Configuration) -> bool:
     if configuration.verbose:
         success()
     return True
+
+def __get_last_release_from_readme(verbose: bool) -> [str, str]:
+    """Mini state-machine to find last "release" in our changelog embedded within our README."""
+    path_readme = Path.cwd() / "README.md"
+    format_ = "markdown"
+    if not path_readme.exists():
+        path_readme = Path.cwd() / "README.org"
+        format_ = "org"
+        if not path_readme.exists():
+            print("[red]Sorry, unable to open EITHER README.md or README.org from the current directory.")
+            return path_readme, None
+
+    if verbose:
+        msg = f"\nReading from {path_readme}"
+        message(msg, color='light_slate_grey', end_success=True)
+    method = __get_last_release_from_markdown if format_ == "markdown" else __get_last_release_from_org
+    return method(verbose, path_readme)
+
+def __get_last_release_from_org(verbose: bool, path_readme: Path) -> str:
+    header = "***"
+    unreleased_header = f"{header} Unreleased".casefold()
+    take_next_release = False
+    for i_line, line in enumerate(path_readme.read_text().split("\n")):
+        if line.casefold().startswith(unreleased_header):
+            take_next_release = True
+            if verbose:
+                msg = f"Found '{unreleased_header}' on line: {i_line+1}"
+                message(msg, color='light_slate_grey', end_success=True)
+            continue
+        if take_next_release and line.casefold().startswith(header):  # eg "*** vX.Y.Z - <aDate>"
+            tag = line.split()[1]
+            version = tag[1:]
+            if verbose:
+                msg = f"Found next header matching '{line}' on line: {i_line+1}"
+                message(msg, color='light_slate_grey', end_success=True)
+            return version
+    return None
+
+def __get_last_release_from_markdown(verbose: bool, path_readme: Path) -> str:
+    header = "###"
+    unreleased_header = f"{header} Unreleased".casefold()
+    take_next_release = False
+    for i_line, line in enumerate(path_readme.read_text().split("\n")):
+        if line.casefold().startswith(unreleased_header):
+            take_next_release = True
+            if verbose:
+                msg = f"Found '{unreleased_header}' on line: {i_line+1}"
+                message(msg, color='light_slate_grey', end_success=True)
+            continue
+        if take_next_release and line.startswith(header):  # eg "### vX.Y.Z - <aDate>"
+            tag = line.split()[1]
+            version = tag[1:]
+            if verbose:
+                msg = f"Found next header matching '{line}' on line: {i_line+1}"
+                message(msg, color='light_slate_grey', end_success=True)
+            return version
+    return None
 
 
 def _validate_recipe_methods(verbose: bool, recipes: Recipes, step_methods: dict[str, Callable]) -> bool:

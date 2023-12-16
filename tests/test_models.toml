@@ -1,0 +1,26 @@
+# NOTE: Must match contents of tests/test_models.py!
+
+[tool.manage.recipes.clean]
+description = "A Clean Recipe"
+
+[[tool.manage.recipes.clean.steps]]
+method = "clean"
+confirm = true             # All these are DEFAULT values!
+verbose = false
+allow_error = false
+arguments = { arg_1_str = "arg_1_str_value", arg_2_bool = false, arg_3_int = 42 }
+
+[[tool.manage.recipes.clean.steps]]
+method = "print"
+confirm = true
+verbose = true
+allow_error = true
+
+[tool.manage.recipes.build]
+description = "A Build Recipe"
+
+[[tool.manage.recipes.build.steps]]
+recipe = "clean"
+
+[[tool.manage.recipes.build.steps]]
+method = "build"

@@ -27,3 +27,74 @@ pytest-git = "^1.7.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# ##############################################################################
+[tool.manage]
+dry_run = true  # If set to true, you'll need --live on each run.
+
+# ------------------------------------------------------------------------------
+[tool.manage.recipes."1_bump"]
+description = "Bump the version number to the next /patch/ level and commit locally"
+
+[[tool.manage.recipes."1_bump".steps]]
+method = "poetry_bump_version"
+arguments = { poetry_version = "patch" }
+
+[[tool.manage.recipes."1_bump".steps]]
+method = "update_readme"
+
+[[tool.manage.recipes."1_bump".steps]]
+method = "git_add"
+arguments = { pathspec = "README.md pyproject.toml" }
+
+[[tool.manage.recipes."1_bump".steps]]
+method = "git_commit"
+
+# ------------------------------------------------------------------------------
+[tool.manage.recipes."2_release"]
+description = "Build & release current version's distribution to our github repository"
+
+[[tool.manage.recipes."2_release".steps]]
+recipe = "build"
+
+[[tool.manage.recipes."2_release".steps]]
+method = "git_push_to_github"
+confirm = false
+echo_stdout = true
+
+# ------------------------------------------------------------------------------
+[tool.manage.recipes.all]
+description = "Bump to next patch level, build and & release!"
+
+[[tool.manage.recipes.all.steps]]
+recipe = "1_bump"
+
+[[tool.manage.recipes.all.steps]]
+recipe = "2_release"
+
+# ------------------------------------------------------------------------------
+# Utility recipes (multi-user)
+# ------------------------------------------------------------------------------
+[tool.manage.recipes.build]
+description = "Build our distribution(s)"
+
+[[tool.manage.recipes.build.steps]]
+method = "poetry_lock_check"
+confirm = false
+
+[[tool.manage.recipes.build.steps]]
+recipe = "clean"
+confirm = false
+
+[[tool.manage.recipes.build.steps]]
+method = "build"
+confirm = false
+echo_stdout = true
+
+# ------------------------------------------------------------------------------
+[tool.manage.recipes.clean]
+description = "Clean out our temp files and ALL previous builds"
+
+[[tool.manage.recipes.clean.steps]]
+method = "clean"
+confirm = false
