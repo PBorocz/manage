@@ -1,25 +1,13 @@
 """Setup functions, not meant for direct calling from recipe file."""
 import importlib
 import sys
-import tomllib
 from pathlib import Path
 from typing import Callable
 
-import yaml
 from rich import print
 
-from manage.models import Configuration, Recipes, Recipe, Step
+from manage.models import Configuration, Recipes, PyProject, Recipe, Step
 from manage.utilities import message, success, failure
-
-
-def read_pyproject(verbose: bool, path_pyproject: Path) -> dict:
-    """Do a raw read of the specified recipe file path, doing *no* other processing!."""
-    if verbose:
-        message(f"Reading {path_pyproject}")
-    raw_pyproject = tomllib.loads(path_pyproject.read_text())
-    if verbose:
-        success()
-    return raw_pyproject
 
 
 # def read_parse_recipes(path_to_recipes: Path) -> [dict, list]:
@@ -68,13 +56,12 @@ def read_pyproject(verbose: bool, path_pyproject: Path) -> dict:
 
 def uptype_recipes(
         configuration: Configuration,
-        raw_pyproject: dict,
+        pyproject: PyProject,
         methods: dict[Callable] | None = None) -> Recipes:
     """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
     # First, convert to strongly-typed dataclass instances
     d_recipes = dict()
-    raw_recipes = raw_pyproject.get("tool", {}).get("manage", {}).get("recipes", {})
-    for id_, raw_recipe in raw_recipes.items():
+    for id_, raw_recipe in pyproject.recipes.items():
         recipe = Recipe(**raw_recipe)
         d_recipes[id_] = recipe
     recipes = Recipes.parse_obj(d_recipes)

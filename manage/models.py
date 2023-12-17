@@ -1,4 +1,7 @@
 """Core data types and recipe file read."""
+from __future__ import annotations
+import sys
+import tomllib
 from argparse import Namespace
 from copy import copy, deepcopy
 from pathlib import Path
@@ -7,7 +10,7 @@ from typing import Any, Callable, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
-from manage.utilities import get_package_version_from_pyproject_toml, message
+from manage.utilities import failure, message, smart_join, success, warning
 
 
 TStep = TypeVar("Step")
@@ -185,11 +188,84 @@ class Arguments(BaseModel):
         return None
 
 
+class PyProject(BaseModel):
+    """Encapsulate a parsed pyproject.toml file.
+
+    Specifically:
+    - Two general attributes associated with the current project
+    - Two related to this package's configuration.
+    """
+    version: str | None = None  # Current version string..
+    package: str | None = None  # Package name..
+    recipes: dict = {}  # These are RAW recipe dicts here!
+    parameters: dict = {}
+
+    def get_formatted_list_of_targets(self) -> str:
+        """Return a comma-delimited list of available recipe targets."""
+        targets_recipes = list(self.recipes.keys())
+        if targets_recipes:
+            return ": " + smart_join(targets_recipes)
+        return ""
+
+    def get_target_names_and_descriptions(self) -> list[tuple[str, str]]:
+        """Return a list of tuples, each containing recipe name and description."""
+        return [(name, definition.get("description", "")) for name, definition in self.recipes.items()]
+
+    def is_valid_target(self, target: str) -> bool:
+        """Return true if proposed target name is a valid recipe."""
+        return target.casefold() in [recipe.casefold() for recipe in self.recipes.keys()]
+
+    @classmethod
+    def factory(cls, path_pyproject: Path) -> PyProject:
+        """Do a raw read of the specified pyproject.toml path and returning a instance."""
+        message(f"Reading {path_pyproject}")
+        raw_pyproject = tomllib.loads(path_pyproject.read_text())
+        success()
+
+        # "Parse" our portion of pyproject.toml, ie. "tool"/"manage" into two things:
+        # - The set of recipes defined
+        # - The set of default configuration/control parameters.
+        parameters = dict()
+        for name, obj in raw_pyproject.get("tool", {}).get("manage", {}).items():
+            if name == "recipes":
+                recipes = obj
+            else:
+                parameters[name] = obj
+
+        # Similarly, parse the *current* package and version we're working with.
+        package = None
+        if packages := raw_pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
+            try:
+                # FIXME: For now, use the *first* entry in tool.poetry.packages (even though multiple are allowed)
+                package_include = packages[0]
+                package = package_include.get("include")
+            except IndexError:
+                ...
+        if package is None:
+            warning()
+            print("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
+
+        # Similarly, get our current version:
+        version = raw_pyproject.get("tool", {}).get("poetry", {}).get("version", None)
+        if version is None:
+            warning()
+            print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
+
+        return cls(
+            package=package,
+            version=version,
+            parameters=parameters,
+            recipes=recipes,
+        )
+
+
 class Configuration(BaseModel):
     """Configuration/state, primarily (but not solely) from command-line args."""
     verbose: bool | None = None
+    help: bool | None = None
     target: str | None = None
     dry_run: bool | None = None
+    live: bool | None = None
     confirm: bool | None = None  # If set, override step confirmation instruction appropriately.
     version_: str | None = None  # Note: This is the current version # of the project we're working on!
     version: str | None = None   # " In nice format..
@@ -204,34 +280,44 @@ class Configuration(BaseModel):
         setattr(self, attr, value)
 
 
-def configuration_factory(args: Namespace | None, parameters: dict | None, pyproject: dict, **kwargs) -> Configuration | None:
+
+def configuration_factory(args: Namespace | None, pyproject: PyProject, **kwargs) -> Configuration | None:
     """Create a Configuration object, setting some attrs from pyproject.toml.
 
     We can either set from args (usual case) or pyproject.toml or from kwargs (primarily for testing).
     """
     def _resolve_parameter(attr: str, config: Configuration) -> Configuration:
         # First, get from the pyproject.toml:
-        if attr in parameters:
-            config.set_value(attr, parameters[attr], "from pyproject.toml")
+        if attr in pyproject.parameters:
+            config.set_value(attr, pyproject.parameters[attr], "based on pyproject.toml entry")
 
         # Then, from command-line args (which *override* pyproject.toml!)
         if value := getattr(args, attr, None):
-            config.set_value(attr, value, "from command-line")
+            msg = "from command-line override" if getattr(config, attr) else "from command-line"
+            config.set_value(attr, value, msg)
 
         return config
 
-    version_, package = get_package_version_from_pyproject_toml(args.verbose, pyproject)
-    config = Configuration(
-        version_ = version_,        # This is the "raw" value, e.g. 1.2.3
-        version  = f"v{version_}",  # This is the "nice" format, e.g. v1.2.3 for use in README's
-        package_ =package,
+    configuration = Configuration(
+        version_ = pyproject.version,        # This is the "raw" value, e.g. 1.2.3
+        version  = f"v{pyproject.version}",  # This is the "nice" format, e.g. v1.2.3 for use in README's
+        package_ = pyproject.package,
     )
 
-    for attr in ["verbose", "dry_run", "confirm", "target"]:
-        config = _resolve_parameter(attr, config)
+    # Parameters we recognise from pyproject.toml:
+    for attr in ["help", "verbose", "dry_run", "live", "confirm", "target"]:
+        configuration = _resolve_parameter(attr, configuration)
 
     if kwargs:
         for attr, value in kwargs.items():
-            config.set_value(attr, value, "from direct kwargs")
+            configuration.set_value(attr, value, "from direct kwargs")
 
-    return config
+    ################################################################################
+    # Do some validity checking..
+    ################################################################################
+    if configuration.dry_run == configuration.live:
+        msg = "Sorry, inconsistency...'dry-run' and 'live' parameters must be different!"
+        message(msg, end_failure=True)
+        sys.exit(1)
+
+    return configuration

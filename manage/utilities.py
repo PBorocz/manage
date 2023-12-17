@@ -85,6 +85,7 @@ def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step"
         message(f"Running [italic]{command}[/]")
 
     result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     if result.returncode != 0:
         ################################################
         # Failed:
@@ -109,33 +110,33 @@ def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step"
     return True, result.stdout.decode().strip()
 
 
-def get_package_version_from_pyproject_toml(verbose: bool, pyproject: dict) -> tuple[str | None, str | None]:
-    """Read the pyproject.toml file to return *current* package and version we're working with."""
-    # Lookup the package which "should" represent the current package we're working on:
-    package = None
-    if packages := pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
-        try:
-            # FIXME: For now, use the *first* entry in tool.poetry.packages (even though multiple are allowed)
-            package_include = packages[0]
-            package = package_include.get("include")
-        except IndexError:
-            ...
-    if package is None and verbose:
-        warning()
-        print("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
+# def get_package_version_from_pyproject_toml(verbose: bool, pyproject: dict) -> tuple[str | None, str | None]:
+#     """Read the pyproject.toml file to return *current* package and version we're working with."""
+#     # Lookup the package which "should" represent the current package we're working on:
+#     package = None
+#     if packages := pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
+#         try:
+#             # FIXME: For now, use the *first* entry in tool.poetry.packages (even though multiple are allowed)
+#             package_include = packages[0]
+#             package = package_include.get("include")
+#         except IndexError:
+#             ...
+#     if package is None and verbose:
+#         warning()
+#         print("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
 
-    ################################################################################
-    # Similarly, get our current version:
-    ################################################################################
-    version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-    if version is None and verbose:
-        warning()
-        print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
+#     ################################################################################
+#     # Similarly, get our current version:
+#     ################################################################################
+#     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
+#     if version is None and verbose:
+#         warning()
+#         print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
 
-    if (package and version) and verbose:
-        success()
+#     if (package and version) and verbose:
+#         success()
 
-    return version, package
+#     return version, package
 
 
 def get_package_version(pyproject: dict) -> str:

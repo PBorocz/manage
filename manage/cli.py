@@ -7,10 +7,9 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from manage.dispatch import dispatch
-from manage.models import configuration_factory
+from manage.models import configuration_factory, Configuration, PyProject
 from manage.setup import (
     gather_available_methods,
-    read_pyproject,
     uptype_recipes,
     validate_existing_version_numbers,
 )
@@ -22,61 +21,39 @@ load_dotenv(verbose=True)
 DEFAULT_PROJECT_PATH = Path.cwd() / "pyproject.toml"
 CONSOLE = Console()
 
-def process_arguments() -> [argparse.Namespace, dict, dict]:
-    """Do a two-pass command-line argument parser with a "raw" read of recipes available.
+def process_arguments() -> [Configuration, PyProject]:
+    """Do a two-pass command-line argument parser with a "raw" read of our pyproject.toml."""
+    # Read our pyproject.toml file (using verbosity from command-line, not pyproject.toml itself!)
+    pyproject = PyProject.factory(DEFAULT_PROJECT_PATH)
 
-    We have a "chicken & egg" problem...ie, can't parse our arguments nicely until we read our
-    pyproject file.
-    """
-    # We read args on a preliminary basis *JUST* to capture the the
-    # recipe file to be used (if different from default); we use this
-    # to do a raw read of the recipe file to get the list of targets
-    # defined and arguments possible.
-    parser, args_verbose = get_args_pass_1()
+    # Get the command-line arguments
+    args = get_args(pyproject)
 
-    # Then we build on the initial arg-parser to include the list of all recipes available.
-    raw_pyproject = read_pyproject(args_verbose, DEFAULT_PROJECT_PATH)
+    # Create our configuration instance
+    if not (configuration := configuration_factory(args, pyproject)):
+        sys.exit(1)
 
-    args, parameters, available_targets = get_args_pass_2(parser, raw_pyproject)
-
-    return args, parameters, raw_pyproject
+    return configuration, pyproject
 
 
-def get_args_pass_1():
-    """Pro-forma arg processing, get an alternate recipe file and non-recipe-file based arguments."""
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False)
-    args, _ = parser.parse_known_args()
-    return parser, args.verbose
-
-
-def get_args_pass_2(initial_parser, raw_pyproject: dict) -> [argparse.Namespace, dict, list[str]]:
+def get_args(pyproject: PyProject) -> argparse.Namespace:
     """Build on the initial parser and get the target to run for."""
-    parser = argparse.ArgumentParser("", parents=[initial_parser], add_help=False)
+    parser = argparse.ArgumentParser(add_help=False)
 
-    # Get our configuration from the raw pyproject dictionary:
-    parameters = dict()
-    for name, obj in raw_pyproject.get("tool", {}).get("manage", {}).items():
-        if name == "recipes":
-            recipes = obj
-        else:
-            parameters[name] = obj
-
-    names_and_descriptions = [(name, definition.get("description", "")) for name, definition in recipes.items()]
-    available_targets = [recipe_name for (recipe_name, description) in names_and_descriptions]
-    s_targets = ": " + smart_join(available_targets) if available_targets else ""
-
-    # Add the rest of the command-line arguments:
+    s_targets = pyproject.get_formatted_list_of_targets()
     parser.add_argument(
         "target",
         type=str,
         action="store",
         nargs="?",
         help=f"Please specify a specific recipe to run from your recipe file: {s_targets}",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
     )
 
     parser.add_argument(
@@ -88,7 +65,7 @@ def get_args_pass_2(initial_parser, raw_pyproject: dict) -> [argparse.Namespace,
     parser.add_argument(
         "--version",
         action="version",
-        version=get_package_version(raw_pyproject))
+        version=get_package_version(pyproject))
 
     parser.add_argument(
         "--confirm",
@@ -109,24 +86,10 @@ def get_args_pass_2(initial_parser, raw_pyproject: dict) -> [argparse.Namespace,
         action="store_true",
         default=False)
 
-    args = parser.parse_args()
-
-    # # If we're doing help, use our own method and we're done!
-    # if args.help:
-    #     do_help(parameters, names_and_descriptions)
-    #     sys.exit(0)
-
-    # # We have enough information now to validate the user's specific target requested:
-    # if not args.target or args.target.casefold() not in available_targets + ["check", "print"]:
-    #     s_targets = [f"[italic]{id_}[/]" for id_ in available_targets + ["check", "print"]]
-    #     msg = f"Sorry, [red]{args.target}[/] is not a valid recipe, must be one of \\[{smart_join(s_targets)}]."
-    #     CONSOLE.print(msg)
-    #     sys.exit(1)
-
-    return args, parameters, available_targets
+    return parser.parse_args()
 
 
-def do_help(parameters: dict, names_and_descriptions: list[str])-> None:
+def do_help(configuration: Configuration, pyproject: PyProject)-> None:
     from rich.panel import Panel
     from rich.table import Table
 
@@ -141,10 +104,20 @@ def do_help(parameters: dict, names_and_descriptions: list[str])-> None:
     # CONSOLE.print("Usage: manage [OPTIONS] <target> [METHOD_ARGS]")
     CONSOLE.print()
 
-    default_dry_run = parameters.get("dry_run", True) # By default if NOTHING else
-    default_live = parameters.get("live", False)      # is specified, stay safe.
+    ################################################################################
+    # Recipe targets available..
+    ################################################################################
+    table = Table.grid(expand=True)
+    for name, description in sorted(pyproject.get_target_names_and_descriptions()):
+        table.add_row(blue(name), green(description))
+    CONSOLE.print(Panel(table, title=green("RECIPES (pyproject.toml)"), title_align="left"))
 
     ################################################################################
+    # Command-line Options
+    ################################################################################
+    default_dry_run = pyproject.parameters["dry_run"]
+    default_live = pyproject.parameters["live"]
+
     table = Table.grid(expand=True)
     table.add_row(blue("--version"),
                   green("Show program's version number and exit."))
@@ -168,14 +141,7 @@ def do_help(parameters: dict, names_and_descriptions: list[str])-> None:
     table.add_row(blue("--no-confirm"),
                   green("Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "\
                   "all [bold]no[/] confirm."))
-
     CONSOLE.print(Panel(table, title=green("OPTIONS"), title_align="left"))
-
-    ################################################################################
-    table = Table.grid(expand=True)
-    for name, description in sorted(names_and_descriptions):
-        table.add_row(blue(name), green(description))
-    CONSOLE.print(Panel(table, title=green("TARGETS (pyproject.toml)"), title_align="left"))
 
 
 def main():
@@ -185,25 +151,28 @@ def main():
         CONSOLE.print("[red]Sorry, you need to run this from the same directory that your pyproject.toml file exists.")
         sys.exit(1)
 
-    # Parse our command-line and do our initial read of the specified pyproject file.
-    args, parameters, raw_pyproject = process_arguments()
+    # Read our pyproject.toml file and parse our command-line
+    configuration, pyproject = process_arguments()
 
-    # Read configuration and package we're working on
-    if not (configuration := configuration_factory(args, parameters, raw_pyproject)):
+    # Do help here AFTER we've setup the configuration object
+    # correctly (ie. after incorporating both pyproject.toml defaults
+    # and cli args
+    if configuration.help:
+        do_help(configuration, pyproject)
+        sys.exit(0)
+
+    # We have enough information now to validate the user's specific target requested:
+    s_targets = pyproject.get_formatted_list_of_targets()
+    if not configuration.target:
+        msg = f"Sorry, we need a valid recipe target to execute, must be one of {s_targets}."
+        CONSOLE.print(msg)
         sys.exit(1)
 
-    # START HERE!!!
-    # Do help here AFTER we've setup the configuration object correctly..
-    # if args.help:
-    #     do_help(parameters, names_and_descriptions)
-    #     sys.exit(0)
-
-    # # We have enough information now to validate the user's specific target requested:
-    # if not args.target or args.target.casefold() not in available_targets + ["check", "print"]:
-    #     s_targets = [f"[italic]{id_}[/]" for id_ in available_targets + ["check", "print"]]
-    #     msg = f"Sorry, [red]{args.target}[/] is not a valid recipe, must be one of \\[{smart_join(s_targets)}]."
-    #     CONSOLE.print(msg)
-    #     sys.exit(1)
+    if not pyproject.is_valid_target(configuration.target):
+        # s_targets = [f"[italic]{id_}[/]" for id_ in available_targets + ["check", "print"]]
+        msg = f"Sorry, [red]{configuration.target}[/] is not a valid recipe, must be one of {s_targets}."
+        CONSOLE.print(msg)
+        sys.exit(1)
 
     # Gather all available methods from our package's library
     if not (methods := gather_available_methods(configuration.verbose)):
@@ -214,7 +183,7 @@ def main():
         sys.exit(1)
 
     # Validate and configure the specified recipe file into strongly-typed instances
-    recipes = uptype_recipes(configuration, raw_pyproject, methods)
+    recipes = uptype_recipes(configuration, pyproject, methods)
 
     try:
         dispatch(configuration, recipes)
