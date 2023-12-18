@@ -2,8 +2,8 @@
 from pathlib import Path
 
 import pytest
-from manage.models import Step, Recipe, Recipes
-from manage.setup import read_pyproject, uptype_recipes
+from manage.models import Step, PyProject, Recipe, Recipes
+from manage.setup import uptype_recipes
 
 
 class Namespace:
@@ -52,18 +52,14 @@ def recipes():
 
 def test_read_pyproject(recipes):
     args = Namespace(recipes=Path("tests/test_models.toml"), no_confirm=None)
-    raw_pyproject = read_pyproject(False, args.recipes)
+    raw_pyproject = PyProject.factory(args.recipes)
     assert raw_pyproject is not None
-    assert isinstance(raw_pyproject, dict)
-    assert len(raw_pyproject) == 1
-    assert "tool" in raw_pyproject
-    assert "manage" in raw_pyproject.get("tool")
-    assert "recipes" in raw_pyproject.get("tool").get("manage")
+    assert isinstance(raw_pyproject, PyProject)
 
 
 def test_uptype_recipes(recipes):
     args = Namespace(recipes=Path("tests/test_models.toml"), no_confirm=None)
-    raw_pyproject = read_pyproject(False, args.recipes)
+    raw_pyproject = PyProject.factory(args.recipes)
     recipes_from_file = uptype_recipes(args, raw_pyproject, None)
     assert len(recipes) == len(recipes_from_file)
     assert sum([len(recipe) for recipe in recipes]) == sum([len(recipe) for recipe in recipes_from_file])

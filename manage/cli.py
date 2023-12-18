@@ -7,14 +7,13 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from manage.dispatch import dispatch
-from manage.models import configuration_factory, Configuration, PyProject
+from manage.models import Configuration, PyProject
 from manage.setup import (
     gather_available_methods,
     uptype_recipes,
     validate_existing_version_numbers,
 )
 
-from manage.utilities import smart_join, get_package_version
 load_dotenv(verbose=True)
 
 # FIXME: Assume's we're always running from top-level/project directory!
@@ -30,7 +29,7 @@ def process_arguments() -> [Configuration, PyProject]:
     args = get_args(pyproject)
 
     # Create our configuration instance
-    if not (configuration := configuration_factory(args, pyproject)):
+    if not (configuration := Configuration.factory(args, pyproject)):
         sys.exit(1)
 
     return configuration, pyproject
@@ -63,11 +62,6 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         default=False)
 
     parser.add_argument(
-        "--version",
-        action="version",
-        version=get_package_version(pyproject))
-
-    parser.add_argument(
         "--confirm",
         help=("Override recipe's 'confirm' setting to run all confirmable "
               "steps as either confirm or don't confirm, default is None."),
@@ -89,7 +83,7 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
     return parser.parse_args()
 
 
-def do_help(configuration: Configuration, pyproject: PyProject)-> None:
+def do_help(pyproject: PyProject)-> None:
     from rich.panel import Panel
     from rich.table import Table
 
@@ -115,12 +109,7 @@ def do_help(configuration: Configuration, pyproject: PyProject)-> None:
     ################################################################################
     # Command-line Options
     ################################################################################
-    default_dry_run = pyproject.parameters["dry_run"]
-    default_live = pyproject.parameters["live"]
-
     table = Table.grid(expand=True)
-    table.add_row(blue("--version"),
-                  green("Show program's version number and exit."))
 
     table.add_row(blue("--help/-h"),
                   green("Show this help message and exit."))
@@ -129,10 +118,10 @@ def do_help(configuration: Configuration, pyproject: PyProject)-> None:
                   green("Run steps in verbose mode [italic](including method stdout if available)[/]."))
 
     table.add_row(blue("--dry-run"),
-                  green(f"Run steps in 'dry-run' mode, default is {default_dry_run}."))
+                  green("Run steps in 'dry-run' mode."))
 
     table.add_row(blue("--live"),
-                  green(f"Run steps in 'live' mode, default is {default_live}."))
+                  green("Run steps in 'live' mode."))
 
     table.add_row(blue("--confirm"),
                   green("Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "\
@@ -154,23 +143,22 @@ def main():
     # Read our pyproject.toml file and parse our command-line
     configuration, pyproject = process_arguments()
 
-    # Do help here AFTER we've setup the configuration object
-    # correctly (ie. after incorporating both pyproject.toml defaults
-    # and cli args
+    # Do help here AFTER we've setup the configuration object (ie.
+    # after incorporating both pyproject.toml defaults and cli args)
     if configuration.help:
-        do_help(configuration, pyproject)
+        do_help(pyproject)
         sys.exit(0)
 
     # We have enough information now to validate the user's specific target requested:
-    s_targets = pyproject.get_formatted_list_of_targets()
+    s_targets = pyproject.get_formatted_list_of_targets(["check", "print"])
     if not configuration.target:
-        msg = f"Sorry, we need a valid recipe target to execute, must be one of {s_targets}."
+        msg = f"Sorry, we need a valid recipe target to execute, must be one of [yellow]{s_targets}[/]."
         CONSOLE.print(msg)
         sys.exit(1)
 
     if not pyproject.is_valid_target(configuration.target):
         # s_targets = [f"[italic]{id_}[/]" for id_ in available_targets + ["check", "print"]]
-        msg = f"Sorry, [red]{configuration.target}[/] is not a valid recipe, must be one of {s_targets}."
+        msg = f"Sorry, [red]{configuration.target}[/] is not a valid recipe, must be one of [yellow][italic]{s_targets}[/]."
         CONSOLE.print(msg)
         sys.exit(1)
 

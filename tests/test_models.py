@@ -2,7 +2,7 @@
 import pydantic
 import pytest
 
-from manage.models import Step, Recipe, Recipes
+from manage.models import Configuration, Step, Recipe, Recipes
 
 
 @pytest.fixture
@@ -77,3 +77,42 @@ def test_recipe_step_validation(recipes):
         "another" : lambda x: x,
     }
     assert not recipes.validate_methods_steps(methods)
+
+
+class SimpleObj:
+    """."""
+    def __init__(self, **kwargs):
+        """."""
+        [setattr(self, attr, value) for (attr, value) in kwargs.items()]
+
+
+def test_configuration_dryrun():
+    """Test various options vv setting dry-run vs. live."""
+    # Case 1: nothing in pyproject nor command-line
+    # essentially just checks Configuration's default value of dry-run.
+    args = SimpleObj()
+    pyproject = SimpleObj(parameters={})
+
+    config = Configuration.factory(args, pyproject, test=True)
+    assert config.dry_run is True
+
+    # Case 2: default in pyproject but no command-line
+    pyproject = SimpleObj(parameters={"dry_run": True})
+    config = Configuration.factory(args, pyproject, test=True)
+    assert config.dry_run is True
+
+    pyproject = SimpleObj(parameters={"dry_run": False})
+    config = Configuration.factory(args, pyproject, test=True)
+    assert config.dry_run is False
+
+    # Case 3: nothing in pyproject but command-line is set
+    pyproject = SimpleObj(parameters={})
+    args = SimpleObj(dry_run=True)
+    config = Configuration.factory(args, pyproject, test=True)
+    assert config.dry_run is True
+
+    # Case 4: nothing in pyproject but command-line has live
+    pyproject = SimpleObj(parameters={})
+    args = SimpleObj(live=True)
+    config = Configuration.factory(args, pyproject, test=True)
+    assert config.dry_run is False

@@ -3,7 +3,6 @@ import re
 import shlex
 import subprocess
 import sys
-import tomllib
 from importlib import metadata
 from pathlib import Path
 from typing import Final, Any
@@ -153,8 +152,9 @@ def get_package_version(pyproject: dict) -> str:
     FIXME: Instead of relying upon metadata not working, can we categorically
            know if we're running from a "build" environment??
     """
-    try:
-        return metadata.version('manage')
-    except metadata.PackageNotFoundError:
-        version, _ = get_package_version_from_pyproject_toml(False, pyproject)
-        return version
+    raise NotImplementedError("Sorry, we don't know how to look our own version number up!")
+    # try:
+    #     return metadata.version('manage')
+    # except metadata.PackageNotFoundError:
+    #     version, _ = get_package_version_from_pyproject_toml(False, pyproject)
+    #     return version

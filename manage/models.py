@@ -200,11 +200,11 @@ class PyProject(BaseModel):
     recipes: dict = {}  # These are RAW recipe dicts here!
     parameters: dict = {}
 
-    def get_formatted_list_of_targets(self) -> str:
+    def get_formatted_list_of_targets(self, supplements: list[str] = []) -> str:
         """Return a comma-delimited list of available recipe targets."""
-        targets_recipes = list(self.recipes.keys())
+        targets_recipes = list(self.recipes.keys()) + supplements
         if targets_recipes:
-            return ": " + smart_join(targets_recipes)
+            return ": " + smart_join(sorted(targets_recipes), with_or=True)
         return ""
 
     def get_target_names_and_descriptions(self) -> list[tuple[str, str]]:
@@ -264,60 +264,74 @@ class Configuration(BaseModel):
     verbose: bool | None = None
     help: bool | None = None
     target: str | None = None
-    dry_run: bool | None = None
-    live: bool | None = None
+    dry_run: bool = True
     confirm: bool | None = None  # If set, override step confirmation instruction appropriately.
+
     version_: str | None = None  # Note: This is the current version # of the project we're working on!
     version: str | None = None   # " In nice format..
+
     package_: str | None = None  # "
 
+    _messages_: list[str] = []
 
     def set_value(self, attr: str, value: any, source: str) -> None:
-        """."""
-        if self.verbose:
-            msg = f"Setting [italic]{attr}[/] to {value} {source}."
-            message(msg, color='light_slate_grey', end_success=True)
+        """Set the specified attr to the value given with verbosity."""
         setattr(self, attr, value)
+        self._messages_.append(f"Setting [italic]{attr}[/] to {value} {source}.")
 
+    @classmethod
+    def factory(cls, args: Namespace | None, pyproject: PyProject, test: bool = False, **kwargs) -> Configuration | None:
+        """Create a Configuration object, setting some attrs from pyproject.toml.
 
+        We can either set from args (usual case) or pyproject.toml or from kwargs (primarily for testing).
+        """
+        def _resolve_parameter(attr: str, config: Configuration) -> Configuration:
+            # First, get from the pyproject.toml:
+            if attr in getattr(pyproject, "parameters", []): # Use getattr to simplify test creation.
+                config.set_value(attr, pyproject.parameters[attr], "based on pyproject.toml entry")
 
-def configuration_factory(args: Namespace | None, pyproject: PyProject, **kwargs) -> Configuration | None:
-    """Create a Configuration object, setting some attrs from pyproject.toml.
+            # Then, from command-line args (which *override* pyproject.toml!)
+            if value := getattr(args, attr, None):
+                msg = "from command-line override" if getattr(config, attr) else "from command-line"
+                config.set_value(attr, value, msg)
 
-    We can either set from args (usual case) or pyproject.toml or from kwargs (primarily for testing).
-    """
-    def _resolve_parameter(attr: str, config: Configuration) -> Configuration:
-        # First, get from the pyproject.toml:
-        if attr in pyproject.parameters:
-            config.set_value(attr, pyproject.parameters[attr], "based on pyproject.toml entry")
+            return config
 
-        # Then, from command-line args (which *override* pyproject.toml!)
-        if value := getattr(args, attr, None):
-            msg = "from command-line override" if getattr(config, attr) else "from command-line"
-            config.set_value(attr, value, msg)
+        # Get the current project version from the pyproject instance..first, the "raw" value, eg. 1.2.3
+        pyproject_version_raw = getattr(pyproject, "version", "")
 
-        return config
+        # Then, make the "nice" format, eg. v1.2.3 (for use in README's)
+        pyproject_version_nice = f"v{pyproject_version_raw}" if pyproject_version_raw else ""
 
-    configuration = Configuration(
-        version_ = pyproject.version,        # This is the "raw" value, e.g. 1.2.3
-        version  = f"v{pyproject.version}",  # This is the "nice" format, e.g. v1.2.3 for use in README's
-        package_ = pyproject.package,
-    )
+        ############################################################
+        # CREATE our Configuration instance with these values
+        ############################################################
+        configuration = Configuration(
+            version_ = pyproject_version_raw,
+            version  = pyproject_version_nice,
+            package_ = getattr(pyproject, "", ""),
+        )
 
-    # Parameters we recognise from pyproject.toml:
-    for attr in ["help", "verbose", "dry_run", "live", "confirm", "target"]:
-        configuration = _resolve_parameter(attr, configuration)
+        # Resolve the rest of the configuration parameters from pyproject and command-line:
+        for attr in ["help", "verbose", "confirm", "target", "dry_run"]:
+            configuration = _resolve_parameter(attr, configuration)
 
-    if kwargs:
-        for attr, value in kwargs.items():
-            configuration.set_value(attr, value, "from direct kwargs")
+        # Handle special case of "--live" on command-line (and ONLY from command-line!)
+        if getattr(args, "live", None):
+            configuration.set_value("dry_run", False, "based on --live on command-line")
 
-    ################################################################################
-    # Do some validity checking..
-    ################################################################################
-    if configuration.dry_run == configuration.live:
-        msg = "Sorry, inconsistency...'dry-run' and 'live' parameters must be different!"
-        message(msg, end_failure=True)
-        sys.exit(1)
+        if kwargs:  # TESTING ONLY!!
+            for attr, value in kwargs.items():
+                configuration.set_value(attr, value, "from testing kwargs")
 
-    return configuration
+        ############################################################
+        # Verbose output to be nice??
+        ############################################################
+        if configuration.verbose:
+            for msg in configuration._messages_:
+                message(msg, color='light_slate_grey', end_success=True)
+        if test:
+            for msg in configuration._messages_:
+                print(msg)
+
+        return configuration

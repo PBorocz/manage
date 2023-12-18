@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from manage.models import Recipes, Step, configuration_factory
+from manage.models import Configuration, Recipes, Step
 from manage.methods.update_readme import main as update_readme
 
 
@@ -74,7 +74,8 @@ def test_md(path_readme_md):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_md)))
 
     # Test
-    assert update_readme(configuration_factory(None, {}, version_="1.9.11"), Recipes.parse_obj({}), step)
+    configuration = Configuration.factory(None, None, version_="1.9.11")
+    assert update_readme(configuration, Recipes.parse_obj({}), step)
 
     # Confirm
     assert path_readme_md.exists()
@@ -90,7 +91,8 @@ def test_org(path_readme_org):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    assert update_readme(configuration_factory(None, {}, version_="1.9.11"), Recipes.parse_obj({}), step)
+    configuration = Configuration.factory(None, None, version_="1.9.11")
+    assert update_readme(configuration, Recipes.parse_obj({}), step)
 
     # Confirm
     assert path_readme_org.exists()
@@ -107,7 +109,8 @@ def test_no_file_available():
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    assert not update_readme(configuration_factory(None, {}, version_="1.9.11"), Recipes.parse_obj({}), step)
+    configuration = Configuration.factory(None, None, version_="1.9.11")
+    assert not update_readme(configuration, Recipes.parse_obj({}), step)
 
 
 def test_file_not_found():
@@ -115,7 +118,8 @@ def test_file_not_found():
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme="/tmp/foobar"))
 
     # Test
-    assert not update_readme(configuration_factory(None, {}, version_="1.9.11"), Recipes.parse_obj({}), step)
+    configuration = Configuration.factory(None, None, version_="1.9.11")
+    assert not update_readme(configuration, Recipes.parse_obj({}), step)
 
 
 def test_no_unreleased_header(path_readme_org_no_header):
@@ -123,7 +127,8 @@ def test_no_unreleased_header(path_readme_org_no_header):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    assert not update_readme(configuration_factory(None, {}, version_="1.9.11"), Recipes.parse_obj({}), step)
+    configuration = Configuration.factory(None, None, version_="1.9.11")
+    assert not update_readme(configuration, Recipes.parse_obj({}), step)
 
 
 def test_file_from_default(path_readme_md):
@@ -132,7 +137,8 @@ def test_file_from_default(path_readme_md):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    assert update_readme(configuration_factory(None, {}, version_="1.9.11"), Recipes.parse_obj({}), step)
+    configuration = Configuration.factory(None, None, version_="1.9.11")
+    assert update_readme(configuration, Recipes.parse_obj({}), step)
 
     # Confirm
     assert path_readme_md.exists()

@@ -30,7 +30,7 @@ build-backend = "poetry.core.masonry.api"
 
 # ##############################################################################
 [tool.manage]
-dry_run = true  # If set to true, you'll need --live on each run.
+dry_run = true  # If set to true, you'll need --live on each run (safest until you get stable)
 
 # ------------------------------------------------------------------------------
 [tool.manage.recipes."1_bump"]
@@ -63,13 +63,13 @@ confirm = false
 echo_stdout = true
 
 # ------------------------------------------------------------------------------
-[tool.manage.recipes.all]
+[tool.manage.recipes.ALL]
 description = "Bump to next patch level, build and & release!"
 
-[[tool.manage.recipes.all.steps]]
+[[tool.manage.recipes.ALL.steps]]
 recipe = "1_bump"
 
-[[tool.manage.recipes.all.steps]]
+[[tool.manage.recipes.ALL.steps]]
 recipe = "2_release"
 
 # ------------------------------------------------------------------------------
@@ -78,13 +78,13 @@ recipe = "2_release"
 [tool.manage.recipes.build]
 description = "Build our distribution(s)"
 
-[[tool.manage.recipes.build.steps]]
-method = "poetry_lock_check"
-confirm = false
+# [[tool.manage.recipes.build.steps]]
+# method = "poetry_lock_check"
+# confirm = false
 
-[[tool.manage.recipes.build.steps]]
-recipe = "clean"
-confirm = false
+# [[tool.manage.recipes.build.steps]]
+# recipe = "clean"
+# confirm = false
 
 [[tool.manage.recipes.build.steps]]
 method = "build"
