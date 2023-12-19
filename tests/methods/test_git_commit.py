@@ -1,8 +1,9 @@
 """Test git_commit method."""
 from manage.models import Configuration, Recipes, Step
-from manage.methods.git_commit import main as git_commit
+from manage.methods.git_commit import Method as git_commit  # noqa: N813
 
 COMMIT_MESSAGE = "A commit message"
+
 
 def test_git_commit(git_repo):
     repo = git_repo.api
@@ -14,7 +15,7 @@ def test_git_commit(git_repo):
 
     # Test!
     step = Step(method="aMethod", confirm=False, verbose=True, arguments=dict(message=COMMIT_MESSAGE))
-    assert git_commit(Configuration(), Recipes.parse_obj({}), step, repo=repo)
+    assert git_commit(Configuration(), Recipes.parse_obj({}), step, repo=repo).run()
 
     # Confirm: 1 - Did we get a commit?
     try:
@@ -23,7 +24,7 @@ def test_git_commit(git_repo):
         assert False, "Sorry, we didn't find anything committed to our test repo."
 
     # Confirm: 2 - Was it only of a single file?
-    assert commit.stats.total.get('files') == 1
+    assert commit.stats.total.get("files") == 1
 
     # Confirm: 3 - Was it the *right* file?
     for file, diff in commit.stats.files.items():

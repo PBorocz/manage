@@ -305,7 +305,7 @@ class Configuration(BaseModel):
         self.version = version_formatted
 
     @classmethod
-    def factory(cls, args: Namespace, pyproject: PyProject, test: bool = False, **testing) -> Configuration | None:
+    def factory(cls, args: Namespace, pyproject: PyProject, test: bool = False, **kwargs) -> Configuration | None:
         """Create a Configuration object, setting some attrs from pyproject.toml.
 
         We can either set from args (usual case) or pyproject.toml or from kwargs (primarily for testing).
@@ -325,9 +325,9 @@ class Configuration(BaseModel):
             configuration.set_value("dry_run", False, "based on --live on command-line")
 
         # Finally, for testing only, override any other attrs:
-        if testing:
-            for attr, value in testing.items():
-                configuration.set_value(attr, value, "from testing kwargs")
+        if kwargs:
+            for attr, value in kwargs.items():
+                configuration.set_value(attr, value, "from (testing) kwargs")
 
         ############################################################
         # Verbose output to be nice??

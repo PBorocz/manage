@@ -36,7 +36,7 @@ class Method(AbstractMethod):
         repo = Repo(Path.cwd()) if not repo else repo
 
         # Get arguments (and matching confirm message)
-        if s_pathspec := self.step.get_arg("pathspec", optional=True):
+        if s_pathspec := self.get_arg("pathspec", optional=True):
             pathspec = s_pathspec.split(" ")
             confirm = f"Ok to 'git add {','.join(pathspec)}'?"
         else:

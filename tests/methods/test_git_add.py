@@ -1,6 +1,6 @@
 """Test git_add method."""
 from manage.models import Configuration, Recipes, Step
-from manage.methods.git_add import main as git_add
+from manage.methods.git_add import Method as git_add  # noqa: N813
 
 
 def test_git_add(git_repo):
@@ -19,7 +19,7 @@ def test_git_add(git_repo):
     step = Step(method="aMethod", confirm=False, verbose=True, arguments=dict(pathspec=str(file_path)))
 
     # Test
-    assert git_add(Configuration(), Recipes.parse_obj({}), step, repo=repo)
+    assert git_add(Configuration(dry_run=False), Recipes.parse_obj({}), step).run(repo)
 
     # Confirm
     diff = repo.index.diff("HEAD")

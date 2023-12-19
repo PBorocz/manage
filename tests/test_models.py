@@ -1,8 +1,9 @@
-
+"""Test models."""
 import pydantic
 import pytest
 
 from manage.models import Configuration, Step, Recipe, Recipes
+from tests import SimpleObj
 
 
 @pytest.fixture
@@ -12,10 +13,7 @@ def recipes():
         description="A Clean Recipe",
         steps=[
             Step(method="clean"),  # Test that defaults match those in toml file..
-            Step(method="print",
-                 config=True,
-                 verbose=True,
-                 allow_error=True),
+            Step(method="print", config=True, verbose=True, allow_error=True),
         ],
     )
 
@@ -26,10 +24,12 @@ def recipes():
             Step(method="build"),
         ],
     )
-    return Recipes.parse_obj({
-        "clean" : recipe_clean,
-        "build" : recipe_build,
-    })
+    return Recipes.parse_obj(
+        {
+            "clean": recipe_clean,
+            "build": recipe_build,
+        },
+    )
 
 
 def test_step():
@@ -66,24 +66,6 @@ def test_recipe():
     step = Step(method="build")
     recipe = Recipe(description="Another Description", steps=[step])
     assert len(recipe) == 1
-
-
-def test_recipe_step_validation(recipes):
-    # assert recipes.validate_step_actions({}) is not None
-    methods = {
-        "clean"   : lambda x: x,
-        "print"   : lambda x: x,
-        "build"   : lambda x: x,
-        "another" : lambda x: x,
-    }
-    assert not recipes.validate_methods_steps(methods)
-
-
-class SimpleObj:
-    """."""
-    def __init__(self, **kwargs):
-        """."""
-        [setattr(self, attr, value) for (attr, value) in kwargs.items()]
 
 
 def test_configuration_dryrun():

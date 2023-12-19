@@ -4,8 +4,7 @@ from pathlib import Path
 import pytest
 
 from manage.models import Configuration, Recipes, Step
-from manage.methods.pandoc_convert_org_to_markdown import main
-
+from manage.methods.pandoc_convert_org_to_markdown import Method as pandoc_convert_org_to_markdown  # noqa: N813
 
 test_org_text = """
 * Sample ORG File
@@ -16,12 +15,14 @@ test_org_text = """
     open text open text open text open text open text open text open text open text open text open text open text.
 """
 
+
 @pytest.fixture
 def path_md():
     path_md = Path("/tmp/test.md")
     yield path_md
     if path_md.exists():
         path_md.unlink()
+
 
 @pytest.fixture
 def path_org():
@@ -31,16 +32,18 @@ def path_org():
     if path_org.exists():
         path_org.unlink()
 
-def test_normal_case(path_org, path_md):
 
+def test_normal_case(path_org, path_md):
     # Setup
     step = Step(
-        method="aMethod", confirm=False, verbose=False,
+        method="aMethod",
+        confirm=False,
+        verbose=False,
         arguments=dict(path_org=path_org, path_md=path_md),
     )
 
     # Test
-    assert main(Configuration(), Recipes.parse_obj({}), step)
+    assert pandoc_convert_org_to_markdown(Configuration(), Recipes.parse_obj({}), step).run()
 
     # Confirm
     assert path_md.exists()
@@ -50,10 +53,10 @@ def test_normal_case(path_org, path_md):
     assert "open text." in md_
     assert "[custom exceptions]" in md_
 
-def test_missing_arg_s(path_org, path_md):
 
+def test_missing_arg_s(path_org, path_md):
     # Setup
     step = Step(method="aMethod", confirm=False, verbose=False)
 
     # Test
-    assert not main(Configuration(), Recipes.parse_obj({}), step)
+    assert not pandoc_convert_org_to_markdown(Configuration(), Recipes.parse_obj({}), step).run()

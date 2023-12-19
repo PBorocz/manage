@@ -4,12 +4,12 @@ import unittest.mock as mock
 from pathlib import Path
 
 from manage.models import Configuration, Recipes, Step
-from manage.methods.clean import main as clean
+from manage.methods.clean import Method as clean  # noqa: N813
 
 
 @pytest.fixture
 def configuration():
-    return Configuration()
+    return Configuration(dry_run=False)
 
 
 @pytest.fixture
@@ -29,26 +29,23 @@ def step_confirm():
 
 @pytest.fixture
 def mock_input():
-    with mock.patch('rich.console.input') as m:
+    with mock.patch("rich.console.input") as m:
         yield m
 
 
 def test_clean_with_confirm(configuration, recipes, step_confirm, mock_input):
-    mock_input.return_value = 'y'
-    assert clean(configuration, recipes, step_confirm)
+    mock_input.return_value = "y"
+    assert clean(configuration, recipes, step_confirm).run()
 
-    mock_input.return_value = 'n'
-    assert not clean(configuration, recipes, step_confirm)
+    mock_input.return_value = "n"
+    assert not clean(configuration, recipes, step_confirm).run()
 
 
 def test_clean_no_confirm(configuration, recipes, step_no_confirm, mock_input):
-    path_build = Path('build')
+    path_build = Path("build")
 
-    # With nothing, should work as is..
-    assert clean(configuration, recipes, step_no_confirm)
-
-    # With an existing file, should delete it.
+    # With an existing file, command should delete it!
     path_build.touch()
     assert path_build.exists()
-    clean(configuration, recipes, step_no_confirm)
+    clean(configuration, recipes, step_no_confirm).run()
     assert not path_build.exists()

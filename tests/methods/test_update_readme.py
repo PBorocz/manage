@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from manage.models import Configuration, Recipes, Step
-from manage.methods.update_readme import main as update_readme
+from manage.methods.update_readme import Method as update_readme  # noqa: N813
 
 
 test_readme_md = """
@@ -43,6 +43,7 @@ test_readme_org_no_header = """
    - open text open text open text open text open text open text open text open text open text open text open text.
 """
 
+
 @pytest.fixture
 def path_readme_md():
     path_ = Path("/tmp/README.md")
@@ -51,6 +52,7 @@ def path_readme_md():
     if path_.exists():
         path_.unlink()
 
+
 @pytest.fixture
 def path_readme_org():
     path_ = Path("/tmp/README.org")
@@ -58,6 +60,7 @@ def path_readme_org():
     yield path_
     if path_.exists():
         path_.unlink()
+
 
 @pytest.fixture
 def path_readme_org_no_header():
@@ -79,7 +82,7 @@ def test_md(configuration, path_readme_md):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_md)))
 
     # Test
-    assert update_readme(configuration, Recipes.parse_obj({}), step)
+    assert update_readme(configuration, Recipes.parse_obj({}), step).run()
 
     # Confirm
     assert path_readme_md.exists()
@@ -95,7 +98,7 @@ def test_org(configuration, path_readme_org):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    assert update_readme(configuration, Recipes.parse_obj({}), step)
+    assert update_readme(configuration, Recipes.parse_obj({}), step).run()
 
     # Confirm
     assert path_readme_org.exists()
@@ -112,7 +115,7 @@ def test_no_file_available(configuration):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    assert not update_readme(configuration, Recipes.parse_obj({}), step)
+    assert not update_readme(configuration, Recipes.parse_obj({}), step).run()
 
 
 def test_file_not_found(configuration):
@@ -120,7 +123,7 @@ def test_file_not_found(configuration):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme="/tmp/foobar"))
 
     # Test
-    assert not update_readme(configuration, Recipes.parse_obj({}), step)
+    assert not update_readme(configuration, Recipes.parse_obj({}), step).run()
 
 
 def test_no_unreleased_header(configuration, path_readme_org_no_header):
@@ -128,7 +131,7 @@ def test_no_unreleased_header(configuration, path_readme_org_no_header):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    assert not update_readme(configuration, Recipes.parse_obj({}), step)
+    assert not update_readme(configuration, Recipes.parse_obj({}), step).run()
 
 
 def test_file_from_default(configuration, path_readme_md):
@@ -137,7 +140,7 @@ def test_file_from_default(configuration, path_readme_md):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    assert update_readme(configuration, Recipes.parse_obj({}), step)
+    assert update_readme(configuration, Recipes.parse_obj({}), step).run()
 
     # Confirm
     assert path_readme_md.exists()
