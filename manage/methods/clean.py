@@ -2,6 +2,7 @@
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
 
+
 class Method(AbstractMethod):
     """Clean up build artifacts."""
 

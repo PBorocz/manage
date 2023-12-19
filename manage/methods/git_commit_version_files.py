@@ -3,6 +3,7 @@ from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
 from manage.utilities import message, run
 
+
 class Method(AbstractMethod):
     """Commit version-related files."""
 

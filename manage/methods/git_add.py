@@ -9,17 +9,20 @@ from manage.models import Configuration, Recipes, Arguments, Argument
 from manage.utilities import message, smart_join
 
 # Metadata about arguments available...
-DEFAULT_ARGS = Arguments(arguments=[
-    Argument(
-        name="pathspec",
-        type_=str,
-        default=".",
-    ),
-])
+DEFAULT_ARGS = Arguments(
+    arguments=[
+        Argument(
+            name="pathspec",
+            type_=str,
+            default=".",
+        ),
+    ],
+)
 
 
 class Method(AbstractMethod):
     """git add."""
+
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Define git add."""
         super().__init__(configuration, recipes, step)

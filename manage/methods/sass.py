@@ -1,33 +1,47 @@
 """Method to run SASS pre-processor."""
 import shutil
 
+from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import ask_confirm, message, run
+from manage.utilities import message, run
 
 
 # Metadata about arguments available...
-args = Arguments(arguments=[
-    Argument(
-        name="pathspec",
-        type_=str,
-        default=None,
-    ),
-])
+args = Arguments(
+    arguments=[
+        Argument(
+            name="pathspec",
+            type_=str,
+            default=None,
+        ),
+    ],
+)
 
-def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
+
+class Method(AbstractMethod):
     """Run a SASS pre-processor command on the required pathspec."""
-    # Check we have a SASS to run against..
-    if not shutil.which("sass"):
-        message("Sorry, we can't find 'sass' on your path.", color="red", end_failure=True)
-        return False
 
-    # Check for argument..
-    if not (pathspec := step.get_arg('pathspec')):
-        message("Sorry, the `sass` method requires a 'pathspec' argument.", color="red", end_failure=True)
-        return False
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Init."""
+        super().__init__(configuration, recipes, step)
 
-    confirm = f"Ok to run '[italic]sass {pathspec}[/]'?"
-    if step.confirm and not ask_confirm(confirm):
-        return False
+    def run(self) -> bool:
+        """Do it."""
+        # Check we have a SASS to run against..
+        if not shutil.which("sass"):
+            message("Sorry, we can't find 'sass' on your path.", color="red", end_failure=True)
+            return False
 
-    return run(step, f"sass {pathspec}")[0]
+        # Lookup argument and get resultant command:
+        if not (pathspec := self.get_arg("pathspec")):
+            return False
+        cmd = f"sass {pathspec}"
+
+        if self.configuration.dry_run:
+            self.dry_run(cmd)
+            return True
+
+        if not self.do_confirm(f"Ok to run '[italic]{cmd}[/]'?"):
+            return False
+
+        return run(self.step, cmd)[0]

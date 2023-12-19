@@ -8,13 +8,15 @@ from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import ask_confirm, message, failure, success
 
 # Metadata about arguments available...
-args = Arguments(arguments=[
-    Argument(
-        name="readme",
-        type_=str,
-        default=None,
-    ),
-])
+args = Arguments(
+    arguments=[
+        Argument(
+            name="readme",
+            type_=str,
+            default=None,
+        ),
+    ],
+)
 
 
 def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
@@ -41,7 +43,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     """
     # What's the default path we'll be working on? (note: this is primarily for testing
     # purposes), manage is intended to be run from the project's top level directory!)
-    cwd = Path(step.get_arg('cwd', Path.cwd()))
+    cwd = Path(step.get_arg("cwd", Path.cwd()))
 
     # Has the user provided an explicit path to the README file to work on?
     if s_readme := step.get_arg("readme"):
@@ -65,7 +67,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
             print("[red]Sorry, couldn't find either a README.org or README.md in the top-level directory!")
             return False
 
-    release_tag = f"{configuration.version} - {datetime.now().strftime('%Y-%m-%d')}" # eg. "vA.B.C - 2023-05-15"
+    release_tag = f"{configuration.version} - {datetime.now().strftime('%Y-%m-%d')}"  # eg. "vA.B.C - 2023-05-15"
 
     # Confirmation before we continue?
     confirm = f"Ok to update {readme_name}'s '[italic]Unreleased[/]' header to '[italic]{release_tag}[/]'?"
@@ -94,9 +96,7 @@ def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
     new_release_header = unreleased_header.lower().replace("unreleased", release_tag)
 
     # Finally, we can replace the current unrelease_header line with the new contents..
-    readme_contents = readme_contents.replace(
-        unreleased_header,
-        unreleased_header + "\n" + new_release_header)
+    readme_contents = readme_contents.replace(unreleased_header, unreleased_header + "\n" + new_release_header)
 
     # Save our file back out and we're done!
     path_readme.write_text(readme_contents)

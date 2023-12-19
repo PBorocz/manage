@@ -1,51 +1,84 @@
 """Manage step."""
 import sys
 
-from rich import print
-
+from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import ask_confirm, failure, run, smart_join
+from manage.utilities import failure, message, run, smart_join
 
-POETRY_VERSIONS = ('patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor', 'prerelease')
+POETRY_VERSIONS = ("patch", "minor", "major", "prepatch", "preminor", "premajor", "prerelease")
 
 # Metadata about arguments available...
-args = Arguments(arguments=[
-    Argument(
-        name="poetry_version",
-        type_=str,
-        default="bump",
-    ),
-])
+args = Arguments(
+    arguments=[
+        Argument(
+            name="poetry_version",
+            type_=str,
+            default="bump",
+        ),
+    ],
+)
 
-def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
+
+class Method(AbstractMethod):
     """Do a version "bump" of pyproject.toml using poetry by a specified "level"."""
-    if not (poetry_version := step.get_arg('poetry_version')):
-        print("[red]Sorry, this command requires supplemental argument: poetry_version")
-        sys.exit(1)
 
-    if poetry_version not in POETRY_VERSIONS:
-        versions = smart_join(POETRY_VERSIONS, with_or=True)
-        print(f"[red]Sorry, {poetry_version} is not a valid poetry_version, must be one of \\[{versions}].")
-        sys.exit(1)
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Init."""
+        super().__init__(configuration, recipes, step)
 
-    # Use poetry to get what our next version *should* be (NOTE: This is a DRY-RUN only!!!!)
-    success, result = run(step, f"poetry version {poetry_version} --dry-run")
-    if not success:
-        failure()
-        print(f"[red]Sorry, Poetry couldn't determine a new version number from pyproject.toml: {result}")
-        sys.exit(1)
+    def run(self) -> bool:
+        """Do a version "bump" of pyproject.toml using poetry by a specified "level"."""
+        # Get argument...
+        if not (poetry_version := self.get_arg("poetry_version")):
+            return False
 
-    new_version = result.split()[-1]  # a bit fragile, we're relying on poetry default message format :-(
+        # FIXME: Can we put this into our validation check? Perhaps as a local method that's called earlier?
+        if poetry_version not in POETRY_VERSIONS:
+            versions = smart_join(POETRY_VERSIONS, with_or=True)
+            failure()
+            message(f"[red]Sorry, {poetry_version} is not a valid poetry_version, must be one of \\[{versions}].")
+            sys.exit(1)
 
-    ################################################################################
-    # Safety check
-    ################################################################################
-    confirm = f"Ok to bump version from '[italic]{configuration.version}[/]' to '[italic]v{new_version}[/]' in pyproject.toml?"
-    if step.confirm and not ask_confirm(confirm):
-        return False
+        # The arg becomes the core command to execute:
+        cmd = f"poetry version {poetry_version}"
 
-    # Update our version in pyproject.toml
-    result = run(step, f"poetry version {poetry_version}")[1]
-    configuration.version_ = result.split()[-1]
-    configuration.version = f"v{configuration.version_}" # FIXME: Duplicate with models.py/configuration_factory!
-    return True
+        ################################################################################
+        # For confirmation purposes, use poetry to get what our next
+        # version *should* be (NOTE: This is a DRY-RUN only!!!!)
+        ################################################################################
+        success, result = run(self.step, f"poetry version {poetry_version} --dry-run")
+        if not success:
+            failure()
+            msg = (
+                "[red]Sorry, poetry couldn't determine a new "
+                f"version number from pyproject.toml: [italic]{result}[/]"
+            )
+            message(msg)
+            sys.exit(1)
+        new_version = result.split()[-1]  # a bit fragile, we're relying on poetry default message format :-(
+
+        confirm = (
+            f"Ok to '[italic]{self.configuration.version}[/]' "
+            f"to '[italic]v{new_version}[/]' in pyproject.toml? "
+            f"'[italic]{cmd}[/]'"
+        )
+        if not self.do_confirm(confirm):
+            return False
+
+        ################################################################################
+        # Dry-run?
+        ################################################################################
+        if self.configuration.dry_run:
+            self.dry_run(cmd)
+            return True
+
+        ################################################################################
+        # Run it AND save the new version that poetry gave us!
+        ################################################################################
+        status, output = run(self.step, cmd)
+        if status:
+            # Side-effect! -> Make sure our configuration has the NEW version from now on!
+            self.configuration.set_version(output.split()[-1])
+            return True
+        else:
+            return False

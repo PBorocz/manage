@@ -20,6 +20,7 @@ load_dotenv(verbose=True)
 DEFAULT_PROJECT_PATH = Path.cwd() / "pyproject.toml"
 CONSOLE = Console()
 
+
 def process_arguments() -> [Configuration, PyProject]:
     """Do a two-pass command-line argument parser with a "raw" read of our pyproject.toml."""
     # Read our pyproject.toml file (using verbosity from command-line, not pyproject.toml itself!)
@@ -55,35 +56,27 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         default=False,
     )
 
-    parser.add_argument(
-        "-h",
-        "--help",
-        action="store_true",
-        default=False)
+    parser.add_argument("-h", "--help", action="store_true", default=False)
 
     parser.add_argument(
         "--confirm",
-        help=("Override recipe's 'confirm' setting to run all confirmable "
-              "steps as either confirm or don't confirm, default is None."),
+        help=(
+            "Override recipe's 'confirm' setting to run all confirmable "
+            "steps as either confirm or don't confirm, default is None."
+        ),
         type=bool,
         action=argparse.BooleanOptionalAction,
         default=None,
     )
 
-    parser.add_argument(
-        "--live",
-        action="store_true",
-        default=False)
+    parser.add_argument("--live", action="store_true", default=False)
 
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        default=False)
+    parser.add_argument("--dry-run", action="store_true", default=False)
 
     return parser.parse_args()
 
 
-def do_help(pyproject: PyProject)-> None:
+def do_help(pyproject: PyProject) -> None:
     from rich.panel import Panel
     from rich.table import Table
 
@@ -111,30 +104,36 @@ def do_help(pyproject: PyProject)-> None:
     ################################################################################
     table = Table.grid(expand=True)
 
-    table.add_row(blue("--help/-h"),
-                  green("Show this help message and exit."))
+    table.add_row(blue("--help/-h"), green("Show this help message and exit."))
 
-    table.add_row(blue("--verbose/-v"),
-                  green("Run steps in verbose mode [italic](including method stdout if available)[/]."))
+    table.add_row(
+        blue("--verbose/-v"),
+        green("Run steps in verbose mode [italic](including method stdout if available)[/]."),
+    )
 
-    table.add_row(blue("--dry-run"),
-                  green("Run steps in 'dry-run' mode."))
+    table.add_row(blue("--dry-run"), green("Run steps in 'dry-run' mode."))
 
-    table.add_row(blue("--live"),
-                  green("Run steps in 'live' mode."))
+    table.add_row(blue("--live"), green("Run steps in 'live' mode."))
 
-    table.add_row(blue("--confirm"),
-                  green("Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "\
-                  "all [bold]confirm[/]."))
+    table.add_row(
+        blue("--confirm"),
+        green(
+            "Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "
+            "all [bold]confirm[/].",
+        ),
+    )
 
-    table.add_row(blue("--no-confirm"),
-                  green("Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "\
-                  "all [bold]no[/] confirm."))
+    table.add_row(
+        blue("--no-confirm"),
+        green(
+            "Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "
+            "all [bold]no[/] confirm.",
+        ),
+    )
     CONSOLE.print(Panel(table, title=green("OPTIONS"), title_align="left"))
 
 
 def main():
-
     # Before anything else, make sure we're working from the root-level of the target project and have a pyproject.toml.
     if not DEFAULT_PROJECT_PATH.exists():
         CONSOLE.print("[red]Sorry, you need to run this from the same directory that your pyproject.toml file exists.")
@@ -158,7 +157,10 @@ def main():
 
     if not pyproject.is_valid_target(configuration.target):
         # s_targets = [f"[italic]{id_}[/]" for id_ in available_targets + ["check", "print"]]
-        msg = f"Sorry, [red]{configuration.target}[/] is not a valid recipe, must be one of [yellow][italic]{s_targets}[/]."
+        msg = (
+            f"Sorry, [red]{configuration.target}[/] is not a valid recipe, "
+            f"must be one of [yellow][italic]{s_targets}[/]."
+        )
         CONSOLE.print(msg)
         sys.exit(1)
 

@@ -6,19 +6,19 @@ import requests
 
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, success
+from manage.utilities import success
 
 
 class Method(AbstractMethod):
     """Create github release."""
+
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Create github release."""
         super().__init__(configuration, recipes, step)
 
-
     def run(self) -> bool:
         """Create github release."""
-        now = datetime.now().strftime('%Y-%m-%dT%H%M')
+        now = datetime.now().strftime("%Y-%m-%dT%H%M")
 
         confirm = f"Ok to create github release using tag '[italic]{self.configuration.version}[/]'?"
         if not self.do_confirm(confirm):
@@ -43,4 +43,4 @@ class Method(AbstractMethod):
         response = requests.post(url, headers=headers, auth=auth, json=json)
         response.raise_for_status()
         success()
-        return False
+        return True

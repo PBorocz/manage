@@ -1,5 +1,5 @@
 """Method root classes and methods."""
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, message, run
@@ -14,45 +14,52 @@ class AbstractMethod:
         self.configuration = configuration
         self.recipes = recipes
         self.step = step
-        self.cmd: str = None      # Provided on concrete class instantiation
+        self.cmd: str = None  # Provided on concrete class instantiation
         self.confirm: str = None  # "
 
     def run(self) -> bool:
-        """Run a single command after possible confirmation and dry-run check."""
+        """Run a single command after dry-run-check and possible confirmation."""
         if self.configuration.dry_run:
             self.dry_run(self.cmd)
             return True
 
-        if self.step.confirm:                      # Do we need to do a confirm?
-            if self.confirm:                       # Do we *have* a confirm message?
-                if not ask_confirm(self.confirm):  # Did the user want to pass on it?
-                    return False
+        if not self.do_confirm():
+            return False
 
-        # Otherwise, run it!
-        result, _ = run(self.step, self.cmd)
-        return result
+        status, _ = run(self.step, self.cmd)  # Run it for real!
+        return status
 
     def do_confirm(self, confirm: str | None = None) -> bool:
-        """."""
+        """Return True if we're good to keep going and run a command, False otherwise."""
         msg = confirm if confirm else self.confirm
 
-        # If we're running this step in dry_run mode, no need to confirm!
+        # If we're running this step in dry_run mode, no need to
+        # confirm (this may be duplicative with the run method above
+        # BUT this method if most often called on it's own!)
         if self.configuration.dry_run:
             return True
 
-        # Running in LIVE mode, do we need to confirm for the step?
-        if not self.step.confirm:             # Do we need to do a confirm?
+        # Ok, we *ARE* running in in LIVE mode: Do we need to confirm the step?
+        if not self.step.confirm:
             return True
 
-        # *DO* we have a confirm message"
+        # If we don't have confirmation message, we can't ask for confirmation!
         if not msg:
             return True
 
-        # Does the user still want to do the action?
-        if not ask_confirm(msg):
-            return False
-        return True
+        # Finally, does the *USER* want to do the step?
+        return ask_confirm(msg)
 
-    def dry_run(self, msg: str) -> None:
+    ################################################################################
+    # Utility methods
+    ################################################################################
+    def dry_run(self, cmd: str) -> None:
         """Wrap-up format for dry-run command messages."""
-        message(f"DRY-RUN -> '{msg}'", end_success=True, color="green")
+        message(f"DRY-RUN -> '{cmd}'", end_success=True, color="green")
+
+    def get_arg(self, arg_name: str) -> str | None:
+        """Find the value of the specified argument in the step, else message and None!"""
+        if not (arg_value := self.step.get_arg("path_md")):
+            message(f"Sorry, command requires a supplemental argument for '{arg_name}'", color="red", end_failure=True)
+            return None
+        return arg_value

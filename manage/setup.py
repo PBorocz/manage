@@ -6,7 +6,7 @@ from typing import Callable
 
 from rich import print
 
-from manage.models import Configuration, Recipes, PyProject, Recipe, Step
+from manage.models import Configuration, Recipes, PyProject, Recipe
 from manage.utilities import message, success, failure
 
 
@@ -55,9 +55,10 @@ from manage.utilities import message, success, failure
 
 
 def uptype_recipes(
-        configuration: Configuration,
-        pyproject: PyProject,
-        method_classes: dict[Callable] | None = None) -> Recipes:
+    configuration: Configuration,
+    pyproject: PyProject,
+    method_classes: dict[Callable] | None = None,
+) -> Recipes:
     """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
     #
     # First, convert to strongly-typed dataclass instances
@@ -87,12 +88,15 @@ def validate_existing_version_numbers(configuration: Configuration) -> bool:
     last_release_version = __get_last_release_from_readme(configuration.verbose)
     if last_release_version != configuration.version_:
         failure()
-        print(f"[red]Warning, pyproject.toml has version: {configuration.version_} "
-              f"while last release in README is {last_release_version}!")
+        print(
+            f"[red]Warning, pyproject.toml has version: {configuration.version_} "
+            f"while last release in README is {last_release_version}!",
+        )
         return False
     if configuration.verbose:
         success()
     return True
+
 
 def __get_last_release_from_readme(verbose: bool) -> [str, str]:
     """Mini state-machine to find last "release" in our changelog embedded within our README."""
@@ -107,9 +111,10 @@ def __get_last_release_from_readme(verbose: bool) -> [str, str]:
 
     if verbose:
         msg = f"\nReading from {path_readme}"
-        message(msg, color='light_slate_grey', end_success=True)
+        message(msg, color="light_slate_grey", end_success=True)
     method = __get_last_release_from_markdown if format_ == "markdown" else __get_last_release_from_org
     return method(verbose, path_readme)
+
 
 def __get_last_release_from_org(verbose: bool, path_readme: Path) -> str:
     header = "***"
@@ -120,16 +125,17 @@ def __get_last_release_from_org(verbose: bool, path_readme: Path) -> str:
             take_next_release = True
             if verbose:
                 msg = f"Found '{unreleased_header}' on line: {i_line+1}"
-                message(msg, color='light_slate_grey', end_success=True)
+                message(msg, color="light_slate_grey", end_success=True)
             continue
         if take_next_release and line.casefold().startswith(header):  # eg "*** vX.Y.Z - <aDate>"
             tag = line.split()[1]
             version = tag[1:]
             if verbose:
                 msg = f"Found next header matching '{line}' on line: {i_line+1}"
-                message(msg, color='light_slate_grey', end_success=True)
+                message(msg, color="light_slate_grey", end_success=True)
             return version
     return None
+
 
 def __get_last_release_from_markdown(verbose: bool, path_readme: Path) -> str:
     header = "###"
@@ -140,14 +146,14 @@ def __get_last_release_from_markdown(verbose: bool, path_readme: Path) -> str:
             take_next_release = True
             if verbose:
                 msg = f"Found '{unreleased_header}' on line: {i_line+1}"
-                message(msg, color='light_slate_grey', end_success=True)
+                message(msg, color="light_slate_grey", end_success=True)
             continue
         if take_next_release and line.startswith(header):  # eg "### vX.Y.Z - <aDate>"
             tag = line.split()[1]
             version = tag[1:]
             if verbose:
                 msg = f"Found next header matching '{line}' on line: {i_line+1}"
-                message(msg, color='light_slate_grey', end_success=True)
+                message(msg, color="light_slate_grey", end_success=True)
             return version
     return None
 

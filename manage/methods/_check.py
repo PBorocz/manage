@@ -5,7 +5,6 @@ from manage.models import Configuration, Recipes
 from manage.utilities import message
 
 
-
 class Method(AbstractMethod):
     """Show/print the recipes."""
 

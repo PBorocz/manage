@@ -60,12 +60,13 @@ def replace_rich_markup(string: str) -> str:
 
 
 def message(
-        message: str,
-        overhead: int = 0,
-        color: str = 'blue',
-        end_success: bool = False,
-        end_failure: bool = False,
-        end_warning: bool = False) -> str:
+    message: str,
+    overhead: int = 0,
+    color: str = "blue",
+    end_success: bool = False,
+    end_failure: bool = False,
+    end_warning: bool = False,
+) -> str:
     """Create and print a message string, padded to width (minus markup) and in the specified color."""
     padding = TERMINAL_WIDTH - overhead - len(replace_rich_markup(message))
     formatted = f"[{color}]{message}{'.' * padding}"

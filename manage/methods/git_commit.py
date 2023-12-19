@@ -9,17 +9,20 @@ from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import message
 
 # Metadata about arguments available...
-DEFAULT_ARGS = Arguments(arguments=[
-    Argument(
-        name="message",
-        type_=str,
-        default=f"Commit as of {datetime.now().isoformat()}",
-    ),
-])
+DEFAULT_ARGS = Arguments(
+    arguments=[
+        Argument(
+            name="message",
+            type_=str,
+            default=f"Commit as of {datetime.now().isoformat()}",
+        ),
+    ],
+)
 
 
 class Method(AbstractMethod):
     """git commit."""
+
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Define git commit."""
         super().__init__(configuration, recipes, step)

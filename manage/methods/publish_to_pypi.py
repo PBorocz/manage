@@ -1,12 +1,13 @@
 """Push/publish to PyPI using Poetry."""
+from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, run
 
 
-def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
+class Method(AbstractMethod):
     """Push/publish to PyPI using Poetry."""
-    cmd = "poetry publish"
-    confirm = f"Ok to publish to PyPI with '[italic]{cmd}[/]'?"
-    if step.confirm and not ask_confirm(confirm):
-        return False
-    return run(step, cmd)[0]
+
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Init."""
+        super().__init__(configuration, recipes, step)
+        self.cmd = "poetry publish"
+        self.confirm = f"Ok to publish to PyPI with '[italic]{self.cmd}[/]'?"

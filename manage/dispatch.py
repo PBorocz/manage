@@ -1,5 +1,4 @@
 """Core processing loop to dispatch recipe method(s) and/or step(s)."""
-from rich import print
 
 from manage.models import Configuration, Recipes
 # from manage.methods._print import main as _print
@@ -17,7 +16,6 @@ def dispatch(configuration: Configuration, recipes: Recipes) -> None:
 
     # We have a "regular" step to be performed, could still be either a method OR another step though!
     for step in recipes.get(configuration.target):
-
         # Before we execute, update step with any/all runtime arguments received from the command line:
         # (while we "could" do this once on setup
         step.reflect_runtime_arguments(configuration)

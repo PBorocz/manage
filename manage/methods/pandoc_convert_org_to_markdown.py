@@ -1,43 +1,65 @@
 """Convert an emacs org file into a markdown version using Pandoc."""
-from rich import print
+import shutil
 
-from manage.models import Argument, Arguments, Configuration
-from manage.utilities import ask_confirm, message, run
+from manage.methods import AbstractMethod
+from manage.models import Argument, Arguments, Configuration, Recipes
+from manage.utilities import failure, message, run
 
 
 # Metadata about arguments available...
-args = Arguments(arguments=[
-    Argument(
-        name="path_org",
-        type_=str,
-        default=None,
-    ),
-    Argument(
-        name="path_md",
-        type_=str,
-        default=None,
-    ),
-])
+args = Arguments(
+    arguments=[
+        Argument(
+            name="path_org",
+            type_=str,
+            default=None,
+        ),
+        Argument(
+            name="path_md",
+            type_=str,
+            default=None,
+        ),
+    ],
+)
 
 
-def main(configuration: Configuration, _, step: dict) -> bool:
-    """Do step."""
-    if not (path_md := step.get_arg('path_md')):
-        message("Sorry, command requires a supplemental argument for 'path_md'", color="red", end_failure=True)
-        return False
+class Method(AbstractMethod):
+    """Convert an emacs org file into a markdown version using Pandoc."""
 
-    if not (path_org := step.get_arg('path_org')):
-        message("Sorry, command requires a supplemental argument for 'path_org'", color="red", end_failure=True)
-        return False
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Init."""
+        super().__init__(configuration, recipes, step)
 
-    cmd = f"pandoc -f org -t markdown-smart --wrap none --output {path_md} {path_org}"
-    confirm = f"Ok to run '[italic]{cmd}[/]'?"
+    def run(self) -> bool:
+        """Run pandoc.."""
+        # Lookup arguments
+        if not (path_md := self.get_arg("path_md")):
+            return False
 
-    if step.confirm and not ask_confirm(confirm):
-        return False
+        if not (path_org := self.get_arg("path_org")):
+            return False
 
-    try:
-        return run(step, cmd)[0]
-    except FileNotFoundError:
-        print("\n[red]Sorry, couldn't find a [italic]pandoc[/] executable on your path!")
-        return False
+        # Check we have a pandoc on our patg to run against..
+        if not shutil.which("pandoc"):
+            failure()
+            message("Sorry, we can't find [italic]pandoc[/] on your path.", color="red", end_failure=True)
+            return False
+
+        # Get our command and confirmation string:
+        cmd = f"pandoc -f org -t markdown-smart --wrap none --output {path_md} {path_org}"
+        confirm = f"Ok to run '[italic]{cmd}[/]'?"
+
+        # Dry-run?
+        if self.configuration.dry_run:
+            self.dry_run(cmd)
+            return True
+
+        # Live but no confirmation?
+        if not self.do_confirm(confirm):
+            return False
+
+        try:
+            return run(self.step, cmd)[0]
+        except FileNotFoundError:
+            message("\n[red]Sorry, perhaps couldn't find a [italic]pandoc[/] executable on your path?")
+            return False

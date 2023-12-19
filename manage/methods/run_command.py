@@ -1,26 +1,39 @@
 """Run a generic (local) command."""
+from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import ask_confirm, run
+from manage.utilities import run
 
 
 # Metadata about arguments available...
-args = Arguments(arguments=[
-    Argument(
-        name="command",
-        type_=str,
-        default=None,
-    ),
-])
+args = Arguments(
+    arguments=[
+        Argument(
+            name="command",
+            type_=str,
+            default=None,
+        ),
+    ],
+)
 
 
-def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
-    """Run a local command."""
-    if not (cmd := step.get_arg('command')):
-        print("[red]Sorry, we require a 'command' argument for this method.")
-        return False
+class Method(AbstractMethod):
+    """Run a generic (local) command."""
 
-    confirm = f"Ok to run command: '[italic]{cmd}[/]'?"
-    if step.confirm and not ask_confirm(confirm):
-        return False
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Init."""
+        super().__init__(configuration, recipes, step)
 
-    return run(step, cmd)[0]
+    def run(self) -> bool:
+        """Run a local command."""
+        # Get argument...
+        if not (command := self.get_arg("command")):
+            return False
+
+        if self.configuration.dry_run:
+            self.dry_run(command)
+            return True
+
+        if self.do_confirm(f"Ok to run command: '[italic]{command}[/]'?"):
+            return False
+
+        return run(self.step, command)[0]

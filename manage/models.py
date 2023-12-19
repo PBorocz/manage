@@ -1,16 +1,15 @@
 """Core data types and recipe file read."""
 from __future__ import annotations
-import sys
 import tomllib
 from argparse import Namespace
-from copy import copy, deepcopy
+from copy import deepcopy
 from pathlib import Path
 
 from typing import Any, Callable, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
-from manage.utilities import failure, message, smart_join, success, warning
+from manage.utilities import message, smart_join, success, warning
 
 
 TClass = TypeVar("T")
@@ -21,30 +20,31 @@ TConfiguration = TypeVar("Configuration")
 
 class Step(BaseModel):
     """A step in a recipe."""
+
     # FROM inbound manage file:
-    method: str | None = None    # Reference to the built-in method to run
-    recipe: str | None = None    # Reference to the id_ of another recipe.
+    method: str | None = None  # Reference to the built-in method to run
+    recipe: str | None = None  # Reference to the id_ of another recipe.
 
     confirm: bool | None = None  # Default value is a function of the respective method
     verbose: bool | None = False
     allow_error: bool | None = False
 
-    arguments: Dict[str, Any] = {}   # Supplemental arguments for the callable
+    arguments: Dict[str, Any] = {}  # Supplemental arguments for the callable
 
     # NOT from inbound manage file:
     class_: TClass | None = None  # Python method we'll instantiate and call if this is a "method" step.
 
-    @validator('recipe', always=True)
+    @validator("recipe", always=True)
     @classmethod
     def check_consistency(cls, v, field, values):
         """Ensure that EITHER method or another recipe is specified on creation.
 
         NOTE: We use ~recipe~ here as it's *after* the ~method~ attribute in field definition order!
         """
-        if v is None and values['method'] is None:
-            raise ValueError('must provide either method or recipe')
-        if v is not None and values['method'] is not None:
-            raise ValueError('must not provide both method and recipe')
+        if v is None and values["method"] is None:
+            raise ValueError("must provide either method or recipe")
+        if v is not None and values["method"] is not None:
+            raise ValueError("must not provide both method and recipe")
         return v
 
     def get_arg(self, arg_key: str, default: Any | None = None) -> Any | None:
@@ -107,6 +107,7 @@ class Step(BaseModel):
 
 class Recipe(BaseModel):
     """A recipe, consisting of a description and a set of steps."""
+
     description: str | None = None
     steps: list[Step] = []
 
@@ -119,6 +120,7 @@ class Recipe(BaseModel):
 
 class Recipes(BaseModel):
     """A collection of recipes, maps 1-to-1 with an inbound file."""
+
     __root__: dict[str, Recipe]
 
     def __len__(self):
@@ -172,6 +174,7 @@ class Recipes(BaseModel):
 
 class Argument(BaseModel):
     """Possible argument for a method."""
+
     name: str
     type_: type
     default: Any | None = None
@@ -179,6 +182,7 @@ class Argument(BaseModel):
 
 class Arguments(BaseModel):
     """Collection of Arguments for a method."""
+
     arguments: list[Argument] = []
 
     def get_argument(self, argument_name: str) -> Argument | None:
@@ -196,6 +200,7 @@ class PyProject(BaseModel):
     - Two general attributes associated with the current project
     - Two related to this package's configuration.
     """
+
     version: str | None = None  # Current version string..
     package: str | None = None  # Package name..
     recipes: dict = {}  # These are RAW recipe dicts here!
@@ -273,6 +278,7 @@ class PyProject(BaseModel):
 
 class Configuration(BaseModel):
     """Configuration/state, primarily (but not solely) from command-line args."""
+
     verbose: bool | None = None
     help: bool | None = None
     target: str | None = None
@@ -280,7 +286,7 @@ class Configuration(BaseModel):
     confirm: bool | None = None  # If set, override step confirmation instruction appropriately.
 
     version_: str | None = None  # Note: This is the current version # of the project we're working on!
-    version: str | None = None   # " In nice format..
+    version: str | None = None  # " In nice format..
 
     package_: str | None = None  # "
 
@@ -291,49 +297,36 @@ class Configuration(BaseModel):
         setattr(self, attr, value)
         self._messages_.append(f"Setting [italic]{attr}[/] to {value} {source}.")
 
+    def set_version(self, version_raw: str | None) -> None:
+        """Set both the version attributes based on that provided from poetry."""
+        # Set both "raw" & ncie project versions from the pyproject.toml, eg. 1.2.3 and v1.2.3.
+        version_formatted = f"v{version_raw}" if version_raw else ""
+        self.configuration.version_ = version_raw
+        self.configuration.version = version_formatted
+
     @classmethod
-    def factory(cls, args: Namespace | None, pyproject: PyProject, test: bool = False, **kwargs) -> Configuration | None:
+    def factory(cls, args: Namespace, pyproject: PyProject, test: bool = False, **testing) -> Configuration | None:
         """Create a Configuration object, setting some attrs from pyproject.toml.
 
         We can either set from args (usual case) or pyproject.toml or from kwargs (primarily for testing).
         """
-        def _resolve_parameter(attr: str, config: Configuration) -> Configuration:
-            # First, get from the pyproject.toml:
-            if attr in getattr(pyproject, "parameters", []): # Use getattr to simplify test creation.
-                config.set_value(attr, pyproject.parameters[attr], "based on pyproject.toml entry")
-
-            # Then, from command-line args (which *override* pyproject.toml!)
-            if value := getattr(args, attr, None):
-                msg = "from command-line override" if getattr(config, attr) else "from command-line"
-                config.set_value(attr, value, msg)
-
-            return config
-
-        # Get the current project version from the pyproject instance..first, the "raw" value, eg. 1.2.3
-        pyproject_version_raw = getattr(pyproject, "version", "")
-
-        # Then, make the "nice" format, eg. v1.2.3 (for use in README's)
-        pyproject_version_nice = f"v{pyproject_version_raw}" if pyproject_version_raw else ""
-
         ############################################################
         # CREATE our Configuration instance with these values
         ############################################################
-        configuration = Configuration(
-            version_ = pyproject_version_raw,
-            version  = pyproject_version_nice,
-            package_ = getattr(pyproject, "", ""),
-        )
+        configuration = Configuration(package_=getattr(pyproject, "", ""))
+        configuration.set_verion(getattr(pyproject, "version", ""))
 
         # Resolve the rest of the configuration parameters from pyproject and command-line:
-        for attr in ["help", "verbose", "confirm", "target", "dry_run"]:
-            configuration = _resolve_parameter(attr, configuration)
+        for attr in ["confirm", "dry_run", "help", "target", "verbose"]:
+            configuration = _resolve_parameter(args, attr, pyproject, configuration)
 
         # Handle special case of "--live" on command-line (and ONLY from command-line!)
         if getattr(args, "live", None):
             configuration.set_value("dry_run", False, "based on --live on command-line")
 
-        if kwargs:  # TESTING ONLY!!
-            for attr, value in kwargs.items():
+        # Finally, for testing only, override any other attrs:
+        if testing:
+            for attr, value in testing.items():
                 configuration.set_value(attr, value, "from testing kwargs")
 
         ############################################################
@@ -341,9 +334,23 @@ class Configuration(BaseModel):
         ############################################################
         if configuration.verbose:
             for msg in configuration._messages_:
-                message(msg, color='light_slate_grey', end_success=True)
+                message(msg, color="light_slate_grey", end_success=True)
         if test:
             for msg in configuration._messages_:
                 print(msg)
 
         return configuration
+
+
+def _resolve_parameter(args: Namespace, attr: str, pyproject: PyProject, config: Configuration) -> Configuration:
+    """Resolve the specified attribue starting from pyproject and command-line."""
+    # First, get from the pyproject.toml:
+    if attr in getattr(pyproject, "parameters", []):  # Use getattr to simplify test creation.
+        config.set_value(attr, pyproject.parameters[attr], "based on pyproject.toml entry")
+
+    # Then, from command-line args (which *override* pyproject.toml!)
+    if value := getattr(args, attr, None):
+        msg = "from command-line override" if getattr(config, attr) else "from command-line"
+        config.set_value(attr, value, msg)
+
+    return config

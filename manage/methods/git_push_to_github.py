@@ -1,10 +1,13 @@
 """Push to github."""
+from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, run
 
 
-def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
+class Method(AbstractMethod):
     """Push to github."""
-    if step.confirm and not ask_confirm("Ok to push to github?"):
-        return False
-    return run(step, "git push --follow-tags")[0]
+
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Easy single command to push."""
+        super().__init__(configuration, recipes, step)
+        self.confirm = "Ok to push to github?"
+        self.cmd = "git push --follow-tags"
