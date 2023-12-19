@@ -68,13 +68,17 @@ def path_readme_org_no_header():
         path_.unlink()
 
 
-def test_md(path_readme_md):
+@pytest.fixture
+def configuration():
+    yield Configuration.factory(None, None, version_="1.9.11")
+
+
+def test_md(configuration, path_readme_md):
     """Test standard case with Markdown file."""
     # Setup
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_md)))
 
     # Test
-    configuration = Configuration.factory(None, None, version_="1.9.11")
     assert update_readme(configuration, Recipes.parse_obj({}), step)
 
     # Confirm
@@ -85,13 +89,12 @@ def test_md(path_readme_md):
     assert "v1.9.11" in readme
 
 
-def test_org(path_readme_org):
+def test_org(configuration, path_readme_org):
     """Test standard case with Org file."""
     # Setup
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    configuration = Configuration.factory(None, None, version_="1.9.11")
     assert update_readme(configuration, Recipes.parse_obj({}), step)
 
     # Confirm
@@ -102,42 +105,38 @@ def test_org(path_readme_org):
     assert "v1.9.11" in readme
 
 
-def test_no_file_available():
+def test_no_file_available(configuration):
     """Test case where we don't have a README at all!"""
     # Setup (note: we don't specify the name of the file here but we DO need to set cwd
     # so we don't accidentally pick up the README file in our own project!)
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    configuration = Configuration.factory(None, None, version_="1.9.11")
     assert not update_readme(configuration, Recipes.parse_obj({}), step)
 
 
-def test_file_not_found():
+def test_file_not_found(configuration):
     """Test case where we have a README specified but it doesn't actually exist."""
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme="/tmp/foobar"))
 
     # Test
-    configuration = Configuration.factory(None, None, version_="1.9.11")
     assert not update_readme(configuration, Recipes.parse_obj({}), step)
 
 
-def test_no_unreleased_header(path_readme_org_no_header):
+def test_no_unreleased_header(configuration, path_readme_org_no_header):
     """Test case where we have a README specified but it doesn't actually exist."""
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    configuration = Configuration.factory(None, None, version_="1.9.11")
     assert not update_readme(configuration, Recipes.parse_obj({}), step)
 
 
-def test_file_from_default(path_readme_md):
+def test_file_from_default(configuration, path_readme_md):
     """Test special case where we find a default README file (in this case, Markdown)."""
     # Setup (note: we don't specify the name of the file here!
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(cwd="/tmp"))
 
     # Test
-    configuration = Configuration.factory(None, None, version_="1.9.11")
     assert update_readme(configuration, Recipes.parse_obj({}), step)
 
     # Confirm

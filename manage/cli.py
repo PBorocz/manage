@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from manage.dispatch import dispatch
-from manage.models import Configuration, PyProject
+from manage.models import Configuration, PyProject, Recipes
 from manage.setup import (
-    gather_available_methods,
+    gather_available_method_classes,
     uptype_recipes,
     validate_existing_version_numbers,
 )
@@ -150,7 +150,7 @@ def main():
         sys.exit(0)
 
     # We have enough information now to validate the user's specific target requested:
-    s_targets = pyproject.get_formatted_list_of_targets(["check", "print"])
+    s_targets = pyproject.get_formatted_list_of_targets()
     if not configuration.target:
         msg = f"Sorry, we need a valid recipe target to execute, must be one of [yellow]{s_targets}[/]."
         CONSOLE.print(msg)
@@ -163,7 +163,7 @@ def main():
         sys.exit(1)
 
     # Gather all available methods from our package's library
-    if not (methods := gather_available_methods(configuration.verbose)):
+    if not (method_classes := gather_available_method_classes(configuration.verbose)):
         sys.exit(1)
 
     # Validate that version numbers are consistent between pyproject.toml and README's change history.
@@ -171,7 +171,7 @@ def main():
         sys.exit(1)
 
     # Validate and configure the specified recipe file into strongly-typed instances
-    recipes = uptype_recipes(configuration, pyproject, methods)
+    recipes: Recipes = uptype_recipes(configuration, pyproject, method_classes)
 
     try:
         dispatch(configuration, recipes)

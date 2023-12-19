@@ -1,12 +1,12 @@
 """Clean step."""
+from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, run
 
+class Method(AbstractMethod):
+    """Clean up build artifacts."""
 
-def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
-    """Clean the build environment."""
-    cmd = "rm -rf build *.egg-info"
-    confirm = f"Ok to clean build environment with '[italic]{cmd}[/]'?"
-    if step.confirm and not ask_confirm(confirm):
-        return False
-    return run(step, cmd)[0]
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Easy single command to clean."""
+        super().__init__(configuration, recipes, step)
+        self.cmd = "rm -rf build *.egg-info"
+        self.confirm = f"Ok to clean build environment with '[italic]{self.cmd}[/]'?"

@@ -13,6 +13,7 @@ from pydantic import BaseModel, validator
 from manage.utilities import failure, message, smart_join, success, warning
 
 
+TClass = TypeVar("T")
 TStep = TypeVar("Step")
 TRecipes = TypeVar("Recipes")
 TConfiguration = TypeVar("Configuration")
@@ -31,7 +32,7 @@ class Step(BaseModel):
     arguments: Dict[str, Any] = {}   # Supplemental arguments for the callable
 
     # NOT from inbound manage file:
-    callable_: Callable | None = None  # Python func we'll call if this is a "method" step.
+    class_: TClass | None = None  # Python method we'll instantiate and call if this is a "method" step.
 
     @validator('recipe', always=True)
     @classmethod
@@ -93,7 +94,7 @@ class Step(BaseModel):
         step = deepcopy(self)
 
         # We don't need this for printing..
-        delattr(step, "callable_")
+        delattr(step, "class_")
 
         # And one of these will be empty!
         if step.method:
@@ -146,13 +147,13 @@ class Recipes(BaseModel):
         """Is the target provide valid against our current recipes? (on a case-folded basis)."""
         return recipe_target.casefold() in [id_.casefold() for id_ in self.keys()]
 
-    def validate_methods_steps(self, methods_available: dict[Callable]) -> list | None:
+    def validate_method_steps(self, method_classes_defined: dict[Callable]) -> list | None:
         """Each step in each recipe needs to be either a "built-in" method or refer to another valid step."""
         return_ = list()
         for id_, recipe in self:
             for step in recipe:
                 if step.method:
-                    if step.method not in methods_available:
+                    if step.method not in method_classes_defined:
                         return_.append(f"Method: '{step.method}' in recipe={id_} is NOT a valid step method!")
                 else:
                     if self.get(step.recipe) is None:
@@ -250,6 +251,17 @@ class PyProject(BaseModel):
         if version is None:
             warning()
             print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
+
+        # Lastly, we have two "built-in" recipes that we make ALWAYS available, specifically, check and print,
+        # Add them in here as well so they'll be treated the same as the user's recipes.
+        recipes["print"] = {
+            "description": "Show/print recipes defined in pyproject.toml",
+            "steps": [{"method": "print", "confirm": False}],
+        }
+        recipes["check"] = {
+            "description": "Check configuration in pyproject.toml",
+            "steps": [{"method": "check", "confirm": False}],
+        }
 
         return cls(
             package=package,

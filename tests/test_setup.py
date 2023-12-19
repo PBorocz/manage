@@ -89,6 +89,6 @@ def tst_override_steps_from_args():
     # FIXME: Implement me..
     ...
 
-def tst_gather_available_methods():
+def tst_gather_available_method_classes():
     # FIXME: Implement me..
     ...

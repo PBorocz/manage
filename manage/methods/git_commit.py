@@ -4,13 +4,12 @@ from pathlib import Path
 
 from git import Repo
 
+from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import ask_confirm, failure, message, success
-
-PATHSPEC_ALL = "."
+from manage.utilities import message
 
 # Metadata about arguments available...
-args = Arguments(arguments=[
+DEFAULT_ARGS = Arguments(arguments=[
     Argument(
         name="message",
         type_=str,
@@ -18,30 +17,46 @@ args = Arguments(arguments=[
     ),
 ])
 
-def main(configuration: Configuration, recipes: Recipes, step: dict, repo: Repo | None = None) -> bool:
-    """Commits all staged files.
 
-    Use either repo provided (testing usually) or that in the current directory (normal mode).
-    """
-    repo = Repo(Path.cwd()) if not repo else repo
+class Method(AbstractMethod):
+    """git commit."""
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Define git commit."""
+        super().__init__(configuration, recipes, step)
 
-    # Get argument...
-    if not (commit_message := step.get_arg("message")):
-        commit_message = args.get_argument("message").default
+    def run(self, repo: Repo | None = None) -> bool:
+        """Commits *all* staged files (ie. normal git commit).
 
-    # State changing commmand...confirm execution..
-    confirm = f"Ok to '[italic]git commit -m \"{commit_message}\"[/]'?"
-    if step.confirm and not ask_confirm(confirm):
+        Use either repo provided (testing usually) or that in the current directory (normal mode).
+        """
+        repo = Repo(Path.cwd()) if not repo else repo
+
+        # Get argument...
+        if not (commit_message := self.step.get_arg("message")):
+            commit_message = DEFAULT_ARGS.get_argument("message").default
+
+        cmd = f'git commit -m "{commit_message}"'
+
+        # State changing commmand...if we're going to run live, confirm execution beforehand.
+        confirm = f"Ok to '[italic]{cmd}[/]'?"
+        if not self.do_confirm(confirm):
             return False
 
-    # Do it..
-    try:
-        repo.index.commit(commit_message)
-        if step.verbose:
-            commit = repo.head.commit
-            for file_, diff in commit.stats.files.items():
-                message(f"git commit -m {file_}", color="green", end_success=True)
-        return True
-    except OSError:
-        message(f"Unable to '[italic]git commit -m \"{message}\"[/]", color="red", end_failure=True)
-        return False
+        # Do it?
+        try:
+            # Dry-run?
+            if self.configuration.dry_run:
+                self.dry_run(cmd)
+                return True
+
+            # Do it!
+            repo.index.commit(commit_message)
+            if self.step.verbose:
+                commit = repo.head.commit
+                for file_, diff in commit.stats.files.items():
+                    message(f'git commit -m "{file_}"', color="green", end_success=True)
+            return True
+
+        except OSError:
+            message(f"Unable to '[italic]{cmd}[/]'", color="red", end_failure=True)
+            return False

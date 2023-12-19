@@ -57,25 +57,25 @@ from manage.utilities import message, success, failure
 def uptype_recipes(
         configuration: Configuration,
         pyproject: PyProject,
-        methods: dict[Callable] | None = None) -> Recipes:
+        method_classes: dict[Callable] | None = None) -> Recipes:
     """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
+    #
     # First, convert to strongly-typed dataclass instances
+    #
     d_recipes = dict()
     for id_, raw_recipe in pyproject.recipes.items():
         recipe = Recipe(**raw_recipe)
         d_recipes[id_] = recipe
     recipes = Recipes.parse_obj(d_recipes)
 
-    # Add system recipe target(s) (only time we don't is for testing)
-    recipes = _add_system_recipe_s(recipes)
+    if method_classes:
+        # Map the built-in classes available onto each recipe step.
+        recipes = _add_classes(recipes, method_classes)
 
-    if methods:
-        # Map the built-in methods available onto each recipe step.
-        recipes = _add_callables(recipes, methods)
-
-        # Validate that each of the methods are valid.
-        if not _validate_recipe_methods(configuration.verbose, recipes, methods):
-            sys.exit(1)
+        # Validate that each of the methods provided are valid.
+        # DEBUG! FIXME! While we're converting..
+        # if not _validate_recipe_classes(configuration.verbose, recipes, method_classes):
+        #     sys.exit(1)
 
     return recipes
 
@@ -152,11 +152,11 @@ def __get_last_release_from_markdown(verbose: bool, path_readme: Path) -> str:
     return None
 
 
-def _validate_recipe_methods(verbose: bool, recipes: Recipes, step_methods: dict[str, Callable]) -> bool:
+def _validate_recipe_classes(verbose: bool, recipes: Recipes, method_classes: dict[str, Callable]) -> bool:
     """Make sure all the the methods and steps from our recipes are defined and available."""
     if verbose:
         message("Validating recipes")
-    if invalid_method_steps := recipes.validate_methods_steps(step_methods):
+    if invalid_method_steps := recipes.validate_method_steps(method_classes):
         print("\n[red]Sorry, we encountered the following errors in inbound recipe file:")
         for method_step in invalid_method_steps:
             print(f"[red]- {method_step}")
@@ -167,23 +167,12 @@ def _validate_recipe_methods(verbose: bool, recipes: Recipes, step_methods: dict
     return True
 
 
-def _add_callables(recipes: Recipes, step_methods: dict[str, Callable]) -> Recipes:
+def _add_classes(recipes: Recipes, method_classes: dict[str, Callable]) -> Recipes:
     """Add the "callable" method onto each method step to dispatch on."""
     for name, recipe in recipes:
         for step in recipe:
-            if callable_ := step_methods.get(step.method):
-                step.callable_ = callable_
-    return recipes
-
-
-def _add_system_recipe_s(recipes: Recipes) -> Recipes:
-    """Embellish recipes with our "built-in" one(s)."""
-    recipes.set(
-        "check",
-        Recipe(description="Check configuration only.", steps=[Step(method="check", confirm=False)]))
-    recipes.set(
-        "print",
-        Recipe(description="Show/print recipe file contents.", steps=[Step(method="print", confirm=False)]))
+            if class_ := method_classes.get(step.method):
+                step.class_ = class_
     return recipes
 
 
@@ -200,10 +189,10 @@ def _add_system_recipe_s(recipes: Recipes) -> Recipes:
 #     return recipes
 
 
-def gather_available_methods(verbose: bool) -> dict[str, Callable]:
+def gather_available_method_classes(verbose: bool) -> dict[str, Callable]:
     """Read and return all the python-defined step methods available."""
 
-    def __gather_methods_modules():
+    def __gather_method_classes():
         """Iterate over all step modules (utility method)."""
         for path in sorted((Path(__file__).parent / Path("methods")).glob("*.py")):
             if path.name.startswith("__"):
@@ -214,18 +203,18 @@ def gather_available_methods(verbose: bool) -> dict[str, Callable]:
             # Convert methods like "_check_" and "_print" to "check" and "print"
             method_name = path.stem[1:] if path.stem.startswith("_") else path.stem
 
-            yield method_name, getattr(module, "main")
+            yield method_name, getattr(module, "Method", None)
 
     # Get all the 'main" methods in each python file in the steps module:
     if verbose:
         message("Initialising methods available")
 
-    methods = {method_name: method for method_name, method in __gather_methods_modules()}
-    if not methods:
+    classes = {method_name: cls for method_name, cls in __gather_method_classes()}
+    if not classes:
         failure()
-        print("[red]Unable to find [bold]any[/] valid methods steps in manage/methods/*.py?")
+        print("[red]Unable to find [bold]any[/] valid method classes in manage/methods/*.py?")
         sys.exit(1)
 
     if verbose:
         success()
-    return methods
+    return classes

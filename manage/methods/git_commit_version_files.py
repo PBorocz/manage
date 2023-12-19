@@ -1,16 +1,31 @@
 """Commits updated files that contain version information locally."""
+from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, run
+from manage.utilities import message, run
 
+class Method(AbstractMethod):
+    """Commit version-related files."""
 
-def main(configuration: Configuration, recipes: Recipes, step: dict) -> bool:
-    """Commits updated files that contain version information locally."""
-    confirm = "Ok to commit changes to pyproject.toml and README.*?"
-    if step.confirm and not ask_confirm(confirm):
-        print(f"To rollback, you may have to set version back to {configuration.version_} re-commit locally.")
-        return False
-    if not run(step, "git add pyproject.toml README.*")[0]:
-        return False
-    if not run(step, f'git commit --message "Bump version to {configuration.version}"')[0]:
-        return False
-    return True
+    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+        """Commit version-related files."""
+        super().__init__(configuration, recipes, step)
+
+    def run(self) -> bool:
+        """Commits updated files that contain version information locally."""
+        confirm = "Ok to stage & commit changes to pyproject.toml and README.*?"
+        if not self.do_confirm(confirm):
+            message(f"To rollback, you may have to revert version to {self.configuration.version_} & re-commit.")
+            return False
+
+        cmds = (
+            "git add pyproject.toml README.*",
+            f'git commit --m "Bump version to {self.configuration.version}"',
+        )
+
+        for cmd in cmds:
+            if self.configuration.dry_run:
+                self.dry_run(cmd)
+            else:
+                if not run(self.step, cmd)[0]:
+                    return False
+        return True

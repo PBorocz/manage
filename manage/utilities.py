@@ -3,21 +3,23 @@ import re
 import shlex
 import subprocess
 import sys
-from importlib import metadata
-from pathlib import Path
-from typing import Final, Any
+from typing import Final, TypeVar
 
 from rich import print
 from rich.console import Console
 
+
 TERMINAL_WIDTH: Final = 79
 
+TStep = TypeVar("Step")
 
-def smart_join(lst: list[str], with_or: bool = False) -> str:
+
+def smart_join(lst: list[str], with_or: bool = False, delim: str = ",") -> str:
     """Essentially ', ' but with nicer formatting."""
+    s_delim = f"{delim} "
     if with_or:
-        return ', '.join(lst[:-1]) + " or " + lst[-1]
-    return ', '.join(lst)
+        return s_delim.join(lst[:-1]) + " or " + lst[-1]
+    return s_delim.join(lst)
 
 
 def ask_confirm(text: str) -> bool:
@@ -78,7 +80,7 @@ def message(
         failure(color=color)
 
 
-def run(step: Any, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step" but will create circular import!
+def run(step: TStep, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step" but will create circular import!
     """Run the command for the specified Step, capturing output and signal success/failure."""
     if step.verbose:
         message(f"Running [italic]{command}[/]")

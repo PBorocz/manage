@@ -4,7 +4,7 @@ version = "0.1.11"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
-readme = "README.org"
+readme = "README.md"
 packages = [{include = "manage"}]
 
 [tool.poetry.scripts]
@@ -31,6 +31,7 @@ build-backend = "poetry.core.masonry.api"
 # ##############################################################################
 [tool.manage]
 dry_run = true  # If set to true, you'll need --live on each run (safest until you get stable)
+verbose = true
 
 # ------------------------------------------------------------------------------
 [tool.manage.recipes."1_bump"]
@@ -98,3 +99,14 @@ description = "Clean out our temp files and ALL previous builds"
 [[tool.manage.recipes.clean.steps]]
 method = "clean"
 confirm = false
+
+# ------------------------------------------------------------------------------
+# TESTING
+# ------------------------------------------------------------------------------
+[tool.manage.recipes.test]
+description = "Test out a single command."
+
+[[tool.manage.recipes.test.steps]]
+  method = "git_commit_version_files"
+  confirm = true
+  # arguments = {pathspec = "README.md pyproject.toml"}
