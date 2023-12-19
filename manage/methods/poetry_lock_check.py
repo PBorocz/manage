@@ -1,7 +1,9 @@
 """Verify that poetry.lock is consistent with pyproject.toml and update if not (good security practice)."""
+import shutil
+
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import run, warning
+from manage.utilities import failure, message, run, warning
 
 
 class Method(AbstractMethod):
@@ -15,6 +17,12 @@ class Method(AbstractMethod):
         """Poetry lock check and optional update."""
         cmd_chck = "poetry lock --check"  # No changes here, thus, no confirm required!
         cmd_lock = "poetry lock --no-update"  # Dry-run and confirm are possible on this one.
+
+        # Check we have a poetry on our path to run against..
+        if not shutil.which("poetry"):
+            failure()
+            message("Sorry, we can't find [italic]poetry[/] on your path.", color="red", end_failure=True)
+            return False
 
         # Initial check is easy...if it returns fine, we're done...otherwise, update it!
         if not run(self.step, cmd_chck)[0]:

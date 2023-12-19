@@ -1,4 +1,5 @@
 """Manage step."""
+import shutil
 import sys
 
 from manage.methods import AbstractMethod
@@ -32,21 +33,37 @@ class Method(AbstractMethod):
         if not (poetry_version := self.get_arg("poetry_version")):
             return False
 
+        # Check we have a poetry on our path to run against..
+        if not shutil.which("poetry"):
+            failure()
+            message("Sorry, we can't find [italic]poetry[/] on your path.", color="red", end_failure=True)
+            return False
+
         # FIXME: Can we put this into our validation check? Perhaps as a local method that's called earlier?
         if poetry_version not in POETRY_VERSIONS:
             versions = smart_join(POETRY_VERSIONS, with_or=True)
             failure()
-            message(f"[red]Sorry, {poetry_version} is not a valid poetry_version, must be one of \\[{versions}].")
+            message(
+                f"Sorry, {poetry_version} is not a valid poetry_version, must be one of \\[{versions}].",
+                color="red",
+            )
             sys.exit(1)
 
         # The arg becomes the core command to execute:
         cmd = f"poetry version {poetry_version}"
 
         ################################################################################
+        # Dry-run?
+        ################################################################################
+        if self.configuration.dry_run:
+            self.dry_run(cmd)
+            return True
+
+        ################################################################################
         # For confirmation purposes, use poetry to get what our next
         # version *should* be (NOTE: This is a DRY-RUN only!!!!)
         ################################################################################
-        success, result = run(self.step, f"poetry version {poetry_version} --dry-run")
+        success, result = run(self.step, f"{cmd} --dry-run")
         if not success:
             failure()
             msg = (
@@ -66,14 +83,7 @@ class Method(AbstractMethod):
             return False
 
         ################################################################################
-        # Dry-run?
-        ################################################################################
-        if self.configuration.dry_run:
-            self.dry_run(cmd)
-            return True
-
-        ################################################################################
-        # Run it AND save the new version that poetry gave us!
+        # Run it by doing the REAL poetry version!
         ################################################################################
         status, output = run(self.step, cmd)
         if status:

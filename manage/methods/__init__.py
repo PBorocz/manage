@@ -1,5 +1,6 @@
 """Method root classes and methods."""
 from abc import abstractmethod
+from typing import Any
 
 from manage.models import Configuration, Recipes
 from manage.utilities import ask_confirm, message, run
@@ -57,9 +58,19 @@ class AbstractMethod:
         """Wrap-up format for dry-run command messages."""
         message(f"DRY-RUN -> '{cmd}'", end_success=True, color="green")
 
-    def get_arg(self, arg_name: str) -> str | None:
-        """Find the value of the specified argument in the step, else message and None!"""
-        if not (arg_value := self.step.get_arg("path_md")):
-            message(f"Sorry, command requires a supplemental argument for '{arg_name}'", color="red", end_failure=True)
+    def get_arg(self, arg_name: str, optional: bool = False, default: Any | None = None) -> str | None:
+        """Find the value of the specified argument in the step, else look for default."""
+        if arg_value := self.step.get_arg("path_md"):
+            return arg_value
+
+        # No value found, do we have a default to return?
+        if default:
+            return default
+
+        # If the argument is OPTIONAL, we're OK to return None..
+        if optional:
             return None
-        return arg_value
+
+        # Otherwise, we expected to find an argument and no default was provided!!
+        message(f"Sorry, command requires a supplemental argument for '{arg_name}'", color="red", end_failure=True)
+        return None

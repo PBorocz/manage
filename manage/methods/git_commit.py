@@ -38,28 +38,27 @@ class Method(AbstractMethod):
         if not (commit_message := self.step.get_arg("message")):
             commit_message = DEFAULT_ARGS.get_argument("message").default
 
+        # Get the git commit command we'd like to run:
         cmd = f'git commit -m "{commit_message}"'
+
+        # Dry-run?
+        if self.configuration.dry_run:
+            self.dry_run(cmd)
+            return True
 
         # State changing commmand...if we're going to run live, confirm execution beforehand.
         confirm = f"Ok to '[italic]{cmd}[/]'?"
         if not self.do_confirm(confirm):
             return False
 
-        # Do it?
+        # Do it!
         try:
-            # Dry-run?
-            if self.configuration.dry_run:
-                self.dry_run(cmd)
-                return True
-
-            # Do it!
             repo.index.commit(commit_message)
             if self.step.verbose:
                 commit = repo.head.commit
                 for file_, diff in commit.stats.files.items():
                     message(f'git commit -m "{file_}"', color="green", end_success=True)
             return True
-
         except OSError:
             message(f"Unable to '[italic]{cmd}[/]'", color="red", end_failure=True)
             return False

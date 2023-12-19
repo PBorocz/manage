@@ -39,7 +39,7 @@ class Method(AbstractMethod):
         if not (path_org := self.get_arg("path_org")):
             return False
 
-        # Check we have a pandoc on our patg to run against..
+        # Check we have a pandoc on our path to run against..
         if not shutil.which("pandoc"):
             failure()
             message("Sorry, we can't find [italic]pandoc[/] on your path.", color="red", end_failure=True)
@@ -54,12 +54,13 @@ class Method(AbstractMethod):
             self.dry_run(cmd)
             return True
 
-        # Live but no confirmation?
+        # Confirm?
         if not self.do_confirm(confirm):
             return False
 
         try:
             return run(self.step, cmd)[0]
         except FileNotFoundError:
-            message("\n[red]Sorry, perhaps couldn't find a [italic]pandoc[/] executable on your path?")
+            failure()
+            message("Sorry, perhaps couldn't find a [italic]pandoc[/] executable on your path?", color="red")
             return False

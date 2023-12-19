@@ -36,25 +36,23 @@ class Method(AbstractMethod):
         repo = Repo(Path.cwd()) if not repo else repo
 
         # Get arguments (and matching confirm message)
-        if s_pathspec := self.step.get_arg("pathspec"):
+        if s_pathspec := self.step.get_arg("pathspec", optional=True):
             pathspec = s_pathspec.split(" ")
             confirm = f"Ok to 'git add {','.join(pathspec)}'?"
         else:
             pathspec = [DEFAULT_ARGS.get_argument("pathspec").default]
             confirm = "Ok to 'git add *'?"
 
+        if self.configuration.dry_run:
+            self.dry_run(f"git add {smart_join(pathspec, delim='')}")
+            return True
+
         # State changing commmand...confirm execution beforehand...
         if not self.do_confirm(escape(confirm)):
             return False
 
-        # Do it?
+        # Do it!
         try:
-            # Dry-run?
-            if self.configuration.dry_run:
-                self.dry_run(f"git add {smart_join(pathspec, delim='')}")
-                return True
-
-            # Do it!
             results = repo.index.add(pathspec)
             if self.step.verbose:
                 for base_index_entry in results:

@@ -13,20 +13,25 @@ class Method(AbstractMethod):
 
     def run(self) -> bool:
         """Commits updated files that contain version information locally."""
-        confirm = "Ok to stage & commit changes to pyproject.toml and README.*?"
-        if not self.do_confirm(confirm):
-            message(f"To rollback, you may have to revert version to {self.configuration.version_} & re-commit.")
-            return False
-
         cmds = (
             "git add pyproject.toml README.*",
             f'git commit --m "Bump version to {self.configuration.version}"',
         )
 
-        for cmd in cmds:
-            if self.configuration.dry_run:
+        # Dry-run?
+        if self.configuration.dry_run:
+            for cmd in cmds:
                 self.dry_run(cmd)
-            else:
-                if not run(self.step, cmd)[0]:
-                    return False
+            return True
+
+        # Confirmation
+        confirm = "Ok to stage & commit changes to pyproject.toml and README.*?"
+        if not self.do_confirm(confirm):
+            message(f"To rollback, you may have to revert version to {self.configuration.version_} & re-commit.")
+            return False
+
+        # Do em!
+        for cmd in cmds:
+            if not run(self.step, cmd)[0]:
+                return False
         return True

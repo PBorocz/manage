@@ -301,8 +301,8 @@ class Configuration(BaseModel):
         """Set both the version attributes based on that provided from poetry."""
         # Set both "raw" & ncie project versions from the pyproject.toml, eg. 1.2.3 and v1.2.3.
         version_formatted = f"v{version_raw}" if version_raw else ""
-        self.configuration.version_ = version_raw
-        self.configuration.version = version_formatted
+        self.version_ = version_raw
+        self.version = version_formatted
 
     @classmethod
     def factory(cls, args: Namespace, pyproject: PyProject, test: bool = False, **testing) -> Configuration | None:
@@ -314,7 +314,7 @@ class Configuration(BaseModel):
         # CREATE our Configuration instance with these values
         ############################################################
         configuration = Configuration(package_=getattr(pyproject, "", ""))
-        configuration.set_verion(getattr(pyproject, "version", ""))
+        configuration.set_version(getattr(pyproject, "version", ""))
 
         # Resolve the rest of the configuration parameters from pyproject and command-line:
         for attr in ["confirm", "dry_run", "help", "target", "verbose"]:

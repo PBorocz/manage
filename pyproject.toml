@@ -107,6 +107,6 @@ confirm = false
 description = "Test out a single command."
 
 [[tool.manage.recipes.test.steps]]
-  method = "git_commit_version_files"
+  method = "update_readme"
   confirm = true
   # arguments = {pathspec = "README.md pyproject.toml"}

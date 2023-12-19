@@ -15,11 +15,7 @@ class Method(AbstractMethod):
     def run(self):
         """Override and use our local run method to print."""
         if self.configuration.verbose:  # Can't use step.verbose here as we haven't reflected runtime args yet!
-            message(
-                "The following recipes are currently defined:",
-                color="green",
-                end_success=True,
-            )
+            message("The following recipes are currently defined:", color="green", end_success=True)
         for id_, recipe in self.recipes:
             self._print_recipe(id_, self.recipes, recipe)
         return True
