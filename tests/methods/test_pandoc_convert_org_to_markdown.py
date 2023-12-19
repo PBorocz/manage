@@ -43,7 +43,7 @@ def test_normal_case(path_org, path_md):
     )
 
     # Test
-    assert pandoc_convert_org_to_markdown(Configuration(), Recipes.parse_obj({}), step).run()
+    assert pandoc_convert_org_to_markdown(Configuration(dry_run=False), Recipes.parse_obj({}), step).run()
 
     # Confirm
     assert path_md.exists()

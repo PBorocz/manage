@@ -73,7 +73,7 @@ def path_readme_org_no_header():
 
 @pytest.fixture
 def configuration():
-    yield Configuration.factory(None, None, version_="1.9.11")
+    yield Configuration.factory(None, None, version="v1.9.11", dry_run=False)
 
 
 def test_md(configuration, path_readme_md):
@@ -84,12 +84,13 @@ def test_md(configuration, path_readme_md):
     # Test
     assert update_readme(configuration, Recipes.parse_obj({}), step).run()
 
-    # Confirm
+    # Confirm we still have a readme file..
     assert path_readme_md.exists()
 
+    # Confirm that it's been updated to (a) have our new release and (b) still have an Unreleased section.
     readme = path_readme_md.read_text()
-    assert "## Unreleased" in readme  # Note: Second level header here!!
     assert "v1.9.11" in readme
+    assert "## Unreleased" in readme  # Note: Second level header here!!
 
 
 def test_org(configuration, path_readme_org):

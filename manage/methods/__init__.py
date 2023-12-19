@@ -60,7 +60,7 @@ class AbstractMethod:
 
     def get_arg(self, arg_name: str, optional: bool = False, default: Any | None = None) -> str | None:
         """Find the value of the specified argument in the step, else look for default."""
-        if arg_value := self.step.get_arg("path_md"):
+        if arg_value := self.step.get_arg(arg_name):
             return arg_value
 
         # No value found, do we have a default to return?

@@ -6,20 +6,18 @@ COMMIT_MESSAGE = "A commit message"
 
 
 def test_git_commit(git_repo):
-    repo = git_repo.api
-
     # Setup: Stage a file in new/empty repository:
     file_path = git_repo.workspace / "commit.txt"
     file_path.write_text("Initial commit")
-    repo.index.add([file_path])
+    git_repo.api.index.add([file_path])
 
     # Test!
     step = Step(method="aMethod", confirm=False, verbose=True, arguments=dict(message=COMMIT_MESSAGE))
-    assert git_commit(Configuration(), Recipes.parse_obj({}), step, repo=repo).run()
+    assert git_commit(Configuration(dry_run=False), Recipes.parse_obj({}), step).run(git_repo.api)
 
     # Confirm: 1 - Did we get a commit?
     try:
-        commit = repo.head.commit
+        commit = git_repo.api.head.commit
     except ValueError:
         assert False, "Sorry, we didn't find anything committed to our test repo."
 
