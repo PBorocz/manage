@@ -5,14 +5,14 @@ from argparse import Namespace
 from copy import deepcopy
 from pathlib import Path
 
-from typing import Any, Callable, Dict, Iterable, TypeVar
+from typing import Any, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
 from manage.utilities import message, smart_join, success, warning
 
 
-TClass = TypeVar("T")
+TClass = TypeVar("Class")
 TStep = TypeVar("Step")
 TRecipes = TypeVar("Recipes")
 TConfiguration = TypeVar("Configuration")
@@ -139,28 +139,11 @@ class Recipes(BaseModel):
 
     def keys(self) -> Iterable[str]:
         """Get the names of all Recipes."""
-        return iter(self.__root__.keys())
-
-    def ids(self) -> list[str]:
-        """Return a sorted list of recipe "ids", used for command-line argument for what to run."""
-        return sorted(list(self.keys()))  # in self if not recipe.id_.startswith("__")])
+        return iter(sorted(self.__root__.keys()))
 
     def check_target(self, recipe_target: str) -> bool:
         """Is the target provide valid against our current recipes? (on a case-folded basis)."""
         return recipe_target.casefold() in [id_.casefold() for id_ in self.keys()]
-
-    def validate_method_steps(self, method_classes_defined: dict[Callable]) -> list | None:
-        """Each step in each recipe needs to be either a "built-in" method or refer to another valid step."""
-        return_ = list()
-        for id_, recipe in self:
-            for step in recipe:
-                if step.method:
-                    if step.method not in method_classes_defined:
-                        return_.append(f"Method: '{step.method}' in recipe={id_} is NOT a valid step method!")
-                else:
-                    if self.get(step.recipe) is None:
-                        return_.append(f"Step: '{step.recipe}' in recipe={id_} can't be found in this file!")
-        return return_
 
     def as_print(self) -> TRecipes:
         """."""
@@ -170,6 +153,23 @@ class Recipes(BaseModel):
             recipe.steps = [step.as_print() for step in recipe.steps]
             recipes.__root__[name] = recipe
         return recipes
+
+    def laminate_method_classes(self, configuration: Configuration, method_classes: dict[str, TClass] | None) -> None:
+        """Add the instantiable class onto each method step to dispatch from (only not in testing..).
+
+        We already validated that all the recipes are valid, this just ties them classes
+        to the steps for actual execution.
+        """
+        if method_classes:
+            for name, recipe in self:
+                for step in recipe:
+                    step.class_ = method_classes.get(step.method)
+
+    @classmethod
+    def factory(cls, configuration: Configuration, pyproject: PyProject) -> Recipes:
+        """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
+        d_recipes = {id_: Recipe(**raw_recipe) for id_, raw_recipe in pyproject.recipes.items()}
+        return cls.parse_obj(d_recipes)
 
 
 class Argument(BaseModel):
@@ -264,7 +264,7 @@ class PyProject(BaseModel):
             "steps": [{"method": "print", "confirm": False}],
         }
         recipes["check"] = {
-            "description": "Check configuration in pyproject.toml",
+            "description": "Check configuration of pyproject.toml",
             "steps": [{"method": "check", "confirm": False}],
         }
 
@@ -277,7 +277,7 @@ class PyProject(BaseModel):
 
 
 class Configuration(BaseModel):
-    """Configuration/state, primarily (but not solely) from command-line args."""
+    """Configuration/state, primarily (but not solely) obo command-line args."""
 
     verbose: bool | None = None
     help: bool | None = None

@@ -1,9 +1,7 @@
 """Method to run SASS pre-processor."""
-import shutil
-
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import message, run
+from manage.utilities import run
 
 
 # Metadata about arguments available...
@@ -27,11 +25,6 @@ class Method(AbstractMethod):
 
     def run(self) -> bool:
         """Do it."""
-        # Check we have a SASS to run against..
-        if not shutil.which("sass"):
-            message("Sorry, we can't find 'sass' on your path.", color="red", end_failure=True)
-            return False
-
         # Lookup argument and get resultant command:
         if not (pathspec := self.get_arg("pathspec")):
             return False

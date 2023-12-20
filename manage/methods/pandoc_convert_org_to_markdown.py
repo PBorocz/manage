@@ -1,6 +1,4 @@
 """Convert an emacs org file into a markdown version using Pandoc."""
-import shutil
-
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import failure, message, run
@@ -37,12 +35,6 @@ class Method(AbstractMethod):
             return False
 
         if not (path_org := self.get_arg("path_org")):
-            return False
-
-        # Check we have a pandoc on our path to run against..
-        if not shutil.which("pandoc"):
-            failure()
-            message("Sorry, we can't find [italic]pandoc[/] on your path.", color="red", end_failure=True)
             return False
 
         # Get our command and confirmation string:

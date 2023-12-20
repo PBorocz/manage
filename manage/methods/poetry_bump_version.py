@@ -1,5 +1,4 @@
 """Manage step."""
-import shutil
 import sys
 
 from manage.methods import AbstractMethod
@@ -31,12 +30,6 @@ class Method(AbstractMethod):
         """Do a version "bump" of pyproject.toml using poetry by a specified "level"."""
         # Get argument...
         if not (poetry_version := self.get_arg("poetry_version")):
-            return False
-
-        # Check we have a poetry on our path to run against..
-        if not shutil.which("poetry"):
-            failure()
-            message("Sorry, we can't find [italic]poetry[/] on your path.", color="red", end_failure=True)
             return False
 
         # FIXME: Can we put this into our validation check? Perhaps as a local method that's called earlier?

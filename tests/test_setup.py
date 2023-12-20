@@ -43,7 +43,7 @@ def recipes():
             "clean": recipe_clean,
             "build": recipe_build,
             "check": Recipe(
-                description="Check configuration in pyproject.toml",
+                description="Check configuration of pyproject.toml",
                 steps=[Step(method="check", confirm=False)],
             ),
             "print": Recipe(

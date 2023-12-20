@@ -1,13 +1,12 @@
 """Create github release."""
 import os
-import sys
 from datetime import datetime
 
 import requests
 
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import message, success
+from manage.utilities import success
 
 
 class Method(AbstractMethod):
@@ -22,25 +21,10 @@ class Method(AbstractMethod):
         now = datetime.now().strftime("%Y-%m-%dT%H%M")
 
         # Pull requisite Github configuration values
-        # FIXME: Can these be in "setup check" instead of here?
-        if not (url := os.environ["GITHUB_API_RELEASES"]):
-            message("Sorry, unable to find environment variable '[italic]GITHUB_API_RELEASES[/]'", color="red")
-            sys.exit(1)
-
-        if not (user := os.environ["GITHUB_USER"]):
-            message("Sorry, unable to find environment variable '[italic]GITHUB_USER[/]'", color="red")
-            sys.exit(1)
-
-        if not (api_token := os.environ["GITHUB_API_TOKEN"]):
-            message("Sorry, unable to find environment variable '[italic]GITHUB_API_TOKEN[/]'", color="red")
-            sys.exit(1)
-
-        if not (release_history := os.environ["GITHUB_PROJECT_RELEASE_HISTORY"]):
-            message(
-                "Sorry, unable to find environment variable '[italic]GITHUB_PROJECT_RELEASE_HISTORY[/]'",
-                color="red",
-            )
-            sys.exit(1)
+        url = os.environ["GITHUB_API_RELEASES"]
+        user = os.environ["GITHUB_USER"]
+        api_token = os.environ["GITHUB_API_TOKEN"]
+        release_history = os.environ["GITHUB_PROJECT_RELEASE_HISTORY"]
 
         # Dry-run?
         if self.configuration.dry_run:

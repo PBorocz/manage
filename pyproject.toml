@@ -31,7 +31,6 @@ build-backend = "poetry.core.masonry.api"
 # ##############################################################################
 [tool.manage]
 dry_run = true  # If set to true, you'll need --live on each run (safest until you get stable)
-verbose = true
 
 # ------------------------------------------------------------------------------
 [tool.manage.recipes."1_bump"]
@@ -99,14 +98,3 @@ description = "Clean out our temp files and ALL previous builds"
 [[tool.manage.recipes.clean.steps]]
 method = "clean"
 confirm = false
-
-# ------------------------------------------------------------------------------
-# TESTING
-# ------------------------------------------------------------------------------
-[tool.manage.recipes.test]
-description = "Test out a single command."
-
-[[tool.manage.recipes.test.steps]]
-  method = "update_readme"
-  confirm = true
-  # arguments = {pathspec = "README.md pyproject.toml"}

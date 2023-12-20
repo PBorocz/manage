@@ -8,11 +8,8 @@ from rich.console import Console
 
 from manage.dispatch import dispatch
 from manage.models import Configuration, PyProject, Recipes
-from manage.setup import (
-    gather_available_method_classes,
-    uptype_recipes,
-    validate_existing_version_numbers,
-)
+from manage.validate import validate
+from manage.setup import gather_available_method_classes
 
 load_dotenv(verbose=True)
 
@@ -136,27 +133,40 @@ def do_help(pyproject: PyProject) -> None:
 def main():
     # Before anything else, make sure we're working from the root-level of the target project and have a pyproject.toml.
     if not DEFAULT_PROJECT_PATH.exists():
-        CONSOLE.print("[red]Sorry, you need to run this from the same directory that your pyproject.toml file exists.")
+        CONSOLE.print(
+            "[red]Sorry, you need to run this from the same directory that your pyproject.toml file exists in.",
+        )
         sys.exit(1)
 
+    ################################################################################
     # Read our pyproject.toml file and parse our command-line
+    ################################################################################
     configuration, pyproject = process_arguments()
+    s_targets = pyproject.get_formatted_list_of_targets()
 
+    ################################################################################
+    # Gather all available methods from our package's library (doesn't rely on anything else besides verbosity)
+    ################################################################################
+    if not (method_classes := gather_available_method_classes(configuration.verbose)):
+        sys.exit(1)
+
+    ################################################################################
     # Do help here AFTER we've setup the configuration object (ie.
     # after incorporating both pyproject.toml defaults and cli args)
+    ################################################################################
     if configuration.help:
         do_help(pyproject)
         sys.exit(0)
 
+    ################################################################################
     # We have enough information now to validate the user's specific target requested:
-    s_targets = pyproject.get_formatted_list_of_targets()
+    ################################################################################
     if not configuration.target:
         msg = f"Sorry, we need a valid recipe target to execute, must be one of [yellow]{s_targets}[/]."
         CONSOLE.print(msg)
         sys.exit(1)
 
     if not pyproject.is_valid_target(configuration.target):
-        # s_targets = [f"[italic]{id_}[/]" for id_ in available_targets + ["check", "print"]]
         msg = (
             f"Sorry, [red]{configuration.target}[/] is not a valid recipe, "
             f"must be one of [yellow][italic]{s_targets}[/]."
@@ -164,17 +174,25 @@ def main():
         CONSOLE.print(msg)
         sys.exit(1)
 
-    # Gather all available methods from our package's library
-    if not (method_classes := gather_available_method_classes(configuration.verbose)):
+    ################################################################################
+    # Convert specified recipe file raw data into strongly-typed instances.
+    ################################################################################
+    recipes: Recipes = Recipes.factory(configuration, pyproject)
+
+    ################################################################################
+    # Do a full validation suite.
+    ################################################################################
+    if not validate(configuration, recipes, method_classes):
         sys.exit(1)
 
-    # Validate that version numbers are consistent between pyproject.toml and README's change history.
-    if not validate_existing_version_numbers(configuration):
-        sys.exit(1)
+    ################################################################################
+    # Laminate all the method/class operations onto our recipes.
+    ################################################################################
+    recipes.laminate_method_classes(configuration, method_classes)
 
-    # Validate and configure the specified recipe file into strongly-typed instances
-    recipes: Recipes = uptype_recipes(configuration, pyproject, method_classes)
-
+    ################################################################################
+    # Dispatch to our target and run!
+    ################################################################################
     try:
         dispatch(configuration, recipes)
     except (KeyboardInterrupt, EOFError):
