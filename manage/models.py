@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
-from manage.utilities import message, smart_join, success, warning
+from manage.utilities import message, smart_join
 
 
 TClass = TypeVar("Class")
@@ -62,17 +62,21 @@ class Step(BaseModel):
         # For now, only 2 command-line args can trickle down to individual step execution:
         # 'confirm/no-confirm' and 'verbose':
         if configuration.confirm is not None and self.confirm != configuration.confirm:
-            # if verbose:
-            #     msg = f"Overriding [italic]confirm[/] in {self.name()} from " \
-            #         f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]"
-            #     message(msg, color='light_slate_grey', end_success=True)
+            if verbose:
+                msg = (
+                    f"(- (overriding [italic]confirm[/] in {self.name()} from "
+                    f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
+                )
+                message(msg, color="light_slate_grey", end_success=True)
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
-            # if verbose:
-            #     msg = f"Overriding [italic]verbose[/] in {self.name()} from " \
-            #         f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/]"
-            #     message(msg, color='light_slate_grey', end_success=True)
+            if verbose:
+                msg = (
+                    f"- (overriding [italic]verbose[/] in {self.name()} from "
+                    f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
+                )
+                message(msg, color="light_slate_grey", end_success=True)
             self.verbose = configuration.verbose
 
         # Those arguments that are *specific* to this step:
@@ -201,10 +205,23 @@ class PyProject(BaseModel):
     - Two related to this package's configuration.
     """
 
-    version: str | None = None  # Current version string..
-    package: str | None = None  # Package name..
-    recipes: dict = {}  # These are RAW recipe dicts here!
-    parameters: dict = {}
+    # fmt: off
+    version: str  | None = None  # Current version string..
+    package: str  | None = None  # Package name..
+    recipes: dict | None = None  # These are RAW recipe dicts here!
+    #
+    # NOTE: These are the ONLY place we're set set the default values
+    #       for "verbose", "live", "dry-run" and "confirm"
+    #       command-line parameters unless they're NOT set/available
+    #       from the pyproject.toml file:
+    #
+    cli_defaults: dict = {
+        "default_verbose" : False,
+        "default_confirm" : False,
+        "default_dry_run" : True,
+        "default_live"    : False,
+    }
+    # fmt: on
 
     def get_formatted_list_of_targets(self, supplements: list[str] = []) -> str:
         """Return a comma-delimited list of available recipe targets."""
@@ -221,85 +238,123 @@ class PyProject(BaseModel):
         """Return true if proposed target name is a valid recipe."""
         return target.casefold() in [recipe.casefold() for recipe in self.recipes.keys()]
 
+    def get_parm(self, parm: str) -> bool:
+        """Return the value associated with the parameter name specified."""
+        return self.cli_defaults.get(parm)
+
     @classmethod
     def factory(cls, path_pyproject: Path) -> PyProject:
         """Do a raw read of the specified pyproject.toml path and returning a instance."""
-        message(f"Reading {path_pyproject}")
         raw_pyproject = tomllib.loads(path_pyproject.read_text())
-        success()
 
-        # "Parse" our portion of pyproject.toml, ie. "tool"/"manage" into two things:
-        # - The set of recipes defined
-        # - The set of default configuration/control parameters.
-        parameters = dict()
-        for name, obj in raw_pyproject.get("tool", {}).get("manage", {}).items():
+        instance = PyProject()
+        ################################################################################
+        # Parse "our" portion of pyproject.toml, ie. [tool.manage] into two things:
+        # - The set of default configuration/control cli_defaults.
+        # - The set of recipes defined.
+        ################################################################################
+        for name, value in raw_pyproject.get("tool", {}).get("manage", {}).items():
             if name == "recipes":
-                recipes = obj
+                instance.recipes = value
             else:
-                parameters[name] = obj
+                if name not in instance.cli_defaults:
+                    message(
+                        f"Unexpected setting found in 'tool.manage' section: {name}, please check!",
+                        color="red",
+                        end_warning=True,
+                    )
+                else:
+                    if instance.cli_defaults[name] != value:
+                        message(
+                            f"- (overriding internal default for [italic]{name}[/] "
+                            f"from {instance.cli_defaults[name]} to {value})",
+                            color="light_slate_grey",
+                            end_success=True,
+                        )
+                    instance.cli_defaults[name] = value
 
-        # Similarly, parse the *current* package and version we're working with.
-        package = None
+        ################################################################################
+        # Do validity/consistency checking
+        ################################################################################
+        if instance.cli_defaults.get("default_dry_run") == instance.cli_defaults.get("default_live"):
+            message(
+                "You shouldn't set both 'dry_run' and 'live' to the same value in 'tool.manage', please check!",
+                color="red",
+                end_warning=True,
+            )
+
+        ################################################################################
+        # Parse the *current* package:
+        ################################################################################
         if packages := raw_pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
             try:
                 # FIXME: For now, use the *first* entry in tool.poetry.packages (even though multiple are allowed)
                 package_include = packages[0]
-                package = package_include.get("include")
+                instance.package = package_include.get("include")
             except IndexError:
                 ...
-        if package is None:
-            warning()
-            print("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
+        if instance.package is None:
+            message(
+                "No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.",
+                color="yellow",
+                end_warning=True,
+            )
 
-        # Similarly, get our current version:
+        ################################################################################
+        # And get the current version of it:
+        ################################################################################
         version = raw_pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-        if version is None:
-            warning()
-            print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
+        if not version:
+            message(
+                "No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.",
+                color="yellow",
+                end_warning=True,
+            )
+        else:
+            instance.version = version
 
-        # Lastly, we have two "built-in" recipes that we make ALWAYS available, specifically, check and print,
-        # Add them in here as well so they'll be treated the same as the user's recipes.
-        recipes["print"] = {
+        ################################################################################
+        # Lastly, we have two "built-in" recipes that we make ALWAYS
+        # available, specifically, 'check' and 'print', Add them in
+        # here as well so they'll be treated the same as the user's
+        # recipes.
+        ################################################################################
+        instance.recipes["print"] = {
             "description": "Show/print recipes defined in pyproject.toml",
             "steps": [{"method": "print", "confirm": False}],
         }
-        recipes["check"] = {
+        instance.recipes["check"] = {
             "description": "Check configuration of pyproject.toml",
             "steps": [{"method": "check", "confirm": False}],
         }
 
-        return cls(
-            package=package,
-            version=version,
-            parameters=parameters,
-            recipes=recipes,
-        )
+        # Done!
+        return instance
 
 
 class Configuration(BaseModel):
     """Configuration/state, primarily (but not solely) obo command-line args."""
 
-    verbose: bool | None = None
-    help: bool | None = None
-    target: str | None = None
-    dry_run: bool = True
-    confirm: bool | None = None  # If set, override step confirmation instruction appropriately.
+    # fmt: off
+    help       : bool | None = None  # Were we requested to just display help?
+    verbose    : bool | None = None  # Are we running in overall verbose mode?
+    target     : str  | None = None  # What is the target to be performed?
+    confirm    : bool | None = None  # Should we perform confirmations on steps?
+    dry_run    : bool | None = None  # Are we running in dry-run mode (True) or live mode (False)
 
-    version_: str | None = None  # Note: This is the current version # of the project we're working on!
-    version: str | None = None  # " In nice format..
-
-    package_: str | None = None  # "
-
-    _messages_: list[str] = []
+    version_   : str  | None = None  # Note: This is the current version # of the project we're working on!
+    version    : str  | None = None  # " In nice format..
+    package_   : str  | None = None  # "
+    _messages_ : list[str] = []
+    # fmt: on
 
     def set_value(self, attr: str, value: any, source: str) -> None:
         """Set the specified attr to the value given with verbosity."""
         setattr(self, attr, value)
-        self._messages_.append(f"Setting [italic]{attr}[/] to {value} {source}.")
+        self._messages_.append(f"- (setting [italic]{attr}[/] to {value} {source})")
 
     def set_version(self, version_raw: str | None) -> None:
         """Set both the version attributes based on that provided from poetry."""
-        # Set both "raw" & ncie project versions from the pyproject.toml, eg. 1.2.3 and v1.2.3.
         version_formatted = f"v{version_raw}" if version_raw else ""
         self.version_ = version_raw
         self.version = version_formatted
@@ -316,9 +371,10 @@ class Configuration(BaseModel):
         configuration = Configuration(package_=getattr(pyproject, "", ""))
         configuration.set_version(getattr(pyproject, "version", ""))
 
-        # Resolve the rest of the configuration parameters from pyproject and command-line:
-        for attr in ["confirm", "dry_run", "help", "target", "verbose"]:
-            configuration = _resolve_parameter(args, attr, pyproject, configuration)
+        # Get the rest of the command-line parameters (whose default
+        # values could have come from pyproject.toml!)
+        for attr in ["confirm", "verbose", "help", "target"]:
+            setattr(configuration, attr, getattr(args, attr))
 
         # Handle special case of "--live" on command-line (and ONLY from command-line!)
         if getattr(args, "live", None):
@@ -340,17 +396,3 @@ class Configuration(BaseModel):
                 print(msg)
 
         return configuration
-
-
-def _resolve_parameter(args: Namespace, attr: str, pyproject: PyProject, config: Configuration) -> Configuration:
-    """Resolve the specified attribue starting from pyproject and command-line."""
-    # First, get from the pyproject.toml:
-    if attr in getattr(pyproject, "parameters", []):  # Use getattr to simplify test creation.
-        config.set_value(attr, pyproject.parameters[attr], "based on pyproject.toml entry")
-
-    # Then, from command-line args (which *override* pyproject.toml!)
-    if value := getattr(args, attr, None):
-        msg = "from command-line override" if getattr(config, attr) else "from command-line"
-        config.set_value(attr, value, msg)
-
-    return config

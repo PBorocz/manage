@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from manage.dispatch import dispatch
+from manage.methods import gather_available_method_classes
 from manage.models import Configuration, PyProject, Recipes
 from manage.validate import validate
-from manage.setup import gather_available_method_classes
+from manage.utilities import message, shorten_path
 
 load_dotenv(verbose=True)
 
@@ -19,14 +20,18 @@ CONSOLE = Console()
 
 
 def process_arguments() -> [Configuration, PyProject]:
-    """Do a two-pass command-line argument parser with a "raw" read of our pyproject.toml."""
-    # Read our pyproject.toml file (using verbosity from command-line, not pyproject.toml itself!)
+    """Create and run out CLI argument parser with a "raw" read of our pyproject.toml, return it and configuration."""
+    # Read our pyproject.toml
     pyproject = PyProject.factory(DEFAULT_PROJECT_PATH)
 
-    # Get the command-line arguments
+    # Get (and do some simple validation on) the command-line arguments:
     args = get_args(pyproject)
 
-    # Create our configuration instance
+    if args.verbose:
+        shortened_path = shorten_path(DEFAULT_PROJECT_PATH, 76)
+        message(f"Read {shortened_path}", end_success=True)
+
+    # Given our command-line arguments, now we can create our configuration instance:
     if not (configuration := Configuration.factory(args, pyproject)):
         sys.exit(1)
 
@@ -37,7 +42,7 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
     """Build on the initial parser and get the target to run for."""
     parser = argparse.ArgumentParser(add_help=False)
 
-    s_targets = pyproject.get_formatted_list_of_targets()
+    s_targets: str = pyproject.get_formatted_list_of_targets()
     parser.add_argument(
         "target",
         type=str,
@@ -50,30 +55,40 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         "-v",
         "--verbose",
         action="store_true",
+        default=pyproject.get_parm("default_verbose"),
+    )
+
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
         default=False,
     )
 
-    parser.add_argument("-h", "--help", action="store_true", default=False)
-
     parser.add_argument(
         "--confirm",
-        help=(
-            "Override recipe's 'confirm' setting to run all confirmable "
-            "steps as either confirm or don't confirm, default is None."
-        ),
+        help="Override recipe's 'confirm' setting to run all confirmable steps in confirm mode.",
         type=bool,
         action=argparse.BooleanOptionalAction,
-        default=None,
+        default=pyproject.get_parm("default_confirm"),
     )
 
-    parser.add_argument("--live", action="store_true", default=False)
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        default=pyproject.get_parm("default_live"),
+    )
 
-    parser.add_argument("--dry-run", action="store_true", default=False)
+    parser.add_argument(
+        "--dry_run",
+        action="store_true",
+        default=pyproject.get_parm("default_dry_run"),
+    )
 
     return parser.parse_args()
 
 
-def do_help(pyproject: PyProject) -> None:
+def do_help(pyproject: PyProject, console=CONSOLE) -> None:
     from rich.panel import Panel
     from rich.table import Table
 
@@ -83,10 +98,10 @@ def do_help(pyproject: PyProject) -> None:
     def blue(str_: str) -> str:
         return f"[blue]{str_}[/]"
 
-    CONSOLE.print()
-    CONSOLE.print("Usage: manage [OPTIONS] <target>")
-    # CONSOLE.print("Usage: manage [OPTIONS] <target> [METHOD_ARGS]")
-    CONSOLE.print()
+    console.print()
+    console.print("Usage: manage [OPTIONS] <target>")
+    # console.print("Usage: manage [OPTIONS] <target> [METHOD_ARGS]")
+    console.print()
 
     ################################################################################
     # Recipe targets available..
@@ -94,40 +109,51 @@ def do_help(pyproject: PyProject) -> None:
     table = Table.grid(expand=True)
     for name, description in sorted(pyproject.get_target_names_and_descriptions()):
         table.add_row(blue(name), green(description))
-    CONSOLE.print(Panel(table, title=green("RECIPES (pyproject.toml)"), title_align="left"))
+    panel: Panel = Panel(table, title=green("RECIPES (pyproject.toml)"), title_align="left")
+    console.print(panel)
 
     ################################################################################
     # Command-line Options
     ################################################################################
-    table = Table.grid(expand=True)
+    table: Table = Table.grid(expand=True)
 
-    table.add_row(blue("--help/-h"), green("Show this help message and exit."))
+    table.add_row(
+        blue("--help/-h"),
+        green("Show this help message and exit."),
+    )
 
     table.add_row(
         blue("--verbose/-v"),
-        green("Run steps in verbose mode [italic](including method stdout if available)[/]."),
+        green(
+            "Run steps in verbose mode [italic](including method stdout if available)[/]; "
+            f'default is [italic][bold]{pyproject.get_parm("default_verbose")}[/].',
+        ),
     )
-
-    table.add_row(blue("--dry-run"), green("Run steps in 'dry-run' mode."))
-
-    table.add_row(blue("--live"), green("Run steps in 'live' mode."))
-
     table.add_row(
         blue("--confirm"),
         green(
             "Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "
-            "all [bold]confirm[/].",
+            "all [bold]confirm[/]; "
+            f'default is [italic][bold]{pyproject.get_parm("default_confirm")}[/].',
         ),
     )
 
     table.add_row(
-        blue("--no-confirm"),
+        blue("--dry_run"),
         green(
-            "Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "
-            "all [bold]no[/] confirm.",
+            "Run steps in 'dry-run' mode; " f'default is [italic][bold]{pyproject.get_parm("default_dry_run")}[/].',
         ),
     )
-    CONSOLE.print(Panel(table, title=green("OPTIONS"), title_align="left"))
+
+    table.add_row(
+        blue("--live"),
+        green(
+            "Run steps in 'live' mode; " f'default is [italic][bold]{pyproject.get_parm("default_live")}[/].',
+        ),
+    )
+
+    panel: Panel = Panel(table, title=green("OPTIONS"), title_align="left")
+    console.print(panel)
 
 
 def main():
@@ -142,6 +168,7 @@ def main():
     # Read our pyproject.toml file and parse our command-line
     ################################################################################
     configuration, pyproject = process_arguments()
+
     s_targets = pyproject.get_formatted_list_of_targets()
 
     ################################################################################

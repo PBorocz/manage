@@ -1,3 +1,4 @@
+"""."""
 from rich import print
 
 from manage.methods import AbstractMethod

@@ -1,9 +1,44 @@
 """Method root classes and methods."""
+import importlib
+import sys
 from abc import abstractmethod
-from typing import Any
+from pathlib import Path
+from typing import Any, TypeVar
 
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, message, run
+from manage.utilities import ask_confirm, failure, message, run, success
+
+
+TClass = TypeVar("Class")
+
+
+def gather_available_method_classes(verbose: bool) -> dict[str, TClass]:
+    """Read and return all the python-defined step methods available."""
+
+    def __gather_method_classes():
+        """Iterate over all step modules (utility method)."""
+        for path in sorted((Path(__file__).parent).glob("*.py")):
+            if path.name.startswith("__"):  # Like this very file :-)
+                continue
+
+            # Fixme: Should add expection handling here:
+            module = importlib.import_module(f"manage.methods.{path.stem}")
+
+            yield path.stem, getattr(module, "Method", None)
+
+    # Get all the 'main" methods in each python file in the steps module:
+    if verbose:
+        message("Initialising methods available")
+
+    classes = {method_name: cls for method_name, cls in __gather_method_classes()}
+    if not classes:
+        failure()
+        print("[red]Unable to find [bold]any[/] valid method classes in manage/methods/*.py?")
+        sys.exit(1)
+
+    if verbose:
+        success()
+    return classes
 
 
 class AbstractMethod:
@@ -36,7 +71,7 @@ class AbstractMethod:
 
         # If we're running this step in dry_run mode, no need to
         # confirm (this may be duplicative with the run method above
-        # BUT this method if most often called on it's own!)
+        # BUT this method if more often called on it's own!)
         if self.configuration.dry_run:
             return True
 

@@ -5,7 +5,7 @@ from manage.methods.git_commit import Method as git_commit  # noqa: N813
 COMMIT_MESSAGE = "A commit message"
 
 
-def test_git_commit(git_repo):
+def test_git_commit(git_repo, capsys):
     # Setup: Stage a file in new/empty repository:
     file_path = git_repo.workspace / "commit.txt"
     file_path.write_text("Initial commit")
@@ -30,3 +30,8 @@ def test_git_commit(git_repo):
 
     # Confirm: 4 - Does it have the right message?
     assert commit.message == COMMIT_MESSAGE, "Sorry, we didn't find the right commit message on our commit"
+
+    # Confirm: 5 - Did we get the right verbosity?
+    captured = capsys.readouterr()
+    assert 'git commit -m "commit.txt"' in captured.out
+    assert "✔" in captured.out

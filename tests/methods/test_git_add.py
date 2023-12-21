@@ -3,7 +3,7 @@ from manage.models import Configuration, Recipes, Step
 from manage.methods.git_add import Method as git_add  # noqa: N813
 
 
-def test_git_add(git_repo):
+def test_git_add(git_repo, capsys):
     # Setup: Create an initial commit in our new/empty repository:
     path = git_repo.workspace / "commit_me.txt"
     path.write_text("Initial commit to get a 'HEAD' to diff against")
@@ -11,7 +11,7 @@ def test_git_add(git_repo):
     git_repo.api.index.commit("v1.0")
     assert len(list(git_repo.api.iter_commits())) == 1, "Sorry, unable to setup test repo with a single commit."
 
-    # Setup: Create a file to be STAGED and the associated step to add it..
+    # Setup: Create a file to be STAGED (and the associated step to add it..)
     path = git_repo.workspace / "stage_me.txt"
     path.write_text("A staged file's contents")
 
@@ -24,3 +24,7 @@ def test_git_add(git_repo):
     diff = git_repo.api.index.diff("HEAD")
     assert len(list(diff)) == 1, "Sorry, we didn't find anything staged by comparing against 'HEAD'."
     assert path.name == diff[0].a_path, f"Sorry, unable to find {path.name=} in list of staged files."
+
+    captured = capsys.readouterr()  # Note verbose=True above, check our output came out.
+    assert "git add stage_me.txt" in captured.out
+    assert "✔" in captured.out

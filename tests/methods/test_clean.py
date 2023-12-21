@@ -18,34 +18,94 @@ def recipes():
 
 
 @pytest.fixture
-def step_no_confirm():
-    return Step(method="aMethod", confirm=False, verbose=False)
-
-
-@pytest.fixture
-def step_confirm():
-    return Step(method="aMethod", confirm=True, verbose=True)
-
-
-@pytest.fixture
 def mock_input():
     with mock.patch("rich.console.input") as m:
         yield m
 
 
-def test_clean_with_confirm(configuration, recipes, step_confirm, mock_input):
-    mock_input.return_value = "y"
-    assert clean(configuration, recipes, step_confirm).run()
-
-    mock_input.return_value = "n"
-    assert not clean(configuration, recipes, step_confirm).run()
-
-
-def test_clean_no_confirm(configuration, recipes, step_no_confirm, mock_input):
+@pytest.fixture
+def build_file():
     path_build = Path("build")
-
-    # With an existing file, command should delete it!
     path_build.touch()
-    assert path_build.exists()
-    clean(configuration, recipes, step_no_confirm).run()
-    assert not path_build.exists()
+    yield path_build
+    # Cleanup..
+    try:
+        path_build.unlink()
+    except FileNotFoundError:
+        pass  # Ok some of the clean commands should WORK!
+
+
+def test_clean(configuration, recipes, mock_input, capsys, build_file):
+    """Test clean with an actual file (ie. actual functionality)."""
+    # Setup
+    step = Step(method="aMethod", confirm=False, verbose=False)
+
+    # Test
+    clean(configuration, recipes, step).run()
+
+    # Confirm: Path is now gone & nothing came to output.
+    assert not build_file.exists()
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_clean_verbose(configuration, recipes, mock_input, capsys):
+    """Test clean with verbose flag."""
+    # Setup
+    step = Step(method="aMethod", confirm=False, verbose=True)
+
+    # Test
+    clean(configuration, recipes, step).run()
+
+    # Confirm verbose output:
+    captured = capsys.readouterr()
+    assert "Running " in captured.out
+    assert "✔" in captured.out
+
+
+def test_clean_confirm(configuration, recipes, mock_input, capsys, build_file):
+    """Test clean with confirmation."""
+    # Setup
+    step = Step(method="aMethod", confirm=True, verbose=False)
+
+    # Test
+    mock_input.return_value = "yes"
+    clean(configuration, recipes, step).run()
+
+    # Confirm confirm message
+    assert not build_file.exists()
+    captured = capsys.readouterr()
+    assert "Ok to " in captured.out
+    assert "Running " not in captured.out
+
+
+def test_clean_dryrun(recipes, mock_input, capsys, build_file):
+    """Test clean with dry-run."""
+    # Setup
+    configuration = Configuration(dry_run=True)
+    step = Step(method="aMethod", confirm=False, verbose=False)
+
+    # Test
+    clean(configuration, recipes, step).run()
+
+    # Confirm dry-run message
+    captured = capsys.readouterr()
+    assert "DRY-RUN " in captured.out
+    assert "✔" in captured.out
+    assert build_file.exists()
+
+
+def test_clean_confirm_verbose(configuration, recipes, mock_input, capsys):
+    """Test clean with both confirm and verbose."""
+    # Setup
+    step = Step(method="aMethod", confirm=True, verbose=True)
+
+    # Test
+    mock_input.return_value = "y"
+    clean(configuration, recipes, step).run()
+
+    # Confirm confirm and verbose output
+    captured = capsys.readouterr()
+    assert "Ok to " in captured.out
+    assert "Running " in captured.out

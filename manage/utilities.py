@@ -112,52 +112,21 @@ def run(step: TStep, command: str) -> tuple[bool, str]:  # FIXME: Should be "Ste
     return True, result.stdout.decode().strip()
 
 
-# def get_package_version_from_pyproject_toml(verbose: bool, pyproject: dict) -> tuple[str | None, str | None]:
-#     """Read the pyproject.toml file to return *current* package and version we're working with."""
-#     # Lookup the package which "should" represent the current package we're working on:
-#     package = None
-#     if packages := pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
-#         try:
-#             # FIXME: For now, use the *first* entry in tool.poetry.packages (even though multiple are allowed)
-#             package_include = packages[0]
-#             package = package_include.get("include")
-#         except IndexError:
-#             ...
-#     if package is None and verbose:
-#         warning()
-#         print("[yellow]No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.")
+def shorten_path(path, max_length):
+    """Shorten a file path to the max length by cutting parent directories off."""
+    if len(str(path)) <= max_length:
+        return path
 
-#     ################################################################################
-#     # Similarly, get our current version:
-#     ################################################################################
-#     version = pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-#     if version is None and verbose:
-#         warning()
-#         print("[yellow]No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.")
+    parts = list(path.parts)
+    num_parts = len(parts)
+    i = num_parts - 1
 
-#     if (package and version) and verbose:
-#         success()
+    total_length = len("...")
+    truncated_parts = []
+    while total_length + len(parts[i]) + 1 <= max_length and i >= 0:
+        truncated_parts.insert(0, parts[i])
+        total_length += len(parts[i]) + 1
+        i -= 1
+    truncated_parts.insert(0, ".../")
 
-#     return version, package
-
-
-def get_package_version(pyproject: dict) -> str:
-    """Return version of our own package from installed module or manually from pyproject.toml.
-
-    This is a little subtle. If this is running from an "installed" environment,
-    the importlib.metadata *should* work (by getting version from the "build"
-    environment used to package the 'manage' project.
-
-    However, if this is running in a/the development mode (where we're *not*
-    "installed" per se), we simply cheat and use the pyproject.toml reader/parser
-    we already have but against *our own* pyproject.toml!...too subtle?
-
-    FIXME: Instead of relying upon metadata not working, can we categorically
-           know if we're running from a "build" environment??
-    """
-    raise NotImplementedError("Sorry, we don't know how to look our own version number up!")
-    # try:
-    #     return metadata.version('manage')
-    # except metadata.PackageNotFoundError:
-    #     version, _ = get_package_version_from_pyproject_toml(False, pyproject)
-    #     return version
+    return path.__class__(*truncated_parts)

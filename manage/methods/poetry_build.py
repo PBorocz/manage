@@ -10,4 +10,5 @@ class Method(AbstractMethod):
         """Easy single command to build."""
         super().__init__(configuration, recipes, step)
         self.cmd = "poetry build"
+
         self.confirm = f"Ok to build distribution files? ['[italic]{self.cmd}[/]']"
