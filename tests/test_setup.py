@@ -1,9 +1,9 @@
 """Test ability to convert raw_recipes into strongly-typed instances."""
+import tomllib
 from pathlib import Path
 
 import pytest
-from manage.models import Step, PyProject, Recipe, Recipes
-from manage.setup import uptype_recipes
+from manage.models import Configuration, Step, PyProject, Recipe, Recipes
 
 
 class Namespace:
@@ -42,29 +42,19 @@ def recipes():
         {
             "clean": recipe_clean,
             "build": recipe_build,
-            "check": Recipe(
-                description="Check configuration of pyproject.toml",
-                steps=[Step(method="check", confirm=False)],
-            ),
-            "print": Recipe(
-                description="Show/print recipes defined in pyproject.toml",
-                steps=[Step(method="print", confirm=False)],
-            ),
         },
     )
 
 
-def test_read_pyproject(recipes):
-    args = Namespace(recipes=Path("tests/test_models.toml"), no_confirm=None)
-    raw_pyproject = PyProject.factory(args.recipes)
-    assert raw_pyproject is not None
-    assert isinstance(raw_pyproject, PyProject)
+def test_recipe_factory(recipes):
+    # Setup
+    raw_pyproject = PyProject.factory(tomllib.loads(Path("tests/test_models.toml").read_text()))
+    configuration = Configuration.factory(Namespace(), raw_pyproject, test=True)
 
+    # Test
+    recipes_from_file = Recipes.factory(configuration, raw_pyproject, {})
 
-def test_uptype_recipes(recipes):
-    args = Namespace(recipes=Path("tests/test_models.toml"), no_confirm=None)
-    raw_pyproject = PyProject.factory(args.recipes)
-    recipes_from_file = uptype_recipes(args, raw_pyproject, None)
+    # Confirm
     assert len(recipes) == len(recipes_from_file)
     assert sum([len(recipe) for recipe in recipes]) == sum([len(recipe) for recipe in recipes_from_file])
     for name in sorted(recipes.keys()):

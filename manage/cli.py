@@ -1,7 +1,9 @@
 """'Manage' primary entry point."""
 import argparse
 import sys
+import tomllib
 from pathlib import Path
+from typing import TypeVar
 
 from dotenv import load_dotenv
 from rich.console import Console
@@ -14,6 +16,8 @@ from manage.utilities import message, shorten_path
 
 load_dotenv(verbose=True)
 
+TClass = TypeVar("class")
+
 # FIXME: Assume's we're always running from top-level/project directory!
 DEFAULT_PROJECT_PATH = Path.cwd() / "pyproject.toml"
 CONSOLE = Console()
@@ -22,7 +26,12 @@ CONSOLE = Console()
 def process_arguments() -> [Configuration, PyProject]:
     """Create and run out CLI argument parser with a "raw" read of our pyproject.toml, return it and configuration."""
     # Read our pyproject.toml
-    pyproject = PyProject.factory(DEFAULT_PROJECT_PATH)
+    raw_pyproject = tomllib.loads(DEFAULT_PROJECT_PATH.read_text())
+
+    # Create our pyproject instance and make sure it's copacetic.
+    pyproject = PyProject.factory(raw_pyproject)
+    if not pyproject.validate():
+        sys.exit(1)
 
     # Get (and do some simple validation on) the command-line arguments:
     args = get_args(pyproject)
@@ -55,7 +64,7 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         "-v",
         "--verbose",
         action="store_true",
-        default=pyproject.get_parm("default_verbose"),
+        default=pyproject.get_parm("verbose"),
     )
 
     parser.add_argument(
@@ -66,29 +75,39 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--print",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
         "--confirm",
         help="Override recipe's 'confirm' setting to run all confirmable steps in confirm mode.",
         type=bool,
         action=argparse.BooleanOptionalAction,
-        default=pyproject.get_parm("default_confirm"),
+        default=pyproject.get_parm("confirm"),
     )
 
-    parser.add_argument(
+    # Setup a sub-parser to handle mutually-exclusive setting of --live or --dry-run.
+    dry_run_parser = parser.add_mutually_exclusive_group(required=False)
+
+    dry_run_parser.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+    )
+
+    dry_run_parser.add_argument(
         "--live",
-        action="store_true",
-        default=pyproject.get_parm("default_live"),
+        dest="dry_run",
+        action="store_false",
     )
-
-    parser.add_argument(
-        "--dry_run",
-        action="store_true",
-        default=pyproject.get_parm("default_dry_run"),
-    )
+    parser.set_defaults(dry_run=pyproject.get_parm("dry_run"))
 
     return parser.parse_args()
 
 
-def do_help(pyproject: PyProject, console=CONSOLE) -> None:
+def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CONSOLE) -> None:
     from rich.panel import Panel
     from rich.table import Table
 
@@ -108,7 +127,7 @@ def do_help(pyproject: PyProject, console=CONSOLE) -> None:
     ################################################################################
     table = Table.grid(expand=True)
     for name, description in sorted(pyproject.get_target_names_and_descriptions()):
-        table.add_row(blue(name), green(description))
+        table.add_row(blue(name), green(f"{description}."))
     panel: Panel = Panel(table, title=green("RECIPES (pyproject.toml)"), title_align="left")
     console.print(panel)
 
@@ -123,36 +142,55 @@ def do_help(pyproject: PyProject, console=CONSOLE) -> None:
     )
 
     table.add_row(
+        blue("--print"),
+        green("Print either all recipes or specified target's recipe and exit."),
+    )
+
+    table.add_row(
         blue("--verbose/-v"),
         green(
             "Run steps in verbose mode [italic](including method stdout if available)[/]; "
-            f'default is [italic][bold]{pyproject.get_parm("default_verbose")}[/].',
+            f'default is [italic][bold]{pyproject.get_parm("verbose")}[/].',
         ),
     )
+
     table.add_row(
         blue("--confirm"),
         green(
             "Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "
             "all [bold]confirm[/]; "
-            f'default is [italic][bold]{pyproject.get_parm("default_confirm")}[/].',
+            f'default is [italic][bold]{pyproject.get_parm("confirm")}[/].',
         ),
     )
 
     table.add_row(
         blue("--dry_run"),
         green(
-            "Run steps in 'dry-run' mode; " f'default is [italic][bold]{pyproject.get_parm("default_dry_run")}[/].',
+            "Run steps in 'dry-run' mode; " f'default is [italic][bold]{pyproject.get_parm("dry_run")}[/].',
         ),
     )
 
     table.add_row(
         blue("--live"),
         green(
-            "Run steps in 'live' mode; " f'default is [italic][bold]{pyproject.get_parm("default_live")}[/].',
+            "Run steps in 'live' mode; " f'default is [italic][bold]{not pyproject.get_parm("dry_run")}[/].',
         ),
     )
 
-    panel: Panel = Panel(table, title=green("OPTIONS"), title_align="left")
+    panel: Panel = Panel(table, title=green("COMMAND-LINE OPTIONS"), title_align="left")
+    console.print(panel)
+
+    ################################################################################
+    # Methods available
+    ################################################################################
+    table: Table = Table.grid(expand=True)
+
+    for name, cls_ in method_classes.items():
+        table.add_row(
+            blue(name),
+            green(cls_.__doc__),
+        )
+    panel: Panel = Panel(table, title=green("CONFIGURATION METHODS AVAILABLE"), title_align="left")
     console.print(panel)
 
 
@@ -165,14 +203,13 @@ def main():
         sys.exit(1)
 
     ################################################################################
-    # Read our pyproject.toml file and parse our command-line
+    # Read our pyproject.toml file and parse (but don't validate) our command-line:
     ################################################################################
     configuration, pyproject = process_arguments()
-
     s_targets = pyproject.get_formatted_list_of_targets()
 
     ################################################################################
-    # Gather all available methods from our package's library (doesn't rely on anything else besides verbosity)
+    # Gather available methods from package's library:
     ################################################################################
     if not (method_classes := gather_available_method_classes(configuration.verbose)):
         sys.exit(1)
@@ -182,40 +219,42 @@ def main():
     # after incorporating both pyproject.toml defaults and cli args)
     ################################################################################
     if configuration.help:
-        do_help(pyproject)
+        do_help(pyproject, method_classes)
         sys.exit(0)
 
     ################################################################################
-    # We have enough information now to validate the user's specific target requested:
+    # Convert recipes found in pyproject.toml to strongly-typed instances:
     ################################################################################
-    if not configuration.target:
+    recipes: Recipes = Recipes.factory(configuration, pyproject, method_classes)
+
+    ################################################################################
+    # Validate the user's specific target requested:
+    ################################################################################
+    if configuration.target:
+        if not pyproject.is_valid_target(configuration.target):
+            msg = (
+                f"Sorry, [red]{configuration.target}[/] is not a valid recipe, "
+                f"must be one of [yellow][italic]{s_targets}[/]."
+            )
+            CONSOLE.print(msg)
+            sys.exit(1)
+    elif not configuration.print:
         msg = f"Sorry, we need a valid recipe target to execute, must be one of [yellow]{s_targets}[/]."
         CONSOLE.print(msg)
         sys.exit(1)
 
-    if not pyproject.is_valid_target(configuration.target):
-        msg = (
-            f"Sorry, [red]{configuration.target}[/] is not a valid recipe, "
-            f"must be one of [yellow][italic]{s_targets}[/]."
-        )
-        CONSOLE.print(msg)
-        sys.exit(1)
+    ################################################################################
+    # If we're only doing, print...do so and WE'RE DONE!
+    ################################################################################
+    if configuration.print:
+        recipes.print(configuration)
+        sys.exit(0)
 
     ################################################################################
-    # Convert specified recipe file raw data into strongly-typed instances.
-    ################################################################################
-    recipes: Recipes = Recipes.factory(configuration, pyproject)
-
-    ################################################################################
-    # Do a full validation suite.
+    # Do some validation:
     ################################################################################
     if not validate(configuration, recipes, method_classes):
         sys.exit(1)
-
-    ################################################################################
-    # Laminate all the method/class operations onto our recipes.
-    ################################################################################
-    recipes.laminate_method_classes(configuration, method_classes)
 
     ################################################################################
     # Dispatch to our target and run!

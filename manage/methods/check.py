@@ -6,7 +6,7 @@ from manage.utilities import message
 
 
 class Method(AbstractMethod):
-    """Show/print the recipes."""
+    """No-op, validate the recipes in pyproject.toml."""
 
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Easiest method as we already did validation before we got here!"""

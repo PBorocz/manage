@@ -33,7 +33,7 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
     if not _validate_existing_version_numbers(configuration):
         all_ok = False
 
-    if all_ok:
+    if configuration.verbose and all_ok:
         success()
 
     return all_ok

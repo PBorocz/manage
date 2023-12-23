@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "manage"
+version = "0.1.11"
+description = "'Manage' environment for poetry-based projects (at least mine)"
+authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
+license = "MIT"
+
+[tool.manage]
+
+[tool.manage.recipes.bump]
+description = "Bump the version number to the next *patch* level and commit locally"
+
+[[tool.manage.recipes.bump.steps]]
+method = "poetry_bump_version"
+arguments = { poetry_version = "patch" }

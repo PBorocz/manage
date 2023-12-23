@@ -1,10 +1,9 @@
 """Core data types and recipe file read."""
 from __future__ import annotations
-import tomllib
 from argparse import Namespace
 from copy import deepcopy
-from pathlib import Path
 
+from rich.console import Console
 from typing import Any, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
@@ -25,7 +24,7 @@ class Step(BaseModel):
     method: str | None = None  # Reference to the built-in method to run
     recipe: str | None = None  # Reference to the id_ of another recipe.
 
-    confirm: bool | None = None  # Default value is a function of the respective method
+    confirm: bool | None = None
     verbose: bool | None = False
     allow_error: bool | None = False
 
@@ -57,27 +56,29 @@ class Step(BaseModel):
             return self.method
         return self.recipe
 
-    def reflect_runtime_arguments(self, configuration: TConfiguration, verbose: bool = True) -> str:
+    def __reflect_runtime_arguments(self, configuration: TConfiguration) -> Step:
         """Update the step based on any/all arguments received on the command-line."""
         # For now, only 2 command-line args can trickle down to individual step execution:
         # 'confirm/no-confirm' and 'verbose':
         if configuration.confirm is not None and self.confirm != configuration.confirm:
-            if verbose:
+            if configuration.verbose:
                 msg = (
-                    f"(- (overriding [italic]confirm[/] in {self.name()} from "
+                    f"- (overriding [italic]confirm[/] in {self.name()} from "
                     f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
                 )
                 message(msg, color="light_slate_grey", end_success=True)
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
-            if verbose:
+            if configuration.verbose:
                 msg = (
                     f"- (overriding [italic]verbose[/] in {self.name()} from "
                     f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
                 )
                 message(msg, color="light_slate_grey", end_success=True)
             self.verbose = configuration.verbose
+
+        return self
 
         # Those arguments that are *specific* to this step:
         # for step_arg, step_arg_value  in self.arguments.items():
@@ -93,12 +94,28 @@ class Step(BaseModel):
         #                     "[italic]{step_arg_value}[/] to [italic]{runtime_arg_value}[/]"
         #                 message(msg, color='light_slate_grey', end_success=True)
 
-    def as_print(self) -> TStep:
+    @classmethod
+    def factory(cls, configuration: Configuration, method_classes: dict[str, TClass], **step_args) -> Step:
+        """Return a new Step instance based on args and current configuration."""
+        step = cls(**step_args)
+
+        # Add the instantiable class onto each method step to dispatch from:
+        step.class_ = method_classes.get(step.method, None)
+
+        # Ripple command-line argument overrides to each step:
+        step.__reflect_runtime_arguments(configuration)
+
+        return step
+
+    def _str_(self) -> TStep:
         """Return a 'cleaned-up' copy of this step for printing."""
         step = deepcopy(self)
 
         # We don't need this for printing..
         delattr(step, "class_")
+
+        if step.confirm is None:
+            delattr(step, "confirm")
 
         # And one of these will be empty!
         if step.method:
@@ -121,11 +138,24 @@ class Recipe(BaseModel):
     def __len__(self):
         return len(self.steps)
 
+    def print(self, console: Console, name: str, configuration: Configuration) -> None:
+        """Print the recipe to the specified console."""
+        console.print(f"\n[bold italic]{name}[/] ≫ {self.description}")
+        steps = [step._str_() for step in self.steps]
+        console.print(steps)
+
+    @classmethod
+    def factory(cls, configuration: Configuration, method_classes: dict[str, TClass], **recipe_args) -> Recipe:
+        """Return a new Recipe instance based on args and current configuration."""
+        recipe = cls(description=recipe_args.get("description", "-"))
+        recipe.steps = [Step.factory(configuration, method_classes, **d_step) for d_step in recipe_args.get("steps")]
+        return recipe
+
 
 class Recipes(BaseModel):
     """A collection of recipes, maps 1-to-1 with an inbound file."""
 
-    __root__: dict[str, Recipe]
+    __root__: dict[str, Recipe] = {}
 
     def __len__(self):
         return len(self.__root__)
@@ -149,30 +179,22 @@ class Recipes(BaseModel):
         """Is the target provide valid against our current recipes? (on a case-folded basis)."""
         return recipe_target.casefold() in [id_.casefold() for id_ in self.keys()]
 
-    def as_print(self) -> TRecipes:
-        """."""
-        recipes = deepcopy(self)
-        recipes.__root__ = deepcopy(self.__root__)
-        for name, recipe in self.__root__.items():
-            recipe.steps = [step.as_print() for step in recipe.steps]
-            recipes.__root__[name] = recipe
-        return recipes
-
-    def laminate_method_classes(self, configuration: Configuration, method_classes: dict[str, TClass] | None) -> None:
-        """Add the instantiable class onto each method step to dispatch from (only not in testing..).
-
-        We already validated that all the recipes are valid, this just ties them classes
-        to the steps for actual execution.
-        """
-        if method_classes:
-            for name, recipe in self:
-                for step in recipe:
-                    step.class_ = method_classes.get(step.method)
+    def print(self, configuration: Configuration):
+        """Print either all the recipes or only that for target."""
+        console = Console(width=60)
+        for recipe_name, recipe in self:
+            if configuration.target and configuration.target != recipe_name:
+                continue
+            recipe.print(console, recipe_name, configuration)
+        return True
 
     @classmethod
-    def factory(cls, configuration: Configuration, pyproject: PyProject) -> Recipes:
+    def factory(cls, configuration: Configuration, pyproject: PyProject, method_classes: dict[str, TClass]) -> Recipes:
         """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
-        d_recipes = {id_: Recipe(**raw_recipe) for id_, raw_recipe in pyproject.recipes.items()}
+        d_recipes = dict()
+        for recipe_name, raw_recipe in pyproject.recipes.items():
+            recipe = Recipe.factory(configuration, method_classes, **raw_recipe)
+            d_recipes[recipe_name] = recipe
         return cls.parse_obj(d_recipes)
 
 
@@ -210,16 +232,15 @@ class PyProject(BaseModel):
     package: str  | None = None  # Package name..
     recipes: dict | None = None  # These are RAW recipe dicts here!
     #
-    # NOTE: These are the ONLY place we're set set the default values
-    #       for "verbose", "live", "dry-run" and "confirm"
-    #       command-line parameters unless they're NOT set/available
-    #       from the pyproject.toml file:
+    # NOTE: These are the ONLY place we're we set the default values
+    #       for "verbose", "dry-run" and "confirm" command-line
+    #       parameters unless they're NOT set/available from the
+    #       pyproject.toml file:
     #
     cli_defaults: dict = {
-        "default_verbose" : False,
-        "default_confirm" : False,
-        "default_dry_run" : True,
-        "default_live"    : False,
+        "verbose" : False,
+        "confirm" : False,
+        "dry_run" : True,
     }
     # fmt: on
 
@@ -232,7 +253,10 @@ class PyProject(BaseModel):
 
     def get_target_names_and_descriptions(self) -> list[tuple[str, str]]:
         """Return a list of tuples, each containing recipe name and description."""
-        return [(name, definition.get("description", "")) for name, definition in self.recipes.items()]
+        if not self.recipes:
+            return []
+        else:
+            return [(name, definition.get("description", "")) for name, definition in self.recipes.items()]
 
     def is_valid_target(self, target: str) -> bool:
         """Return true if proposed target name is a valid recipe."""
@@ -242,50 +266,64 @@ class PyProject(BaseModel):
         """Return the value associated with the parameter name specified."""
         return self.cli_defaults.get(parm)
 
-    @classmethod
-    def factory(cls, path_pyproject: Path) -> PyProject:
-        """Do a raw read of the specified pyproject.toml path and returning a instance."""
-        raw_pyproject = tomllib.loads(path_pyproject.read_text())
+    def validate(self) -> bool:
+        """Return True is everything's OK with our pyproject object."""
+        # Check for valid cli_defaults:
+        temp_instance = PyProject()
+        s_defaults = smart_join(temp_instance.cli_defaults.keys())
 
-        instance = PyProject()
-        ################################################################################
-        # Parse "our" portion of pyproject.toml, ie. [tool.manage] into two things:
-        # - The set of default configuration/control cli_defaults.
-        # - The set of recipes defined.
-        ################################################################################
-        for name, value in raw_pyproject.get("tool", {}).get("manage", {}).items():
-            if name == "recipes":
-                instance.recipes = value
-            else:
-                if name not in instance.cli_defaults:
-                    message(
-                        f"Unexpected setting found in 'tool.manage' section: {name}, please check!",
-                        color="red",
-                        end_warning=True,
-                    )
-                else:
-                    if instance.cli_defaults[name] != value:
-                        message(
-                            f"- (overriding internal default for [italic]{name}[/] "
-                            f"from {instance.cli_defaults[name]} to {value})",
-                            color="light_slate_grey",
-                            end_success=True,
-                        )
-                    instance.cli_defaults[name] = value
+        ok = True
+        for name in self.cli_defaults.keys():
+            if name not in temp_instance.cli_defaults:
+                message(
+                    f"Unexpected setting found in 'tool.manage.defaults': " f"'{name}', allowed are: {s_defaults}",
+                    color="red",
+                    end_warning=True,
+                )
+                ok = False
+        if not ok:
+            return False
 
-        ################################################################################
-        # Do validity/consistency checking
-        ################################################################################
-        if instance.cli_defaults.get("default_dry_run") == instance.cli_defaults.get("default_live"):
+        # Do we have any recipes?
+        if not self.recipes:
             message(
-                "You shouldn't set both 'dry_run' and 'live' to the same value in 'tool.manage', please check!",
+                "No recipes found in 'tool.manage.recipes?",
                 color="red",
+                end_failure=True,
+            )
+            return False
+
+        # WARNING: Do we have the name of the current package we're processing (eg. for builds etc.)
+        if self.package is None:
+            message(
+                "No 'packages' entry found in \\[tool.poetry] in pyproject.toml; FYI only.",
+                color="yellow",
                 end_warning=True,
             )
 
-        ################################################################################
-        # Parse the *current* package:
-        ################################################################################
+        # WARNING: Does our current package have a current version number? (eg. for build/release mgmt.)
+        if not self.version:
+            message(
+                "No version label found in \\[tool.poetry] in pyproject.toml; FYI only.",
+                color="yellow",
+                end_warning=True,
+            )
+
+        return True
+
+    @classmethod
+    def factory(cls, raw_pyproject: dict) -> PyProject:
+        """Use the raw_pyproject dict from pyproject.toml path and return a instance."""
+        instance = PyProject()
+
+        # 1. Default command-line defaults (ie, that override those in the class definition above)
+        for name, value in raw_pyproject.get("tool", {}).get("manage", {}).get("defaults", {}).items():
+            instance.cli_defaults[name] = value
+
+        # 2. Actual recipes!
+        instance.recipes = raw_pyproject.get("tool", {}).get("manage", {}).get("recipes", {})
+
+        # OPTIONAL: Parse "main" portion of pyproject.toml to find the *current* package the user want's management for:
         if packages := raw_pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
             try:
                 # FIXME: For now, use the *first* entry in tool.poetry.packages (even though multiple are allowed)
@@ -293,40 +331,9 @@ class PyProject(BaseModel):
                 instance.package = package_include.get("include")
             except IndexError:
                 ...
-        if instance.package is None:
-            message(
-                "No 'packages' entry found under \\[tool.poetry] in pyproject.toml; FYI only.",
-                color="yellow",
-                end_warning=True,
-            )
 
-        ################################################################################
-        # And get the current version of it:
-        ################################################################################
-        version = raw_pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-        if not version:
-            message(
-                "No version label found entry under \\[tool.poetry] in pyproject.toml; FYI only.",
-                color="yellow",
-                end_warning=True,
-            )
-        else:
-            instance.version = version
-
-        ################################################################################
-        # Lastly, we have two "built-in" recipes that we make ALWAYS
-        # available, specifically, 'check' and 'print', Add them in
-        # here as well so they'll be treated the same as the user's
-        # recipes.
-        ################################################################################
-        instance.recipes["print"] = {
-            "description": "Show/print recipes defined in pyproject.toml",
-            "steps": [{"method": "print", "confirm": False}],
-        }
-        instance.recipes["check"] = {
-            "description": "Check configuration of pyproject.toml",
-            "steps": [{"method": "check", "confirm": False}],
-        }
+        # OPTIONAL: Get the current version of it from the main portion of the pyproject file:
+        instance.version = raw_pyproject.get("tool", {}).get("poetry", {}).get("version", None)
 
         # Done!
         return instance
@@ -337,7 +344,8 @@ class Configuration(BaseModel):
 
     # fmt: off
     help       : bool | None = None  # Were we requested to just display help?
-    verbose    : bool | None = None  # Are we running in overall verbose mode?
+    print      : bool | None = None  # Were we requested to print the recipes contents?
+    verbose    : bool | None = None  # Are we running in verbose mode?
     target     : str  | None = None  # What is the target to be performed?
     confirm    : bool | None = None  # Should we perform confirmations on steps?
     dry_run    : bool | None = None  # Are we running in dry-run mode (True) or live mode (False)
@@ -373,12 +381,9 @@ class Configuration(BaseModel):
 
         # Get the rest of the command-line parameters (whose default
         # values could have come from pyproject.toml!)
-        for attr in ["confirm", "verbose", "help", "target"]:
-            setattr(configuration, attr, getattr(args, attr))
-
-        # Handle special case of "--live" on command-line (and ONLY from command-line!)
-        if getattr(args, "live", None):
-            configuration.set_value("dry_run", False, "based on --live on command-line")
+        for attr in ["confirm", "verbose", "help", "target", "dry_run", "print"]:
+            if hasattr(args, attr):
+                setattr(configuration, attr, getattr(args, attr))
 
         # Finally, for testing only, override any other attrs:
         if kwargs:
@@ -393,6 +398,6 @@ class Configuration(BaseModel):
                 message(msg, color="light_slate_grey", end_success=True)
         if test:
             for msg in configuration._messages_:
-                print(msg)
+                message(msg)
 
         return configuration

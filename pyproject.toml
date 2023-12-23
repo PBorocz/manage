@@ -29,10 +29,14 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 # ##############################################################################
+# Manager Tool
+# ##############################################################################
 [tool.manage]
-default_dry_run = false
-default_live = false
-default_verbose = false
+
+# ------------------------------------------------------------------------------
+[tool.manage.defaults]
+dry_run = true
+verbose = false
 
 # ------------------------------------------------------------------------------
 [tool.manage.recipes."1_bump"]
@@ -57,7 +61,7 @@ method = "git_commit"
 description = "Build & release current version's distribution to our github repository"
 
 [[tool.manage.recipes."2_release".steps]]
-recipe = "poetry_build"
+recipe = "build"
 
 [[tool.manage.recipes."2_release".steps]]
 method = "git_push_to_github"

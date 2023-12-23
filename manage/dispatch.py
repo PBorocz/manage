@@ -6,9 +6,6 @@ from manage.models import Configuration, Recipes
 def dispatch(configuration: Configuration, recipes: Recipes) -> None:
     """Iterate, ie. execute, each step defined for the recipe specified."""
     for step in recipes.get(configuration.target):
-        # Before we execute, update step with any/all runtime arguments received from the command line:
-        step.reflect_runtime_arguments(configuration)
-
         # Each step to be performed could be either a method OR another step:
         if step.class_:
             # Instantiate the method's class associated with the step and execute the "run" method!

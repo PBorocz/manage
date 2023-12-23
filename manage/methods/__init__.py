@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, failure, message, run, success
+from manage.utilities import ask_confirm, message, run, success
 
 
 TClass = TypeVar("Class")
@@ -27,17 +27,19 @@ def gather_available_method_classes(verbose: bool) -> dict[str, TClass]:
             yield path.stem, getattr(module, "Method", None)
 
     # Get all the 'main" methods in each python file in the steps module:
-    if verbose:
-        message("Initialising methods available")
-
     classes = {method_name: cls for method_name, cls in __gather_method_classes()}
     if not classes:
-        failure()
-        print("[red]Unable to find [bold]any[/] valid method classes in manage/methods/*.py?")
+        message(
+            "Unable to find [bold]any[/] valid method classes in manage/methods/*.py?",
+            end_failure=True,
+            color="red",
+        )
         sys.exit(1)
 
     if verbose:
+        message(f"{len(classes)} run-time methods found and registered")
         success()
+
     return classes
 
 

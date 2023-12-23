@@ -4,7 +4,8 @@ from manage.models import PyProject
 
 
 def test_help(capsys):
-    do_help(PyProject())
+    # Setup
+    do_help(PyProject(), {})
     captured = capsys.readouterr()
     assert "OPTIONS" in captured.out
     assert "RECIPES" in captured.out
