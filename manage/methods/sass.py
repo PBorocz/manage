@@ -28,6 +28,7 @@ class Method(AbstractMethod):
         # Lookup argument and get resultant command:
         if not (pathspec := self.get_arg("pathspec")):
             return False
+
         cmd = f"sass {pathspec}"
 
         if self.configuration.dry_run:
