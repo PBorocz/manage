@@ -152,77 +152,27 @@ At this point, you should be able to run: `manage check` (one of the built-in ta
 
     Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
 
-### Default Recipe Targets
+5.  --print
 
-The following recipes are built-in and available irrespective of your recipe file:
-
-- `check` - Performs a validity check of your recipe file (ie. `manage.yaml`). For example:
-
+    Does a "pretty-print" of your recipe configuration either for either recipes or just the specific target if provided. For example:
+	
     ``` shell
-    % python manage check
-    Reading recipes (manage.yaml)..................................................✔
-    Reading package & version (pyproject.toml).....................................✔
-    Checking consistency of versions (pyproject.toml & README).....................✔
-    Reading recipe steps available.................................................✔
-    Validating recipes.............................................................✔
-    %
-    ```
-
-- `print` - Does a "pretty-print" of your respective recipe file. For example:
-
-    ``` shell
-    % python manage print
+    % python manage --print build
     Recipes(
-        __root__={
-            'bump': Recipe(
-                description='Bump the version number to the next /patch/ level and commit locally',
-                steps=[
-                    Step(
-                        method='poetry_bump_version',
-                        recipe=None,
-                        confirm=True,
-                        echo_stdout=False,
-                        allow_error=False,
-                        quiet_mode=False,
-                        arguments={'poetry_version': 'patch'},
-                        callable_=<function main at 0x1084e1990>
-                    ),
-                    Step(
-                        method='update_readme',
-                        recipe=None,
-                        confirm=True,
-                        echo_stdout=False,
-                        allow_error=False,
-                        quiet_mode=False,
-                        arguments={'readme_format': 'org'},
-                        callable_=<function main at 0x1084e20e0>
-                    ),
-                    Step(
-                        method='git_commit_version_files',
-                        recipe=None,
-                        confirm=True,
-                        echo_stdout=False,
-                        allow_error=False,
-                        quiet_mode=False,
-                        arguments={},
-                        callable_=<function main at 0x10805beb0>
-                    )
-                ]
-            ),
-            'build': Recipe(
-                description='Build our distribution(s) and release to "github" (not PyPI!)',
-                steps=[
-                    Step(
-                        method='poetry_lock_check',
-                        recipe=None,
-                        confirm=False,
-                        echo_stdout=False,
-                        allow_error=False,
-                        quiet_mode=False,
-                        arguments={},
-                        callable_=<function main at 0x1084e1ab0>
-                    ),
-                    .....
+	    'build': Recipe(
+            description='Build our distribution(s) and release to "github" (not PyPI!)',
+            steps=[
+                Step(
+                    method='poetry_lock_check',
+                    recipe=None,
+                    confirm=False,
+                    echo_stdout=False,
+                    allow_error=False,
+                    quiet_mode=False,
+                    arguments={},
+                    callable_=<function main at 0x1084e1ab0>
+                ),
+                .....
     %
     ```
 

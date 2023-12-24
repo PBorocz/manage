@@ -1,0 +1,58 @@
+# ##############################################################################
+# Manager Tool
+# ##############################################################################
+[tool.manage]
+
+# ------------------------------------------------------------------------------
+[tool.manage.defaults]
+dry_run = true
+verbose = false
+[tool.manage.1_version]
+description = "Bump the version number a single patch level and commit locally"
+
+# ------------------------------------------------------------------------------
+# Recipes
+# ------------------------------------------------------------------------------
+[[tool.manage.1_version.steps]]
+  method = "poetry_bump_version"
+
+[[tool.manage.1_version.steps.arguments]]
+  poetry_version = "patch"
+
+[[tool.manage.1_version.steps]]
+  method = "update_readme"
+
+[[tool.manage.1_version.steps]]
+  method = "git_commit_version_files"
+
+# ------------------------------------------------------------------------------
+[tool.manage.2_build]
+description = "Build our distribution(s)."
+
+[[tool.manage.2_build.steps]]
+  method = "run_pre_commit"
+  echo_stdout = true
+
+[[tool.manage.2_build.steps]]
+  method = "clean"
+  allow_error = true
+
+[[tool.manage.2_build.steps]]
+  method = "build"
+  echo_stdout = true
+
+# ------------------------------------------------------------------------------
+[tool.manage.3_publish]
+description = "Release a new version of our package to PyPI."
+
+[[tool.manage.3_publish.steps]]
+  method = "git_create_tag"
+
+[[tool.manage.3_publish.steps]]
+  method = "git_push_to_github"
+
+[[tool.manage.3_publish.steps]]
+  method = "publish_to_pypi"
+
+[[tool.manage.3_publish.steps]]
+  method = "git_create_release"
