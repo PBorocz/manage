@@ -34,13 +34,13 @@ def process_arguments() -> [Configuration, PyProject]:
         sys.exit(1)
 
     # Get (and do some simple validation on) the command-line arguments:
-    args = get_args(pyproject)
+    args: tuple = get_args(pyproject)
 
-    if args.verbose:
+    if args[0].verbose:
         shortened_path = shorten_path(DEFAULT_PROJECT_PATH, 76)
         message(f"Read {shortened_path}", end_success=True)
 
-    # Given our command-line arguments, now we can create our configuration instance:
+    # Given our command-line arguments, create our more structured configuration instance:
     if not (configuration := Configuration.factory(args, pyproject)):
         sys.exit(1)
 
@@ -48,7 +48,7 @@ def process_arguments() -> [Configuration, PyProject]:
 
 
 def get_args(pyproject: PyProject) -> argparse.Namespace:
-    """Build on the initial parser and get the target to run for."""
+    """Parse -all- the command-line arguments provide, both known/expected and unknown/step associated."""
     parser = argparse.ArgumentParser(add_help=False)
 
     s_targets: str = pyproject.get_formatted_list_of_targets()
@@ -104,7 +104,14 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
     )
     parser.set_defaults(dry_run=pyproject.get_parm("dry_run"))
 
-    return parser.parse_args()
+    # Parse all the command-line args/parameters provided (both those above and unknown ones)
+    args_static, unexpected_args = parser.parse_known_args()
+
+    # Convert the unexpected args from ['--foo', 'bar', '--color', 'red'] to {'color': 'red', 'foo': 'bar'}:
+    chunked_args = [[x, y] for x, y in zip(unexpected_args[::2], unexpected_args[1::2])]
+    args_dynamic: dict[str, str] = dict((arg.replace("--", ""), value) for arg, value in chunked_args)
+
+    return args_static, args_dynamic
 
 
 def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CONSOLE) -> None:

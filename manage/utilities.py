@@ -81,6 +81,31 @@ def message(
         failure(color=color)
 
 
+def v_message(
+    verbose: bool,
+    s_message: str,
+    overhead: int = 0,
+    color: str = "blue",
+    end_success: bool = False,
+    end_failure: bool = False,
+    end_warning: bool = False,
+) -> str:
+    """Create and print a message string AFTER checking for verbosity.
+
+    Essentially, just a wrapper on message to keep the number of verbose conditional
+    checks sprinkled throughout to a minimum.
+    """
+    if verbose:
+        message(
+            s_message,
+            color=color,
+            overhead=overhead,
+            end_success=end_success,
+            end_failure=end_failure,
+            end_warning=end_warning,
+        )
+
+
 def run(step: TStep, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step" but will create circular import!
     """Run the command for the specified Step, capturing output and signal success/failure."""
     if step.verbose:

@@ -19,11 +19,11 @@ Here's an example of building and releasing a python package:
 
 - These granular methods are combined into `recipes` to perform a particular task (eg. build my project, update my release notes etc.)
 
-- Recipes are stored in a local recipe file (default `./manage.yaml`) that is _specific to your project_.
+- Recipes are stored in your pyproject.toml file following the `tool` section format used by other python tools. In this case, `[tool.manage]`.
 
 - Recipes can be _nested_ (analogous to cooking recipes where one recipe may refer to another for a component).
 
-- A recipe file (or `manage.yaml` file) contains:
+- The `[tool.manage.recipes]` section contains:
 
     - A set of *targets* aka recipes (terminology synonymous with Makefile/Justfile targets).
 
@@ -31,42 +31,63 @@ Here's an example of building and releasing a python package:
 
     - Each step can refer either to a built-in **method** (e.g. `clean`) or to the name of another *recipe*.
 
-- Each step in a target is also described by the following:
+- Each step in a target is also configured by the following parameters:
 
-    - Steps that have a side-effect (ie. those that can *change* something) can have a user-confirmation before executing, eg. "Are you sure? (`confirm`).
+    - Steps that have a side-effect (ie. those that can *change* something) can have a user-confirmation before executing, e.g. "Are you sure? (`confirm`).
 
     - Each step can be configured as to whether or not it\'s stdout is displayed (`echo_stdout`).
 
     - Each step can be configured control whether errors encountered are fatal or not (`allow_error`).
 
+- Your command-line defaults can be set in the `[tool.manage.defaults]` section. For instance, if you always want to run in verbose-mode, simple set a section in your pyproject.toml like this: 
+
+``` toml
+[tool.manage.defaults]
+verbose = true
+```
+
+- Other command-line defaults that can be set in this section are: `confirm`, `dry-run`/`live` (these last two are mutually-exclusive).
+
 ### Example
 
-An example `manage.yaml` might look like this:
+An example `[tool.manage]` section that defines three targets (bump a version number, clean our build environment and build our package (after cleaning) might look like this:
 
-``` yaml
+``` toml
 ################################################################################
-bump:
-  description: Bump the version number to the next /patch/ level and commit locally
-  steps:
-    - method: poetry_bump_version
-    - method: update_readme
-    - method: git_commit_version_files
+[[tool.manage.recipes.bump]]
+description = "Bump the version number to the next /patch/ level and commit locally"
 
-################################################################################
-clean:
-  description: Clean out our temp files and ALL previous builds.
-  steps:
-    - method: clean
-      echo_stdout: false                # Run quietly
+[[tool.manage.recipes.bump.steps]]
+method = "poetry_bump_version"
+
+[[tool.manage.recipes.bump.steps]]
+method = "update_readme"
+
+[[tool.manage.recipes.bump.steps]]
+method = "git_commit_version_files"
 
 ################################################################################
-build:
-  description: Build our distribution(s).
-  steps:
-    - method: build
-      confirm: false                    # Ok to build without confirmation
-      echo_stdout: true                 # We want to see the output of our build!
-      allow_error: true                 # We don't care if no files are clean or if dirs don't exist.
+[[tool.manage.recipes.clean]]
+description = "Clean out our temp files and ALL previous builds."
+
+[[tool.manage.recipes.clean.steps]]
+method = "clean"
+echo_stdout = false
+confirm = false
+allow_error = true
+
+################################################################################
+[[tool.manage.recipes.build]]
+description = "Build our distribution(s)."
+
+[[tool.manage.recipes.build.steps]]
+recipe = "clean"
+
+[[tool.manage.recipes.build.steps]]
+method = "build"
+confirm = false
+echo_stdout = true
+allow_error = false
 ```
 
 ## Assumptions
@@ -111,42 +132,50 @@ If you use `poetry`, this should suffice (and is how I use it from my projects).
 % poetry add git+https://github.com/PBorocz/manage --group dev
 ```
 
-Create your `manage.yaml` file, here's a sample one to start from:
+Update your `pyproject.toml` file, here's a sample one to start from:
 
-``` yaml
-clean:
-  description: Clean out our temp files and ALL previous builds.
-  steps:
-    - method: clean
-      echo_stdout: true
+``` toml
+# -------------------------------------------------------------------------------
+[[tool.manage.recipes.clean]]
+description = "Clean out our temp files and ALL previous builds."
 
-build:
-  description: Build our package.
-  steps:
-    - step: clean
-    - method: build
-      confirm: true
-      echo_stdout: true
+[[tool.manage.recipes.clean.steps]]
+method = "clean"
+echo_stdout = false
+allow_error = true
+
+# -------------------------------------------------------------------------------
+[[tool.manage.recipes.build]]
+description = "Build our distribution(s)."
+
+[[tool.manage.recipes.build.steps]]
+recipe = "clean"
+
+[[tool.manage.recipes.build.steps]]
+method = "build"
+confirm = false
+echo_stdout = true
+allow_error = false
 ```
 
-At this point, you should be able to run: `manage check` (one of the built-in targets) against `manage.yaml` you just created. Note that `poetry add` will create a `manage` command into your respective python /bin environment (hopefully, your virtual env).
+At this point, you should be able to run: `% manage --print` and your `pyproject.toml` entries will be checked and validated. Note that `poetry add` will create a `manage` command into your respective python /bin environment (hopefully, your virtual env).
 
 ## Documentation
 *NB: This section is **big** and should probably be moved to stand-alone documentation!*
 
 ### Command-Line Arguments
 
-1.  -r/--recipe
+1.  --confirm
 
-    Use another recipe file instead of the default `./manage.yaml`.
+    Override any `confirm = false` entries in your pyproject.toml and force all methods with confirmation (ie. state-change) to do so.
 
-2.  --confirm
+2.  --noconfirm
 
-    Override any `confirm: False` entries in your recipe.file and force all methods with confirmation (ie. state-change) to do so.
+    Override any `confirm = true` entries in your pyproject.toml and force all confirmation methods to **NOT** require (ie. skip) confirmation.
 
-3.  --noconfirm
+3.  --verbose
 
-    Override any `confirm: True` entries in your recipe.file and force all confirmation methods to **NOT** require (ie. skip) confirmation.
+    Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
 
 4.  --verbose
 
@@ -156,80 +185,76 @@ At this point, you should be able to run: `manage check` (one of the built-in ta
 
     Does a "pretty-print" of your recipe configuration either for either recipes or just the specific target if provided. For example:
 	
-    ``` shell
-    % python manage --print build
-    Recipes(
-	    'build': Recipe(
-            description='Build our distribution(s) and release to "github" (not PyPI!)',
-            steps=[
-                Step(
-                    method='poetry_lock_check',
-                    recipe=None,
-                    confirm=False,
-                    echo_stdout=False,
-                    allow_error=False,
-                    quiet_mode=False,
-                    arguments={},
-                    callable_=<function main at 0x1084e1ab0>
-                ),
-                .....
-    %
-    ```
+``` shell
+% python manage --print build
+
+build ≫ Build our distribution(s)
+[
+    {
+        'method': 'poetry_lock_check',
+        'confirm': False,
+        'verbose': False,
+        'allow_error': False,
+        'arguments': {}
+    },
+    {
+        'recipe': 'clean',
+        'confirm': False,
+        'verbose': False,
+        'allow_error': False,
+        'arguments': {}
+    },
+    {
+        'method': 'poetry_build',
+        'confirm': False,
+        'verbose': False,
+        'allow_error': False,
+        'arguments': {}
+    }
+]
+
+%
+```
 
 ### Common Method Options
 
-- `confirm` - Ask for confirmation before executing the respective step, e.g. "Are you sure you want to ...?". Primarily on behalf of *write*-oriented steps, this option can be specified either on a step-by-step basis:
+- `confirm`: Ask for confirmation before executing the respective step, e.g. "Are you sure you want to ...?". Primarily on behalf of *write*-oriented steps, this option can be specified either on a step-by-step basis:
 
-    ``` yaml
-    build_my_package:
-      description: Build my distribution package.
-      steps:
-        - method: build
-          confirm: True
-    ```
+``` toml
+[[tool.manage.recipes."1_bump".steps]]
+method = "poetry_bump_version"
+confirm = true
+arguments = { poetry_version = "patch" }
 
-    **or** for all confirm-able steps during a specific execution from the command-line (which will override any step-specific settings):
-
-    ``` shell
-    % python manage my_recipe --confirm
-    ...
-    %
-    ```
-
-- `echo_stdout` - Echo the stdout of the respective command.
-
-``` yaml
-build_my_package:
-  description: Build my distribution package.
-  steps:
-    - method: ...
-      ...
-    - method: git_create_tag
-      echo_stdout: True
-    - method: ...
-      ...
 ```
 
-- `allow_error` - If True, a non-zero exit code will stop execution of the respective recipe (default is False).
+- `echo_stdout`: Echo the stdout of the respective command:
 
-``` yaml
-build_my_package:
-  description: Build my distribution package.
-  steps:
-    - method: clean
-      allow_error: True
-    - method: ...
-      ...
+``` toml
+[[tool.manage.recipes.build.steps]]
+method = "poetry_build"
+confirm = false
+echo_stdout = true
+```
+
+- `allow_error`: If True, a non-zero exit code will stop execution of the respective recipe (default is False):
+
+``` toml
+[[tool.manage.recipes.build.steps]]
+method = "poetry_clean"
+confirm = false
+echo_stdout = true
+allow_error = true
 ```
 
 ### Available Methods
+
 #### Summary
 
 We provide a summary of the methods supported (listed alphabetically):
 
 | Method Name | Confirmation? | Arguments? | Arguments
 |-------------|---------------|------------|-------------
-| [`build`](#build)														| Yes | \-         |
 | [`clean`](#clean)														| Yes | \-         |
 | [`git_add`](#git_add)													| Yes | Optional   | `pathspec`
 | [`git_commit`](#git_commit)											| Yes | Optional   | `pathspec, message`
@@ -238,6 +263,7 @@ We provide a summary of the methods supported (listed alphabetically):
 | [`git_create_tag`](#git_create_tag)									| Yes | \-         |
 | [`git_push_to_github`](#git_push_to_github)							| Yes | \-         |
 | [`pandoc_convert_org_to_markdown`](#pandoc_convert_org_to_markdown)   | No  | Required   | `path_md, path_org`
+| [`poetry_build`](#build)												| Yes | \-         |
 | [`poetry_bump_version`](#poetry_bump_version)							| Yes | Required   | `poetry_version`
 | [`poetry_lock_check`](#poetry_lock_check)								| No  | \-         |
 | [`publish_to_pypi`](#publish_to_pypi)									| Yes | \-         |

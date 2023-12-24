@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TypeVar
 
 from manage.models import Configuration, Recipes
-from manage.utilities import failure, message, success, warning
+from manage.utilities import failure, message, success, v_message, warning
 
 TClass = TypeVar("Class")
 
@@ -14,8 +14,7 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
     """Run the complete validation suite, returning False if anything's wrong."""
     all_ok = True
 
-    if configuration.verbose:
-        message("Validating environment & recipes")
+    v_message(configuration.verbose, "Validating environment & recipes")
 
     # Check: How is our environment?
     if not _validate_environment(configuration):

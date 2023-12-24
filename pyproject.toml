@@ -39,12 +39,20 @@ dry_run = true
 verbose = false
 
 # ------------------------------------------------------------------------------
+[tool.manage.recipes.bump]
+description = "Bump the version number to the next /patch/ level and commit locally"
+
+[[tool.manage.recipes.bump.steps]]
+method = "poetry_version"
+arguments = { bump_rule = "patch" }
+
+# ------------------------------------------------------------------------------
 [tool.manage.recipes."1_bump"]
 description = "Bump the version number to the next /patch/ level and commit locally"
 
 [[tool.manage.recipes."1_bump".steps]]
-method = "poetry_bump_version"
-arguments = { poetry_version = "patch" }
+method = "poetry_version"
+arguments = { bump_rule = "patch" }
 
 [[tool.manage.recipes."1_bump".steps]]
 method = "update_readme"

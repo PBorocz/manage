@@ -5,13 +5,13 @@ from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import failure, message, run, smart_join
 
-POETRY_VERSIONS = ("patch", "minor", "major", "prepatch", "preminor", "premajor", "prerelease")
+BUMP_RULES = ("patch", "minor", "major", "prepatch", "preminor", "premajor", "prerelease")
 
 # Metadata about arguments available...
 args = Arguments(
     arguments=[
         Argument(
-            name="poetry_version",
+            name="bump_rule",
             type_=str,
             default="bump",
         ),
@@ -27,23 +27,21 @@ class Method(AbstractMethod):
         super().__init__(configuration, recipes, step)
 
     def run(self) -> bool:
-        """Do a version "bump" of pyproject.toml using poetry by a specified "level"."""
-        # Get argument...
-        if not (poetry_version := self.get_arg("poetry_version")):
+        """Do a version "bump" of pyproject.toml using poetry to a specified poetry "level"."""
+        # Get argument
+        if not (bump_rule := self.get_arg("bump_rule")):
             return False
 
-        # FIXME: Can we put this into our validation check? Perhaps as a local method that's called earlier?
-        if poetry_version not in POETRY_VERSIONS:
-            versions = smart_join(POETRY_VERSIONS, with_or=True)
-            failure()
+        if bump_rule not in BUMP_RULES:
+            versions = smart_join(BUMP_RULES, with_or=True)
             message(
-                f"Sorry, {poetry_version} is not a valid poetry_version, must be one of \\[{versions}].",
+                f"Sorry, {bump_rule} is not a valid bump_rule, must be one of \\[{versions}].",
                 color="red",
+                end_failure=True,
             )
             sys.exit(1)
 
-        # The arg becomes the core command to execute:
-        cmd = f"poetry version {poetry_version}"
+        cmd = f"poetry version {bump_rule}"
 
         ################################################################################
         # Dry-run?
@@ -56,16 +54,15 @@ class Method(AbstractMethod):
         # For confirmation purposes, use poetry to get what our next
         # version *should* be (NOTE: This is a DRY-RUN only!!!!)
         ################################################################################
-        success, result = run(self.step, f"{cmd} --dry-run")
+        success, new_version = run(self.step, f"{cmd} --dry-run --short")
         if not success:
             failure()
             msg = (
                 "[red]Sorry, poetry couldn't determine a new "
-                f"version number from pyproject.toml: [italic]{result}[/]"
+                f"version number from pyproject.toml: [italic]{new_version}[/]"
             )
             message(msg)
             sys.exit(1)
-        new_version = result.split()[-1]  # a bit fragile, we're relying on poetry default message format :-(
 
         confirm = (
             f"Ok to '[italic]{self.configuration.version}[/]' "

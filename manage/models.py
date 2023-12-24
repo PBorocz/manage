@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
-from manage.utilities import message, smart_join
+from manage.utilities import message, smart_join, v_message
 
 
 TClass = TypeVar("Class")
@@ -58,41 +58,35 @@ class Step(BaseModel):
 
     def __reflect_runtime_arguments(self, configuration: TConfiguration) -> Step:
         """Update the step based on any/all arguments received on the command-line."""
-        # For now, only 2 command-line args can trickle down to individual step execution:
-        # 'confirm/no-confirm' and 'verbose':
+        # Two STATIC command-line args can trickle down to individual step execution: 'confirm' and 'verbose':
         if configuration.confirm is not None and self.confirm != configuration.confirm:
-            if configuration.verbose:
-                msg = (
-                    f"- (overriding [italic]confirm[/] in {self.name()} from "
-                    f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
-                )
-                message(msg, color="light_slate_grey", end_success=True)
+            # msg = (
+            #     f"- (overriding [italic]confirm[/] in {self.name()} from "
+            #     f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
+            # )
+            # v_message(configuration.verbose, msg, color="light_slate_grey", end_success=True)
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
-            if configuration.verbose:
-                msg = (
-                    f"- (overriding [italic]verbose[/] in {self.name()} from "
-                    f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
-                )
-                message(msg, color="light_slate_grey", end_success=True)
+            # msg = (
+            #     f"- (overriding [italic]verbose[/] in {self.name()} from "
+            #     f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
+            # )
+            # v_message(configuration.verbose, msg, color="light_slate_grey", end_success=True)
             self.verbose = configuration.verbose
 
-        return self
+        # However, we might have any number of DYNAMIC command-line args specific to this method:
+        if self.method:  # Only true if this step is a method!
+            for cli_arg, cli_value in configuration.method_args.items():
+                if cli_arg in self.arguments:
+                    msg = (
+                        f"- (overriding [italic]{cli_arg}[/] in {self.name()} from "
+                        f"[italic]{self.arguments[cli_arg]}[/] to [italic]{cli_value}[/])"
+                    )
+                    message(msg, color="light_slate_grey", end_success=True)
+                    self.arguments[cli_arg] = cli_value
 
-        # Those arguments that are *specific* to this step:
-        # for step_arg, step_arg_value  in self.arguments.items():
-        #     # *Do* we potentially have a relevant command-line argument?
-        #     if hasattr(configuration, step_arg):
-        #         # Yes, what is it?
-        #         if (runtime_arg_value := getattr(configuration, step_arg)) is not None:
-        #             # Is it different than what the step is configured for now?
-        #             if step_arg_value != runtime_arg_value:
-        #                 # Yep!, Override it!!
-        #                 self.arguments[step_arg] = runtime_arg_value
-        #                 msg = f"Overriding: [italic]{step_arg}[/] in {self.name()} from " \
-        #                     "[italic]{step_arg_value}[/] to [italic]{runtime_arg_value}[/]"
-        #                 message(msg, color='light_slate_grey', end_success=True)
+        return self
 
     @classmethod
     def factory(cls, configuration: Configuration, method_classes: dict[str, TClass], **step_args) -> Step:
@@ -191,15 +185,15 @@ class Recipes(BaseModel):
     @classmethod
     def factory(cls, configuration: Configuration, pyproject: PyProject, method_classes: dict[str, TClass]) -> Recipes:
         """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""
-        d_recipes = dict()
-        for recipe_name, raw_recipe in pyproject.recipes.items():
-            recipe = Recipe.factory(configuration, method_classes, **raw_recipe)
-            d_recipes[recipe_name] = recipe
+        d_recipes = dict(
+            (recipe_name, Recipe.factory(configuration, method_classes, **raw_recipe))
+            for recipe_name, raw_recipe in pyproject.recipes.items()
+        )
         return cls.parse_obj(d_recipes)
 
 
 class Argument(BaseModel):
-    """Possible argument for a method."""
+    """Possible argument for a step method."""
 
     name: str
     type_: type
@@ -207,7 +201,7 @@ class Argument(BaseModel):
 
 
 class Arguments(BaseModel):
-    """Collection of Arguments for a method."""
+    """Collection of Arguments for a step method."""
 
     arguments: list[Argument] = []
 
@@ -340,20 +334,22 @@ class PyProject(BaseModel):
 
 
 class Configuration(BaseModel):
-    """Configuration/state, primarily (but not solely) obo command-line args."""
+    """Configuration, primarily associated with command-line args to filter through step execution."""
 
     # fmt: off
-    help       : bool | None = None  # Were we requested to just display help?
-    print      : bool | None = None  # Were we requested to print the recipes contents?
-    verbose    : bool | None = None  # Are we running in verbose mode?
-    target     : str  | None = None  # What is the target to be performed?
-    confirm    : bool | None = None  # Should we perform confirmations on steps?
-    dry_run    : bool | None = None  # Are we running in dry-run mode (True) or live mode (False)
+    help        : bool | None = None  # Were we requested to just display help?
+    print       : bool | None = None  # Were we requested to print the recipes contents?
 
-    version_   : str  | None = None  # Note: This is the current version # of the project we're working on!
-    version    : str  | None = None  # " In nice format..
-    package_   : str  | None = None  # "
-    _messages_ : list[str] = []
+    verbose     : bool | None = None  # Are we running in verbose mode?
+    target      : str  | None = None  # What is the target to be performed?
+    confirm     : bool | None = None  # Should we perform confirmations on steps?
+    dry_run     : bool | None = None  # Are we running in dry-run mode (True) or live mode (False)
+    method_args : dict | None = {}    # Set of "dynamic" arguments for particular methods (from CLI)
+
+    version_    : str  | None = None  # Note: This is the current version # of the project we're working on!
+    version     : str  | None = None  # " In nice format..
+    package_    : str  | None = None  # "
+    _messages_  : list[str] = []
     # fmt: on
 
     def set_value(self, attr: str, value: any, source: str) -> None:
@@ -368,22 +364,21 @@ class Configuration(BaseModel):
         self.version = version_formatted
 
     @classmethod
-    def factory(cls, args: Namespace, pyproject: PyProject, test: bool = False, **kwargs) -> Configuration | None:
-        """Create a Configuration object, setting some attrs from pyproject.toml.
+    def factory(cls, args: tuple[Namespace, dict], pyproject: PyProject, test: bool = False, **kwargs) -> Configuration:
+        """Create a Configuration object instance from our args and user's pyproject.toml."""
+        static_args, method_args = args
 
-        We can either set from args (usual case) or pyproject.toml or from kwargs (primarily for testing).
-        """
         ############################################################
         # CREATE our Configuration instance with these values
         ############################################################
-        configuration = Configuration(package_=getattr(pyproject, "", ""))
+        configuration = Configuration(package_=getattr(pyproject, "", ""), method_args=method_args)
         configuration.set_version(getattr(pyproject, "version", ""))
 
-        # Get the rest of the command-line parameters (whose default
-        # values could have come from pyproject.toml!)
+        # Get the rest of the known command-line parameters (whose
+        # default values could have come from pyproject.toml!)
         for attr in ["confirm", "verbose", "help", "target", "dry_run", "print"]:
-            if hasattr(args, attr):
-                setattr(configuration, attr, getattr(args, attr))
+            if hasattr(static_args, attr):
+                setattr(configuration, attr, getattr(static_args, attr))
 
         # Finally, for testing only, override any other attrs:
         if kwargs:
@@ -393,9 +388,9 @@ class Configuration(BaseModel):
         ############################################################
         # Verbose output to be nice??
         ############################################################
-        if configuration.verbose:
-            for msg in configuration._messages_:
-                message(msg, color="light_slate_grey", end_success=True)
+        for msg in configuration._messages_:
+            v_message(configuration.verbose, msg, color="light_slate_grey", end_success=True)
+
         if test:
             for msg in configuration._messages_:
                 message(msg)
