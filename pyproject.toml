@@ -74,7 +74,6 @@ recipe = "build"
 [[tool.manage.recipes."2_release".steps]]
 method = "git_push_to_github"
 confirm = false
-echo_stdout = true
 
 # ------------------------------------------------------------------------------
 [tool.manage.recipes.ALL]
@@ -103,7 +102,6 @@ confirm = false
 [[tool.manage.recipes.build.steps]]
 method = "poetry_build"
 confirm = false
-echo_stdout = true
 
 # ------------------------------------------------------------------------------
 [tool.manage.recipes.clean]

@@ -35,11 +35,11 @@ Here's an example of building and releasing a python package:
 
     - Steps that have a side-effect (ie. those that can *change* something) can have a user-confirmation before executing, e.g. "Are you sure? (`confirm`).
 
-    - Each step can be configured as to whether or not it\'s stdout is displayed (`echo_stdout`).
-
     - Each step can be configured control whether errors encountered are fatal or not (`allow_error`).
 
-- Your command-line defaults can be set in the `[tool.manage.defaults]` section. For instance, if you always want to run in verbose-mode, simple set a section in your pyproject.toml like this: 
+- For each command within the step, the contents of either `stdout` or `stderr`  man displayed based on the return code of the command's execution. Specifically, on a non-zero return status, `stderr` will always be displayed. For a return code of zero, `stdout` will be displayed if `verbose` mode is active for the respective step.
+
+- Command-line defaults can be set in the `[tool.manage.defaults]` section. For instance, if you always want to run in verbose-mode, simple set a section in your pyproject.toml like this: 
 
 ``` toml
 [tool.manage.defaults]
@@ -72,7 +72,6 @@ description = "Clean out our temp files and ALL previous builds."
 
 [[tool.manage.recipes.clean.steps]]
 method = "clean"
-echo_stdout = false
 confirm = false
 allow_error = true
 
@@ -86,7 +85,6 @@ recipe = "clean"
 [[tool.manage.recipes.build.steps]]
 method = "build"
 confirm = false
-echo_stdout = true
 allow_error = false
 ```
 
@@ -159,7 +157,6 @@ description = "Clean out our temp files and ALL previous builds."
 
 [[tool.manage.recipes.clean.steps]]
 method = "clean"
-echo_stdout = false
 allow_error = true
 
 # -------------------------------------------------------------------------------
@@ -172,7 +169,6 @@ recipe = "clean"
 [[tool.manage.recipes.build.steps]]
 method = "build"
 confirm = false
-echo_stdout = true
 allow_error = false
 ```
 
@@ -187,21 +183,17 @@ At this point, you should be able to run: `% manage --print` and your `pyproject
 
     Override any `confirm = false` entries in your pyproject.toml and force all methods with confirmation (ie. state-change) to do so.
 
-2.  --noconfirm
+2.  --verbose
 
-    Override any `confirm = true` entries in your pyproject.toml and force all confirmation methods to **NOT** require (ie. skip) confirmation.
+    Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
 
 3.  --verbose
 
     Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
 
-4.  --verbose
+4.  --print
 
-    Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
-
-5.  --print
-
-    Does a "pretty-print" of your recipe configuration either for either recipes or just the specific target if provided. For example:
+    Does a "pretty-print" of your recipe configuration either for either recipes or just the specific target if provided and exits. For example:
 	
 ``` shell
 % python manage --print build
@@ -246,22 +238,12 @@ arguments = { poetry_version = "patch" }
 
 ```
 
-- `echo_stdout`: Echo the stdout of the respective command:
-
-``` toml
-[[tool.manage.recipes.build.steps]]
-method = "poetry_build"
-confirm = false
-echo_stdout = true
-```
-
 - `allow_error`: If True, a non-zero exit code will stop execution of the respective recipe (default is False):
 
 ``` toml
 [[tool.manage.recipes.build.steps]]
 method = "poetry_clean"
 confirm = false
-echo_stdout = true
 allow_error = true
 ```
 
@@ -309,7 +291,6 @@ confirm = false
 [[tool.manage.recipes.build.steps]]
 method = "poetry_build"
 confirm = false
-echo_stdout = true
 ```
 
 ##### **clean**
@@ -556,7 +537,7 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
- 
+
 - CHANGED: **BREAKING!** -> Move from standalone `manage.yaml` to reading targets & recipes directly into project's respective `pyproject.toml`.
 
 - CHANGED: **BREAKING!** -> Renamed `poetry_bump_version` method to `poetry_version` to more closely align with Poetry's command structure. Similarly, the method's argument `poetry_version` is now `bump_rule`.
@@ -571,7 +552,11 @@ arguments = {readme: "./subDir/README.txt"}
 % manage --print build
 ```
 
-- CHANGE: Added support for command-line options on behalf of methods that require arguments. For instance, the specific `poetry_version` to go "up to" was an argument setting on the respective step definition in `pyproject.toml` (eg. patch or minor). While a default value of "patch" is sufficient for most releases, if a "minor" release was required, the `pyproject.toml` argument would need to be manually changed. Now, the following will work:
+- CHANGED: Removed unused `echo-stdout` step attribute (mostly in documentation, wasn't actually implemented as we use `verbose` 
+
+- CHANGED: Removed unused `no-confirm` documentation (wasn't actually implemented either)implemented as we use `verbose` 
+
+- CHANGED: Added support for command-line options on behalf of methods that require arguments. For instance, the specific `poetry_version` to go "up to" was an argument setting on the respective step definition in `pyproject.toml` (eg. patch or minor). While a default value of "patch" is sufficient for most releases, if a "minor" release was required, the `pyproject.toml` argument would need to be manually changed. Now, the following will work:
 
 ``` shell
 % manage build --bump_rule minor

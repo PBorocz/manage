@@ -1,28 +1,26 @@
 """Convert an emacs org file into a markdown version using Pandoc."""
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import failure, message, run
-
-
-# Metadata about arguments available...
-args = Arguments(
-    arguments=[
-        Argument(
-            name="path_org",
-            type_=str,
-            default=None,
-        ),
-        Argument(
-            name="path_md",
-            type_=str,
-            default=None,
-        ),
-    ],
-)
+from manage.utilities import failure, message, success
 
 
 class Method(AbstractMethod):
     """Convert an emacs org file into a markdown version using Pandoc."""
+
+    args = Arguments(
+        arguments=[
+            Argument(
+                name="path_org",
+                type_=str,
+                default=None,
+            ),
+            Argument(
+                name="path_md",
+                type_=str,
+                default=None,
+            ),
+        ],
+    )
 
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Init."""
@@ -51,8 +49,17 @@ class Method(AbstractMethod):
             return False
 
         try:
-            return run(self.step, cmd)[0]
+            if self.step.verbose:
+                message(f"Running [italic]{cmd}[/]")
+            status, _ = self.go(cmd)
+            if self.step.verbose:
+                if not status:
+                    failure()
+                else:
+                    success()
         except FileNotFoundError:
             failure()
             message("Sorry, perhaps couldn't find a [italic]pandoc[/] executable on your path?", color="red")
             return False
+        finally:
+            return status

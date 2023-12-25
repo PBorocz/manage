@@ -17,6 +17,31 @@ TRecipes = TypeVar("Recipes")
 TConfiguration = TypeVar("Configuration")
 
 
+class Argument(BaseModel):
+    """Possible argument for a step method."""
+
+    name: str
+    type_: type
+    default: Any | None = None
+
+
+class Arguments(BaseModel):
+    """Collection of Arguments for a step method."""
+
+    arguments: list[Argument] = []
+
+    def __iter__(self):
+        for arg in self.arguments:
+            yield arg
+
+    def get_argument(self, argument_name: str) -> Argument | None:
+        """Lookup Argument by name."""
+        for arg in self.arguments:
+            if arg.name == argument_name:
+                return arg
+        return None
+
+
 class Step(BaseModel):
     """A step in a recipe."""
 
@@ -190,27 +215,6 @@ class Recipes(BaseModel):
             for recipe_name, raw_recipe in pyproject.recipes.items()
         )
         return cls.parse_obj(d_recipes)
-
-
-class Argument(BaseModel):
-    """Possible argument for a step method."""
-
-    name: str
-    type_: type
-    default: Any | None = None
-
-
-class Arguments(BaseModel):
-    """Collection of Arguments for a step method."""
-
-    arguments: list[Argument] = []
-
-    def get_argument(self, argument_name: str) -> Argument | None:
-        """Lookup Argument by name."""
-        for arg in self.arguments:
-            if arg.name == argument_name:
-                return arg
-        return None
 
 
 class PyProject(BaseModel):

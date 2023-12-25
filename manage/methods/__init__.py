@@ -1,12 +1,16 @@
 """Method root classes and methods."""
 import importlib
+import shlex
+import subprocess
 import sys
 from abc import abstractmethod
 from pathlib import Path
 from typing import Any, TypeVar
 
+from rich import print
+
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, message, run, success
+from manage.utilities import ask_confirm, failure, message, success
 
 
 TClass = TypeVar("Class")
@@ -55,18 +59,6 @@ class AbstractMethod:
         self.cmd: str = None  # Provided on concrete class instantiation
         self.confirm: str = None  # "
 
-    def run(self) -> bool:
-        """Run a single command after dry-run-check and possible confirmation."""
-        if self.configuration.dry_run:
-            self.dry_run(self.cmd)
-            return True
-
-        if not self.do_confirm():
-            return False
-
-        status, _ = run(self.step, self.cmd)  # Run it for real!
-        return status
-
     def do_confirm(self, confirm: str | None = None) -> bool:
         """Return True if we're good to keep going and run a command, False otherwise."""
         msg = confirm if confirm else self.confirm
@@ -88,9 +80,59 @@ class AbstractMethod:
         # Finally, does the *USER* want to do the step?
         return ask_confirm(msg)
 
+    def run(self) -> bool:
+        """Run a single command after dry-run-check and possible confirmation."""
+        if self.configuration.dry_run:
+            self.dry_run(self.cmd)
+            return True
+
+        if not self.do_confirm():
+            return False
+
+        status, _ = self.go(self.cmd)  # Run it for real!
+        return status
+
     ################################################################################
     # Utility methods
     ################################################################################
+    def go(self, command) -> tuple[bool, str]:
+        """Run the command for the specified Step, return status and stdout/stderr respectively.
+
+        This is here primarily for simple steps that have a single command to be executed for the entire step.
+        """
+        if self.step.verbose:
+            message(f"Running [italic]{command}[/]")
+
+        result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        if result.returncode != 0:
+            ################################################
+            # Failed:
+            ################################################
+            # Are we allowed to have error?
+            if self.step and not self.step.allow_error:
+                if not self.step.verbose:
+                    message(f"Running [italic]{command}[/]")
+                    failure()
+                stderr = result.stderr.decode()
+                self.__print_std(stderr, "red")
+                return False, stderr
+
+        ################################################
+        # Success:
+        ################################################
+        stdout = result.stdout.decode().strip()
+        if self.step.verbose:
+            success()
+            self.__print_std(stdout, "grey70")
+        return True, stdout
+
+    def __print_std(self, std: str, color: str) -> None:
+        if not std:
+            return
+        for line in std.strip().split("\n"):
+            print(f"[{color}]≫ {line}[/]")
+
     def dry_run(self, cmd: str) -> None:
         """Wrap-up format for dry-run command messages."""
         message(f"DRY-RUN -> '{cmd}'", end_success=True, color="green")

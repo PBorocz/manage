@@ -6,25 +6,24 @@ from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import message, failure, success
 
-# Metadata about arguments available...
-args = Arguments(
-    arguments=[
-        Argument(
-            name="readme",
-            type_=str,
-            default=None,
-        ),
-        Argument(
-            name="cwd",
-            type_=str,
-            default=Path.cwd(),
-        ),
-    ],
-)
-
 
 class Method(AbstractMethod):
     """Change the local README to update the version number (and date) for Unreleased changes."""
+
+    args = Arguments(
+        arguments=[
+            Argument(
+                name="readme",
+                type_=str,
+                default=None,
+            ),
+            Argument(
+                name="cwd",
+                type_=str,
+                default=Path.cwd(),
+            ),
+        ],
+    )
 
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Update README."""
@@ -52,33 +51,10 @@ class Method(AbstractMethod):
         ** vA.B.C - <older date>
         ...
         """
-        # What's the default path we'll be working on? (note: this is primarily for testing
-        # purposes), manage is intended to be run from the project's top level directory!)
-        cwd = Path(self.get_arg("cwd", optional=True, default=Path.cwd()))
-
         # Has the user provided an explicit path to the README file to work on?
-        if s_readme := self.get_arg("readme", optional=True):
-            # Yes, make sure we can find it..
-            path_readme = Path(s_readme)
-            if not path_readme.exists():
-                failure()
-                message(f"Sorry, couldn't find file with path '{path_readme}'!", color="red")
-                return False
-            readme_name = path_readme.name
-        else:
-            # Not specified, look for default README
-            for format_ in ("org", "md"):
-                readme_name = f"README.{format_}"
-                path_readme = cwd / readme_name
-                if path_readme.exists():
-                    break
-            else:
-                failure()
-                message(
-                    "Sorry, couldn't find either a README.org or " "README.md in the top-level directory!",
-                    color="red",
-                )
-                return False
+        status, path_readme, readme_name = self._get_readme_path()
+        if not status:
+            return False
 
         release_tag = f"{self.configuration.version} - {datetime.now().strftime('%Y-%m-%d')}"  # eg. vA.B.C - 2023-05-15
 
@@ -124,7 +100,45 @@ class Method(AbstractMethod):
             return False
 
         # RUN!!
-        message(f"Running update to {readme_name}: '{unreleased_header}'")
+        if self.step.verbose:
+            message(f"Running update on {readme_name} version to: '{unreleased_header}'")
+
         path_readme.write_text(readme_contents)
-        success()
+
+        if self.step.verbose:
+            success()
+
         return True
+
+    def _get_readme_path(self) -> tuple[bool, Path, str]:
+        """Get the default path we'll be working on?.
+
+        Note: this is primarily for testing purposes, as manage
+        is intended to be run from the project's top level directory!
+        """
+        cwd = Path(self.get_arg("cwd", optional=True, default=Path.cwd()))
+
+        if s_readme := self.get_arg("readme", optional=True):
+            # Yes, make sure we can find it..
+            path_readme = Path(s_readme)
+            if not path_readme.exists():
+                failure()
+                message(f"Sorry, couldn't find file with path '{path_readme}'!", color="red")
+                return False, None, None
+            readme_name = path_readme.name
+        else:
+            # Not specified, look for default README
+            for format_ in ("org", "md"):
+                readme_name = f"README.{format_}"
+                path_readme = cwd / readme_name
+                if path_readme.exists():
+                    break
+            else:
+                failure()
+                message(
+                    "Sorry, couldn't find either a README.org or " "README.md in the top-level directory!",
+                    color="red",
+                )
+                return False, None, None
+
+        return True, path_readme, readme_name

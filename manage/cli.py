@@ -2,12 +2,12 @@
 import argparse
 import sys
 import tomllib
-from pathlib import Path
 from typing import TypeVar
 
 from dotenv import load_dotenv
 from rich.console import Console
 
+from manage import DEFAULT_PROJECT_PATH
 from manage.dispatch import dispatch
 from manage.methods import gather_available_method_classes
 from manage.models import Configuration, PyProject, Recipes
@@ -18,8 +18,6 @@ load_dotenv(verbose=True)
 
 TClass = TypeVar("class")
 
-# FIXME: Assume's we're always running from top-level/project directory!
-DEFAULT_PROJECT_PATH = Path.cwd() / "pyproject.toml"
 CONSOLE = Console()
 
 

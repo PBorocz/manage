@@ -49,7 +49,7 @@ def recipes():
 def test_recipe_factory(recipes):
     # Setup
     raw_pyproject = PyProject.factory(tomllib.loads(Path("tests/test_models.toml").read_text()))
-    configuration = Configuration.factory(Namespace(), raw_pyproject, test=True)
+    configuration = Configuration.factory([Namespace(), {}], raw_pyproject, test=True)
 
     # Test
     recipes_from_file = Recipes.factory(configuration, raw_pyproject, {})

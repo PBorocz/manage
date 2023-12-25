@@ -31,7 +31,6 @@ description = "Build our distribution(s)."
 
 [[tool.manage.2_build.steps]]
   method = "run_pre_commit"
-  echo_stdout = true
 
 [[tool.manage.2_build.steps]]
   method = "clean"
@@ -39,7 +38,6 @@ description = "Build our distribution(s)."
 
 [[tool.manage.2_build.steps]]
   method = "build"
-  echo_stdout = true
 
 # ------------------------------------------------------------------------------
 [tool.manage.3_publish]

@@ -20,6 +20,10 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
     if not _validate_environment(configuration):
         all_ok = False
 
+    # Check: are any step command-line arguments correct?
+    if not _validate_step_args(configuration, method_classes):
+        all_ok = False
+
     # Check: are the methods/steps from our recipe file matched to actual method-classes?
     if not _validate_recipes(recipes, method_classes):
         all_ok = False
@@ -71,6 +75,37 @@ def _validate_environment(configuration: Configuration) -> bool:
     warning()
     for msg in messages:
         message(f"- {msg}", color="yellow", end_warning=True)
+    return False
+
+
+################################################################################
+# CLI step arguments
+################################################################################
+def _validate_step_args(configuration: Configuration, method_classes: dict[str, TClass]) -> bool:
+    """Validate all cli dynamic/step arguments against our Method Classes."""
+
+    def __get_all_args() -> list[str]:
+        return_ = []
+        for method, class_ in method_classes.items():
+            if not hasattr(class_, "args"):
+                continue
+            for arg in class_.args:
+                return_.append(arg.name)
+        return return_
+
+    args_possible = __get_all_args()
+
+    # Confirm all method args show up in *any* method_class.
+    invalid = []
+    for arg_name in configuration.method_args.keys():
+        if arg_name not in args_possible:
+            invalid.append(arg_name)
+    if not invalid:
+        return True
+
+    warning()
+    for arg in invalid:
+        message(f"- '[italic]--{arg}[/]' is not supported by any methods", color="yellow", end_warning=True)
     return False
 
 

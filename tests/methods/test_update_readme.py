@@ -73,7 +73,7 @@ def path_readme_org_no_header():
 
 @pytest.fixture
 def configuration():
-    yield Configuration.factory(None, None, version="v1.9.11", dry_run=False)
+    yield Configuration.factory([None, {}], None, version="v1.9.11", dry_run=False)
 
 
 def test_md(configuration, path_readme_md):

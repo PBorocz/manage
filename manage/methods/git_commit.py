@@ -8,20 +8,19 @@ from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import message
 
-# Metadata about arguments available...
-DEFAULT_ARGS = Arguments(
-    arguments=[
-        Argument(
-            name="message",
-            type_=str,
-            default=f"Commit as of {datetime.now().isoformat()}",
-        ),
-    ],
-)
-
 
 class Method(AbstractMethod):
     """git commit."""
+
+    args = Arguments(
+        arguments=[
+            Argument(
+                name="message",
+                type_=str,
+                default=f"Commit as of {datetime.now().isoformat()}",
+            ),
+        ],
+    )
 
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Define git commit."""
@@ -36,7 +35,7 @@ class Method(AbstractMethod):
 
         # Get argument...
         if not (commit_message := self.step.get_arg("message")):
-            commit_message = DEFAULT_ARGS.get_argument("message").default
+            commit_message = Method.args.get_argument("message").default
 
         # Get the git commit command we'd like to run:
         cmd = f'git commit -m "{commit_message}"'

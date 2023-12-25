@@ -3,10 +3,11 @@ import os
 from datetime import datetime
 
 import requests
+from rich import print
 
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import success
+from manage.utilities import failure, message, success
 
 
 class Method(AbstractMethod):
@@ -31,7 +32,7 @@ class Method(AbstractMethod):
             self.dry_run("HTTPS:POST to github: name/release: '[italic]{self.configuration.version}[/]'")
             return True
 
-        # Confirm
+        # Confirm?
         confirm = f"Ok to create github release with tag: '[italic]{self.configuration.version}[/]'?"
         if not self.do_confirm(confirm):
             return False
@@ -52,7 +53,19 @@ class Method(AbstractMethod):
             "tag_name": self.configuration.version,
             "target_commitish": "trunk",
         }
+
+        if self.step.verbose:
+            message(f"Running [italic]HTTPS:Post {url} release: {self.configuration.version}[/]")
+
         response = requests.post(url, headers=headers, auth=auth, json=json)
-        response.raise_for_status()
-        success()
-        return True
+        if response.status_code == 200:
+            if self.step.verbose:
+                success()
+            return True
+
+        if self.step.verbose:
+            failure()
+
+        print(f"[red]≫ {response.text}[/]")
+
+        return False

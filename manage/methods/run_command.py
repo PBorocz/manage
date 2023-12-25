@@ -1,23 +1,20 @@
 """Run a generic (local) command."""
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import run
-
-
-# Metadata about arguments available...
-args = Arguments(
-    arguments=[
-        Argument(
-            name="command",
-            type_=str,
-            default=None,
-        ),
-    ],
-)
 
 
 class Method(AbstractMethod):
     """Run a generic (local) command."""
+
+    args = Arguments(
+        arguments=[
+            Argument(
+                name="command",
+                type_=str,
+                default=None,
+            ),
+        ],
+    )
 
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Init."""
@@ -36,4 +33,4 @@ class Method(AbstractMethod):
         if self.do_confirm(f"Ok to run command: '[italic]{command}[/]'?"):
             return False
 
-        return run(self.step, command)[0]
+        return self.go(command)[0]

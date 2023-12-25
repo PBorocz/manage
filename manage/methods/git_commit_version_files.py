@@ -1,7 +1,7 @@
 """Commits updated files that contain version information locally."""
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import message, run
+from manage.utilities import message
 
 
 class Method(AbstractMethod):
@@ -32,6 +32,7 @@ class Method(AbstractMethod):
 
         # Do em!
         for cmd in cmds:
-            if not run(self.step, cmd)[0]:
+            status, _ = self.go(cmd)
+            if not status:
                 return False
         return True

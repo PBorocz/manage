@@ -8,20 +8,19 @@ from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes, Arguments, Argument
 from manage.utilities import message, smart_join
 
-# Metadata about arguments available...
-DEFAULT_ARGS = Arguments(
-    arguments=[
-        Argument(
-            name="pathspec",
-            type_=str,
-            default=".",
-        ),
-    ],
-)
-
 
 class Method(AbstractMethod):
     """git add."""
+
+    args = Arguments(
+        arguments=[
+            Argument(
+                name="pathspec",
+                type_=str,
+                default=".",
+            ),
+        ],
+    )
 
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Define git add."""
@@ -40,7 +39,7 @@ class Method(AbstractMethod):
             pathspec = s_pathspec.split(" ")
             confirm = f"Ok to 'git add {','.join(pathspec)}'?"
         else:
-            pathspec = [DEFAULT_ARGS.get_argument("pathspec").default]
+            pathspec = [Method.get_argument("pathspec").default]
             confirm = "Ok to 'git add *'?"
 
         if self.configuration.dry_run:

@@ -1,17 +1,13 @@
 """Utility methods, not meant for direct calling from manage.toml."""
 import re
-import shlex
-import subprocess
 import sys
-from typing import Final, TypeVar
+from typing import Final
 
 from rich import print
 from rich.console import Console
 
 
 TERMINAL_WIDTH: Final = 79
-
-TStep = TypeVar("Step")
 
 
 def smart_join(lst: list[str], with_or: bool = False, delim: str = ",") -> str:
@@ -36,8 +32,11 @@ def ask_confirm(text: str) -> bool:
             return True
 
 
+################################################################################
+# "messaging" support methods
+################################################################################
 def success(color: str = "green") -> None:
-    """Render/print a success symbol in the specified color."""
+    """Render/print a success symbol (almost always in green but overrideable)."""
     print(f"[{color}]✔")
 
 
@@ -49,14 +48,6 @@ def warning(color: str = "yellow") -> None:
 def failure(color: str = "red") -> None:
     """Render/print a failure symbol (almost always in red but overrideable)."""
     print(f"[{color}]✖")
-
-
-def replace_rich_markup(string: str) -> str:
-    """Return a string without Rich markup."""
-    return_ = string
-    for pattern in re.findall(r"\[.*?\]", string):
-        return_ = return_.replace(pattern, "")
-    return return_
 
 
 def message(
@@ -106,35 +97,12 @@ def v_message(
         )
 
 
-def run(step: TStep, command: str) -> tuple[bool, str]:  # FIXME: Should be "Step" but will create circular import!
-    """Run the command for the specified Step, capturing output and signal success/failure."""
-    if step.verbose:
-        message(f"Running [italic]{command}[/]")
-
-    result = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    if result.returncode != 0:
-        ################################################
-        # Failed:
-        ################################################
-        # Are we allowed to have error?
-        if step and not step.allow_error:
-            failure()
-            sys.stderr.write(result.stderr.decode())
-            return False, result.stderr.decode()
-
-    ################################################
-    # Success:
-    ################################################
-    if step.verbose:
-        success()
-        stdout = result.stdout.decode().strip()
-        if stdout:
-            print(f"[grey]{stdout}[/]")
-
-    # Most of the time, all we want is whether or not the command was successful but a few
-    # methods *need* the actual result of the command for their use, thus, return both!
-    return True, result.stdout.decode().strip()
+def replace_rich_markup(string: str) -> str:
+    """Return a string without Rich markup."""
+    return_ = string
+    for pattern in re.findall(r"\[.*?\]", string):
+        return_ = return_.replace(pattern, "")
+    return return_
 
 
 def shorten_path(path, max_length):

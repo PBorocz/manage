@@ -3,24 +3,23 @@ import sys
 
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import failure, message, run, smart_join
+from manage.utilities import failure, message, smart_join
 
 BUMP_RULES = ("patch", "minor", "major", "prepatch", "preminor", "premajor", "prerelease")
-
-# Metadata about arguments available...
-args = Arguments(
-    arguments=[
-        Argument(
-            name="bump_rule",
-            type_=str,
-            default="bump",
-        ),
-    ],
-)
 
 
 class Method(AbstractMethod):
     """Do a version "bump" of pyproject.toml using poetry by a specified "level"."""
+
+    args = Arguments(
+        arguments=[
+            Argument(
+                name="bump_rule",
+                type_=str,
+                default="bump",
+            ),
+        ],
+    )
 
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Init."""
@@ -54,7 +53,7 @@ class Method(AbstractMethod):
         # For confirmation purposes, use poetry to get what our next
         # version *should* be (NOTE: This is a DRY-RUN only!!!!)
         ################################################################################
-        success, new_version = run(self.step, f"{cmd} --dry-run --short")
+        success, new_version = self.go(f"{cmd} --dry-run --short")
         if not success:
             failure()
             msg = (
@@ -75,7 +74,7 @@ class Method(AbstractMethod):
         ################################################################################
         # Run it by doing the REAL poetry version!
         ################################################################################
-        status, output = run(self.step, cmd)
+        status, output = self.go(cmd)
         if status:
             # Side-effect! -> Make sure our configuration has the NEW version from now on!
             self.configuration.set_version(output.split()[-1])
