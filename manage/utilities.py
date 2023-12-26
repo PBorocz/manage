@@ -72,29 +72,24 @@ def message(
         failure(color=color)
 
 
-def v_message(
-    verbose: bool,
-    s_message: str,
-    overhead: int = 0,
-    color: str = "blue",
-    end_success: bool = False,
-    end_failure: bool = False,
-    end_warning: bool = False,
-) -> str:
-    """Create and print a message string AFTER checking for verbosity.
+def msg_warning(msg: str) -> None:
+    """Wrap message method obo a Warning."""
+    message(msg, color="yellow", end_warning=True)
 
-    Essentially, just a wrapper on message to keep the number of verbose conditional
-    checks sprinkled throughout to a minimum.
-    """
-    if verbose:
-        message(
-            s_message,
-            color=color,
-            overhead=overhead,
-            end_success=end_success,
-            end_failure=end_failure,
-            end_warning=end_warning,
-        )
+
+def msg_failure(msg: str) -> None:
+    """Wrap message method obo a Failure."""
+    message(msg, color="red", end_failure=True)
+
+
+def msg_success(msg: str) -> None:
+    """Wrap message method obo a simple success message."""
+    message(msg, color="green", end_success=True)
+
+
+def msg_status(msg: str) -> None:
+    """Wrap message method obo a simple status message."""
+    message(msg, color="light_slate_grey", end_success=True)
 
 
 def replace_rich_markup(string: str) -> str:

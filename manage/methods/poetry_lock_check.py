@@ -1,7 +1,7 @@
 """Verify that poetry.lock is consistent with pyproject.toml and update if not (good security practice)."""
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes
-from manage.utilities import message, warning
+from manage.utilities import msg_warning, warning
 
 
 class Method(AbstractMethod):
@@ -19,11 +19,7 @@ class Method(AbstractMethod):
         # Initial check is easy...if it returns fine, we're done...otherwise, update it!
         if not self.go(cmd_chck)[0]:
             warning()
-            message(
-                "poetry.lock is not consistent with pyproject.toml, attempting fix.",
-                color="yellow",
-                end_warning=True,
-            )
+            msg_warning("poetry.lock is not consistent with pyproject.toml, attempting fix.")
 
             if self.configuration.dry_run:
                 self.dry_run(cmd_lock)

@@ -6,7 +6,7 @@ from rich.markup import escape
 
 from manage.methods import AbstractMethod
 from manage.models import Configuration, Recipes, Arguments, Argument
-from manage.utilities import message, smart_join
+from manage.utilities import msg_failure, msg_success, smart_join
 
 
 class Method(AbstractMethod):
@@ -59,9 +59,9 @@ class Method(AbstractMethod):
             results = repo.index.add(pathspec)
             if self.step.verbose:
                 for base_index_entry in results:
-                    message(f"git add {base_index_entry.path}", color="green", end_success=True)
+                    msg_success(f"git add {base_index_entry.path}")
             return True
 
         except OSError:
-            message(f"Unable to `git add {pathspec=}`", color="red", end_failure=True)
+            msg_failure(f"Unable to `git add {pathspec=}`")
             return False

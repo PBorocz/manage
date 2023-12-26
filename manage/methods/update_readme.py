@@ -4,7 +4,7 @@ from pathlib import Path
 
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import message, failure, success
+from manage.utilities import msg_failure, msg_status, failure, success
 
 
 class Method(AbstractMethod):
@@ -74,7 +74,7 @@ class Method(AbstractMethod):
         # Confirm that we actually *found* the "Unreleased" header (irrespective of format):
         if not unreleased_header:
             failure()
-            message(f"Sorry, couldn't find a header-line with 'Unreleased' in {readme_name}!", color="red")
+            msg_failure(f"Sorry, couldn't find a header-line with 'Unreleased' in {readme_name}!")
             return False
 
         # We want to place the new version header at the same level as the current 'Unreleased',
@@ -101,7 +101,7 @@ class Method(AbstractMethod):
 
         # RUN!!
         if self.step.verbose:
-            message(f"Running update on {readme_name} version to: '{unreleased_header}'")
+            msg_status(f"Running update on {readme_name} version to: '{unreleased_header}'")
 
         path_readme.write_text(readme_contents)
 
@@ -121,7 +121,7 @@ class Method(AbstractMethod):
             path_readme = Path(s_readme)
             if not path_readme.exists():
                 failure()
-                message(f"Sorry, couldn't find file with path '{path_readme}'!", color="red")
+                msg_failure(f"Sorry, couldn't find file with path '{path_readme}'!")
                 return False, None, None
             readme_name = path_readme.name
         else:
@@ -134,10 +134,7 @@ class Method(AbstractMethod):
                     break
             else:
                 failure()
-                message(
-                    "Sorry, couldn't find either a README.org or " "README.md in the top-level directory!",
-                    color="red",
-                )
+                msg_failure("Sorry, couldn't find either a README.org or " "README.md in the top-level directory!")
                 return False, None, None
 
         return True, path_readme, readme_name

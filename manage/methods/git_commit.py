@@ -6,7 +6,7 @@ from git import Repo
 
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import message
+from manage.utilities import msg_failure, msg_success
 
 
 class Method(AbstractMethod):
@@ -56,8 +56,8 @@ class Method(AbstractMethod):
             if self.step.verbose:
                 commit = repo.head.commit
                 for file_, diff in commit.stats.files.items():
-                    message(f'git commit -m "{file_}"', color="green", end_success=True)
+                    msg_success(f'git commit -m "{file_}"')
             return True
         except OSError:
-            message(f"Unable to '[italic]{cmd}[/]'", color="red", end_failure=True)
+            msg_failure(f"Unable to '[italic]{cmd}[/]'")
             return False

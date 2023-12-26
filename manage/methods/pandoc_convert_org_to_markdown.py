@@ -3,7 +3,7 @@ from pathlib import Path
 
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import failure, message, success
+from manage.utilities import failure, msg_failure, msg_status, success
 
 
 class Method(AbstractMethod):
@@ -59,7 +59,7 @@ class Method(AbstractMethod):
 
         try:
             if self.step.verbose:
-                message(f"Running [italic]{cmd}[/]")
+                msg_status(f"Running [italic]{cmd}[/]")
             status, _ = self.go(cmd)
             if self.step.verbose:
                 if not status:
@@ -68,7 +68,7 @@ class Method(AbstractMethod):
                     success()
         except FileNotFoundError:
             failure()
-            message("Sorry, perhaps couldn't find a [italic]pandoc[/] executable on your path?", color="red")
+            msg_failure("Sorry, perhaps couldn't find a [italic]pandoc[/] executable on your path?")
             return False
         finally:
             return status

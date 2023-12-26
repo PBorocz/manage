@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TypeVar
 
 from manage.models import Configuration, Recipes
-from manage.utilities import failure, message, success, v_message, warning
+from manage.utilities import failure, message, msg_failure, msg_status, msg_warning, success, warning
 
 TClass = TypeVar("Class")
 
@@ -14,7 +14,8 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
     """Run the complete validation suite, returning False if anything's wrong."""
     all_ok = True
 
-    v_message(configuration.verbose, "Validating environment & recipes")
+    if configuration.verbose:
+        message("Validating environment & recipes")
 
     # Check: How is our environment?
     if not _validate_environment(configuration):
@@ -74,7 +75,7 @@ def _validate_environment(configuration: Configuration) -> bool:
 
     warning()
     for msg in messages:
-        message(f"- {msg}", color="yellow", end_warning=True)
+        msg_warning(f"- {msg}")
     return False
 
 
@@ -105,7 +106,7 @@ def _validate_step_args(configuration: Configuration, method_classes: dict[str, 
 
     warning()
     for arg in invalid:
-        message(f"- '[italic]--{arg}[/]' is not supported by any methods", color="yellow", end_warning=True)
+        msg_warning(f"- '[italic]--{arg}[/]' is not supported by any methods")
     return False
 
 
@@ -126,7 +127,7 @@ def _validate_method_classes(configuration: Configuration, recipes: Recipes, met
 
     warning()
     for msg in messages:
-        message(f"- {msg}", color="red", end_failure=True)
+        msg_failure(f"- {msg}")
     return False
 
 
@@ -138,7 +139,7 @@ def _validate_recipes(recipes: Recipes, method_classes: dict[str, TClass]) -> bo
     if invalid_method_steps := __validate_steps(recipes, method_classes):
         failure()
         for method_step in invalid_method_steps:
-            message(method_step, color="red", end_failure=True)
+            msg_failure(method_step)
         return False
     return True
 
@@ -165,11 +166,9 @@ def _validate_existing_version_numbers(configuration: Configuration) -> bool:
     last_release_version = __get_last_release_from_readme()
     if last_release_version != configuration.version_:
         warning()
-        message(
+        msg_warning(
             f"- Warning, pyproject.toml has version: [italic]{configuration.version_}[/] "
             f"while last release in README is [italic]{last_release_version}[/]",
-            color="yellow",
-            end_warning=True,
         )
         return False
     return True
@@ -184,16 +183,13 @@ def __get_last_release_from_readme() -> [str, str]:
         path_readme = Path.cwd() / "README.org"
         format_ = "org"
         if not path_readme.exists():
-            message(
+            msg_failure(
                 "Sorry, unable to open EITHER README.md or README.org from the current directory.",
-                color="red",
-                end_failure=True,
             )
             return path_readme, None
 
     if debug:
-        msg = f"\nReading from {path_readme}"
-        message(msg, color="light_slate_grey", end_success=True)
+        msg_status(f"\nReading from {path_readme}")
 
     method = __get_last_release_from_markdown if format_ == "markdown" else __get_last_release_from_org
     return method(path_readme)
@@ -208,15 +204,13 @@ def __get_last_release_from_org(path_readme: Path) -> str:
         if line.casefold().startswith(unreleased_header):
             take_next_release = True
             if debug:
-                msg = f"Found '{unreleased_header}' on line: {i_line+1}"
-                message(msg, color="light_slate_grey", end_success=True)
+                msg_status(f"Found '{unreleased_header}' on line: {i_line+1}")
             continue
         if take_next_release and line.casefold().startswith(header):  # eg "*** vX.Y.Z - <aDate>"
             tag = line.split()[1]
             version = tag[1:]
             if debug:
-                msg = f"Found next header matching '{line}' on line: {i_line+1}"
-                message(msg, color="light_slate_grey", end_success=True)
+                msg_status(f"Found next header matching '{line}' on line: {i_line+1}")
             return version
     return None
 
@@ -230,14 +224,12 @@ def __get_last_release_from_markdown(path_readme: Path) -> str:
         if line.casefold().startswith(unreleased_header):
             take_next_release = True
             if debug:
-                msg = f"Found '{unreleased_header}' on line: {i_line+1}"
-                message(msg, color="light_slate_grey", end_success=True)
+                msg_status(f"Found '{unreleased_header}' on line: {i_line+1}")
             continue
         if take_next_release and line.startswith(header):  # eg "### vX.Y.Z - <aDate>"
             tag = line.split()[1]
             version = tag[1:]
             if debug:
-                msg = f"Found next header matching '{line}' on line: {i_line+1}"
-                message(msg, color="light_slate_grey", end_success=True)
+                msg_status(f"Found next header matching '{line}' on line: {i_line+1}")
             return version
     return None

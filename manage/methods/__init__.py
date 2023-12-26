@@ -10,7 +10,7 @@ from typing import Any, TypeVar
 from rich import print
 
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, failure, message, success
+from manage.utilities import ask_confirm, failure, message, msg_failure, msg_status, msg_success, success
 
 
 TClass = TypeVar("Class")
@@ -33,15 +33,11 @@ def gather_available_method_classes(verbose: bool) -> dict[str, TClass]:
     # Get all the 'main" methods in each python file in the steps module:
     classes = {method_name: cls for method_name, cls in __gather_method_classes()}
     if not classes:
-        message(
-            "Unable to find [bold]any[/] valid method classes in manage/methods/*.py?",
-            end_failure=True,
-            color="red",
-        )
+        msg_failure("Unable to find [bold]any[/] valid method classes in manage/methods/*.py?")
         sys.exit(1)
 
     if verbose:
-        message(f"{len(classes)} run-time methods found and registered")
+        msg_status(f"{len(classes)} run-time methods found and registered")
         success()
 
     return classes
@@ -135,7 +131,7 @@ class AbstractMethod:
 
     def dry_run(self, cmd: str) -> None:
         """Wrap-up format for dry-run command messages."""
-        message(f"DRY-RUN -> '{cmd}'", end_success=True, color="green")
+        msg_success(f"DRY-RUN -> '{cmd}'")
 
     def get_arg(self, arg_name: str, optional: bool = False, default: Any | None = None) -> str | None:
         """Find the value of the specified argument in the step, else look for default."""
@@ -151,7 +147,7 @@ class AbstractMethod:
             return None
 
         # Otherwise, we expected to find an argument and no default was provided!!
-        message(f"Sorry, command requires a supplemental argument for '{arg_name}'", color="red", end_failure=True)
+        msg_failure(f"Sorry, command requires a supplemental argument for '{arg_name}'")
         return None
 
     def validate_pathspec(self) -> list | None:

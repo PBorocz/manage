@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
-from manage.utilities import message, smart_join, v_message
+from manage.utilities import msg_failure, msg_status, msg_warning, smart_join
 
 
 TClass = TypeVar("Class")
@@ -85,19 +85,21 @@ class Step(BaseModel):
         """Update the step based on any/all arguments received on the command-line."""
         # Two STATIC command-line args can trickle down to individual step execution: 'confirm' and 'verbose':
         if configuration.confirm is not None and self.confirm != configuration.confirm:
-            # msg = (
-            #     f"- (overriding [italic]confirm[/] in {self.name()} from "
-            #     f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
-            # )
-            # v_message(configuration.verbose, msg, color="light_slate_grey", end_success=True)
+            # if configuration.verbose:
+            #     msg = (
+            #         f"- (overriding [italic]confirm[/] in {self.name()} from "
+            #         f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
+            #     )
+            #     msg_status(msg)
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
-            # msg = (
-            #     f"- (overriding [italic]verbose[/] in {self.name()} from "
-            #     f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
-            # )
-            # v_message(configuration.verbose, msg, color="light_slate_grey", end_success=True)
+            # if configuration.verbose:
+            #     msg = (
+            #         f"- (overriding [italic]verbose[/] in {self.name()} from "
+            #         f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
+            #     )
+            #     msg_status(msg)
             self.verbose = configuration.verbose
 
         # However, we might have any number of DYNAMIC command-line args specific to this method:
@@ -108,7 +110,7 @@ class Step(BaseModel):
                         f"- (overriding [italic]{cli_arg}[/] in {self.name()} from "
                         f"[italic]{self.arguments[cli_arg]}[/] to [italic]{cli_value}[/])"
                     )
-                    message(msg, color="light_slate_grey", end_success=True)
+                    msg_status(msg)
                     self.arguments[cli_arg] = cli_value
 
         return self
@@ -273,10 +275,8 @@ class PyProject(BaseModel):
         ok = True
         for name in self.cli_defaults.keys():
             if name not in temp_instance.cli_defaults:
-                message(
+                msg_failure(
                     f"Unexpected setting found in 'tool.manage.defaults': " f"'{name}', allowed are: {s_defaults}",
-                    color="red",
-                    end_warning=True,
                 )
                 ok = False
         if not ok:
@@ -284,28 +284,16 @@ class PyProject(BaseModel):
 
         # Do we have any recipes?
         if not self.recipes:
-            message(
-                "No recipes found in 'tool.manage.recipes?",
-                color="red",
-                end_failure=True,
-            )
+            msg_failure("No recipes found in 'tool.manage.recipes?")
             return False
 
         # WARNING: Do we have the name of the current package we're processing (eg. for builds etc.)
         if self.package is None:
-            message(
-                "No 'packages' entry found in \\[tool.poetry] in pyproject.toml; FYI only.",
-                color="yellow",
-                end_warning=True,
-            )
+            msg_warning("No 'packages' entry found in \\[tool.poetry] in pyproject.toml; FYI only.")
 
         # WARNING: Does our current package have a current version number? (eg. for build/release mgmt.)
         if not self.version:
-            message(
-                "No version label found in \\[tool.poetry] in pyproject.toml; FYI only.",
-                color="yellow",
-                end_warning=True,
-            )
+            msg_warning("No version label found in \\[tool.poetry] in pyproject.toml; FYI only.")
 
         return True
 
@@ -393,10 +381,7 @@ class Configuration(BaseModel):
         # Verbose output to be nice??
         ############################################################
         for msg in configuration._messages_:
-            v_message(configuration.verbose, msg, color="light_slate_grey", end_success=True)
-
-        if test:
-            for msg in configuration._messages_:
-                message(msg)
+            if configuration.verbose or test:
+                msg_status(msg)
 
         return configuration
