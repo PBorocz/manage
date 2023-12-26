@@ -126,7 +126,7 @@ def _validate_method_classes(configuration: Configuration, recipes: Recipes, met
 
     warning()
     for msg in messages:
-        message(f"- {msg}", color="yellow", end_warning=True)
+        message(f"- {msg}", color="red", end_failure=True)
     return False
 
 

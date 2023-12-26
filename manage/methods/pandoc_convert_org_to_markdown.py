@@ -1,4 +1,6 @@
 """Convert an emacs org file into a markdown version using Pandoc."""
+from pathlib import Path
+
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
 from manage.utilities import failure, message, success
@@ -25,6 +27,13 @@ class Method(AbstractMethod):
     def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
         """Init."""
         super().__init__(configuration, recipes, step)
+
+    def validate(self) -> list | None:
+        """Perform any pre-step validation."""
+        if path_md := self.configuration.method_args.get("path_md"):
+            if not Path(path_md).exists():
+                return [f"Sorry, '[italic]{path_md}[/]' does not exist."]
+        return None
 
     def run(self) -> bool:
         """Run pandoc.."""

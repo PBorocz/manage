@@ -25,20 +25,19 @@ class Method(AbstractMethod):
         """Init."""
         super().__init__(configuration, recipes, step)
 
+    def validate(self) -> list | None:
+        """Perform any pre-step validation."""
+        if bump_rule := self.configuration.method_args.get("bump_rule"):
+            if bump_rule not in BUMP_RULES:
+                versions = smart_join(BUMP_RULES, with_or=True)
+                return [f"Sorry, '[italic]{bump_rule}[/]' is not a valid bump_rule, must be one of \\[{versions}]."]
+        return None
+
     def run(self) -> bool:
         """Do a version "bump" of pyproject.toml using poetry to a specified poetry "level"."""
         # Get argument
         if not (bump_rule := self.get_arg("bump_rule")):
             return False
-
-        if bump_rule not in BUMP_RULES:
-            versions = smart_join(BUMP_RULES, with_or=True)
-            message(
-                f"Sorry, {bump_rule} is not a valid bump_rule, must be one of \\[{versions}].",
-                color="red",
-                end_failure=True,
-            )
-            sys.exit(1)
 
         cmd = f"poetry version {bump_rule}"
 

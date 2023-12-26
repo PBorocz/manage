@@ -15,9 +15,9 @@ Here's an example of building and releasing a python package:
 
 ## Design
 
-- Every granular command that might need to be performed on behalf of project/package management is packaged as a `method` (eg. poetry build, git commit, sass etc.)
+- Every granular command that might need to be performed on behalf of project/package management is packaged as a `method` (e.g. poetry build, git commit, sass etc.)
 
-- These granular methods are combined into `recipes` to perform a particular task (eg. build my project, update my release notes etc.)
+- These granular methods are combined into `recipes` to perform a particular task (e.g. build my project, update my release notes etc.)
 
 - Recipes can be _nested_ (analogous to cooking recipes where one recipe may refer to another for a component).
 
@@ -254,7 +254,7 @@ allow_error = true
 |-----------------------------------------------------------------------|-----|------------|-------------
 | [`clean`](#clean)														| Yes | \-         |
 | [`git_add`](#git_add)													| Yes | Optional   | `pathspec`
-| [`git_commit`](#git_commit)											| Yes | Optional   | `pathspec, message`
+| [`git_commit`](#git_commit)											| Yes | Optional   | `message`
 | [`git_commit_version_files`](#git_commit_version_files)				| No  | \-         |
 | [`git_create_release`](#git_create_release)							| Yes | \-         |
 | [`git_create_tag`](#git_create_tag)									| Yes | \-         |
@@ -372,7 +372,7 @@ method = "git_create_release"
 
 ##### **git_create_tag**
 
-- Method to create a local git **tag** using the appropriate version string (from the potentially updated `pyproject.toml`), eg. `git tag -a <version> -m <version>`
+- Method to create a local git **tag** using the appropriate version string (from the potentially updated `pyproject.toml`), e.g. `git tag -a <version> -m <version>`
 - This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ``` toml
@@ -450,7 +450,7 @@ allow_errors = false
 
 ##### **publish_to_pypi**
 
-- Method to publish your package to PyPI, eg. `poetry publish`.
+- Method to publish your package to PyPI, e.g. `poetry publish`.
 - This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current `poetry.lock` file.
 
 ``` toml
@@ -480,7 +480,7 @@ arguments = {command: "./app/cli/update_settings.py"}
 
 ##### **run_precommit**
 
-- Method to run the `pre-commit` tool (if you use it), eg. `pre-commit run --all-files`
+- Method to run the `pre-commit` tool (if you use it), e.g. `pre-commit run --all-files`
 - This command takes no argument and **will** ask for confirmation unless `--no-confirm` is set on the command-line.
 
 ``` toml
@@ -493,7 +493,7 @@ allow_error = true
 
 ##### **sass**
 
-- Method to run a `sass` command to convert scss to css, eg. `sass <pathSpec>`
+- Method to run a `sass` command to convert scss to css, e.g. `sass <pathSpec>`
 
 ``` toml
 ...
@@ -552,11 +552,11 @@ arguments = {readme: "./subDir/README.txt"}
 % manage --print build
 ```
 
-- CHANGED: Removed unused `echo-stdout` step attribute (mostly in documentation, wasn't actually implemented as we use `verbose` 
+- CHANGED: Removed unused `echo-stdout` step attribute (mostly in documentation), wasn't actually implemented as we use `verbose` instead.
 
-- CHANGED: Removed unused `no-confirm` documentation (wasn't actually implemented either)implemented as we use `verbose` 
+- CHANGED: Removed unused `no-confirm` documentation (wasn't actually implemented either).
 
-- CHANGED: Added support for command-line options on behalf of methods that require arguments. For instance, the specific `poetry_version` to go "up to" was an argument setting on the respective step definition in `pyproject.toml` (eg. patch or minor). While a default value of "patch" is sufficient for most releases, if a "minor" release was required, the `pyproject.toml` argument would need to be manually changed. Now, the following will work:
+- CHANGED: Added support for command-line options on behalf of methods that require arguments. For instance, the specific `poetry_version` to go "up to" (aka "bump level" in poetry parlance) was an argument setting on the respective step definition in `pyproject.toml` (e.g. patch or minor). While a default value of "patch" is sufficient for most releases, if a "minor" release was required, the `pyproject.toml` argument would need to be manually changed. Now, the following will work:
 
 ``` shell
 % manage build --bump_rule minor

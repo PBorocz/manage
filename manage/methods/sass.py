@@ -20,6 +20,10 @@ class Method(AbstractMethod):
         """Init."""
         super().__init__(configuration, recipes, step)
 
+    def validate(self) -> list | None:
+        """Perform any pre-step validation."""
+        return self.validate_pathspec()
+
     def run(self) -> bool:
         """Do it."""
         # Lookup argument and get resultant command:

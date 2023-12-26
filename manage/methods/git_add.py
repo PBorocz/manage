@@ -26,6 +26,10 @@ class Method(AbstractMethod):
         """Define git add."""
         super().__init__(configuration, recipes, step)
 
+    def validate(self) -> list | None:
+        """Perform any pre-step validation."""
+        return self.validate_pathspec()
+
     def run(self, repo: Repo | None = None) -> bool:
         """Do a 'git add' command, either with a specific wildcard or all (if no argument specified).
 

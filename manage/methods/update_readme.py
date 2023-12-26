@@ -116,8 +116,6 @@ class Method(AbstractMethod):
         Note: this is primarily for testing purposes, as manage
         is intended to be run from the project's top level directory!
         """
-        cwd = Path(self.get_arg("cwd", optional=True, default=Path.cwd()))
-
         if s_readme := self.get_arg("readme", optional=True):
             # Yes, make sure we can find it..
             path_readme = Path(s_readme)
@@ -128,6 +126,7 @@ class Method(AbstractMethod):
             readme_name = path_readme.name
         else:
             # Not specified, look for default README
+            cwd = Path(self.get_arg("cwd", optional=True, default=Path.cwd()))
             for format_ in ("org", "md"):
                 readme_name = f"README.{format_}"
                 path_readme = cwd / readme_name
