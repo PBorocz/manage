@@ -4,7 +4,7 @@ from pathlib import Path
 
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import msg_failure, msg_status, failure, success
+from manage.utilities import msg_failure, message, failure, success
 
 
 class Method(AbstractMethod):
@@ -101,7 +101,7 @@ class Method(AbstractMethod):
 
         # RUN!!
         if self.step.verbose:
-            msg_status(f"Running update on {readme_name} version to: '{unreleased_header}'")
+            message(f"Running update on {readme_name} version to: '{unreleased_header}'")
 
         path_readme.write_text(readme_contents)
 

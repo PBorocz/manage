@@ -87,8 +87,8 @@ def msg_success(msg: str) -> None:
     message(msg, color="green", end_success=True)
 
 
-def msg_status(msg: str) -> None:
-    """Wrap message method obo a simple status message."""
+def msg_debug(msg: str) -> None:
+    """Wrap message method obo a simple debug message."""
     message(msg, color="light_slate_grey", end_success=True)
 
 

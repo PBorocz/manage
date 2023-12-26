@@ -22,7 +22,7 @@ class Method(AbstractMethod):
 
     def validate(self) -> list | None:
         """Perform any pre-step validation."""
-        return self.validate_pathspec()
+        return self.validate_pathspec("sass")
 
     def run(self) -> bool:
         """Do it."""

@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, TypeVar
 
 from pydantic import BaseModel, validator
 
-from manage.utilities import msg_failure, msg_status, msg_warning, smart_join
+from manage.utilities import msg_failure, msg_debug, msg_warning, smart_join
 
 
 TClass = TypeVar("Class")
@@ -90,7 +90,7 @@ class Step(BaseModel):
             #         f"- (overriding [italic]confirm[/] in {self.name()} from "
             #         f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
             #     )
-            #     msg_status(msg)
+            #     msg_debug(msg)
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
@@ -99,18 +99,19 @@ class Step(BaseModel):
             #         f"- (overriding [italic]verbose[/] in {self.name()} from "
             #         f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
             #     )
-            #     msg_status(msg)
+            #     msg_debug(msg)
             self.verbose = configuration.verbose
 
         # However, we might have any number of DYNAMIC command-line args specific to this method:
         if self.method:  # Only true if this step is a method!
             for cli_arg, cli_value in configuration.method_args.items():
                 if cli_arg in self.arguments:
-                    msg = (
-                        f"- (overriding [italic]{cli_arg}[/] in {self.name()} from "
-                        f"[italic]{self.arguments[cli_arg]}[/] to [italic]{cli_value}[/])"
-                    )
-                    msg_status(msg)
+                    # if configuration.verbose:
+                    #     msg = (
+                    #         f"- (overriding [italic]{cli_arg}[/] in {self.name()} from "
+                    #         f"[italic]{self.arguments[cli_arg]}[/] to [italic]{cli_value}[/])"
+                    #     )
+                    #     msg_debug(msg)
                     self.arguments[cli_arg] = cli_value
 
         return self
@@ -382,6 +383,6 @@ class Configuration(BaseModel):
         ############################################################
         for msg in configuration._messages_:
             if configuration.verbose or test:
-                msg_status(msg)
+                msg_debug(msg)
 
         return configuration

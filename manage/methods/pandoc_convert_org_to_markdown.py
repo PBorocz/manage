@@ -3,7 +3,7 @@ from pathlib import Path
 
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
-from manage.utilities import failure, msg_failure, msg_status, success
+from manage.utilities import failure, msg_failure, message, success
 
 
 class Method(AbstractMethod):
@@ -32,7 +32,7 @@ class Method(AbstractMethod):
         """Perform any pre-step validation."""
         if path_md := self.configuration.method_args.get("path_md"):
             if not Path(path_md).exists():
-                return [f"Sorry, '[italic]{path_md}[/]' does not exist."]
+                return [f"(pandoc_convert_org_to_markdown) '[italic]{path_md}[/]' does not exist."]
         return None
 
     def run(self) -> bool:
@@ -59,7 +59,7 @@ class Method(AbstractMethod):
 
         try:
             if self.step.verbose:
-                msg_status(f"Running [italic]{cmd}[/]")
+                message(f"Running [italic]{cmd}[/]")
             status, _ = self.go(cmd)
             if self.step.verbose:
                 if not status:

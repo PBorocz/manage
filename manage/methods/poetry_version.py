@@ -30,7 +30,7 @@ class Method(AbstractMethod):
         if bump_rule := self.configuration.method_args.get("bump_rule"):
             if bump_rule not in BUMP_RULES:
                 versions = smart_join(BUMP_RULES, with_or=True)
-                return [f"Sorry, '[italic]{bump_rule}[/]' is not a valid bump_rule, must be one of \\[{versions}]."]
+                return [f"(poetry_version) '[italic]{bump_rule}[/]' is not a valid bump_rule: \\[{versions}]."]
         return None
 
     def run(self) -> bool:
@@ -56,7 +56,7 @@ class Method(AbstractMethod):
         if not success:
             failure()
             msg = (
-                "[red]Sorry, poetry couldn't determine a new "
+                "Sorry, poetry couldn't determine a new "
                 f"version number from pyproject.toml: [italic]{new_version}[/]"
             )
             message(msg)

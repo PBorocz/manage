@@ -10,7 +10,7 @@ from typing import Any, TypeVar
 from rich import print
 
 from manage.models import Configuration, Recipes
-from manage.utilities import ask_confirm, failure, message, msg_failure, msg_status, msg_success, success
+from manage.utilities import ask_confirm, failure, message, msg_failure, msg_debug, msg_success, success
 
 
 TClass = TypeVar("Class")
@@ -37,8 +37,7 @@ def gather_available_method_classes(verbose: bool) -> dict[str, TClass]:
         sys.exit(1)
 
     if verbose:
-        msg_status(f"{len(classes)} run-time methods found and registered")
-        success()
+        msg_debug(f"{len(classes)} run-time methods found and registered")
 
     return classes
 
@@ -150,7 +149,7 @@ class AbstractMethod:
         msg_failure(f"Sorry, command requires a supplemental argument for '{arg_name}'")
         return None
 
-    def validate_pathspec(self) -> list | None:
+    def validate_pathspec(self, method: str) -> list | None:
         """Perform a validation of a 'pathspec' parameter.
 
         We define this here as there are several method-classes that use
@@ -158,5 +157,5 @@ class AbstractMethod:
         """
         if pathspec := self.configuration.method_args.get("pathspec"):
             if not Path(pathspec).exists():
-                return [f"Sorry, '[italic]{pathspec}[/]' does not exist."]
+                return [f"({method}) '[italic]{pathspec}[/]' does not exist."]
         return None

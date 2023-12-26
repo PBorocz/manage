@@ -5,48 +5,67 @@ from pathlib import Path
 from typing import TypeVar
 
 from manage.models import Configuration, Recipes
-from manage.utilities import failure, message, msg_failure, msg_status, msg_warning, success, warning
+from manage.utilities import failure, message, msg_failure, msg_debug, msg_warning, success, warning
 
 TClass = TypeVar("Class")
+TWarnsFails = tuple[list[str], list[str]]
 
 
 def validate(configuration: Configuration, recipes: Recipes, method_classes: dict[str, TClass]) -> bool:
     """Run the complete validation suite, returning False if anything's wrong."""
-    all_ok = True
-
     if configuration.verbose:
         message("Validating environment & recipes")
 
+    warnings, failures = [], []
+
     # Check: How is our environment?
-    if not _validate_environment(configuration):
-        all_ok = False
+    warns, fails = _validate_environment(configuration)
+    warnings.extend(warns)
+    failures.extend(fails)
 
     # Check: are any step command-line arguments correct?
-    if not _validate_step_args(configuration, method_classes):
-        all_ok = False
+    warns, fails = _validate_step_args(configuration, method_classes)
+    warnings.extend(warns)
+    failures.extend(fails)
 
     # Check: are the methods/steps from our recipe file matched to actual method-classes?
-    if not _validate_recipes(recipes, method_classes):
-        all_ok = False
+    warns, fails = _validate_recipes(recipes, method_classes)
+    warnings.extend(warns)
+    failures.extend(fails)
 
     # Check: Do any of method_classes have validation logic to run?
-    if not _validate_method_classes(configuration, recipes, method_classes):
-        all_ok = False
+    warns, fails = _validate_method_classes(configuration, recipes, method_classes)
+    warnings.extend(warns)
+    failures.extend(fails)
 
     # Check: are version numbers consistent between pyproject.toml and README's change history?
-    if not _validate_existing_version_numbers(configuration):
-        all_ok = False
+    warns, fails = _validate_existing_version_numbers(configuration)
+    warnings.extend(warns)
+    failures.extend(fails)
 
-    if configuration.verbose and all_ok:
-        success()
+    if configuration.verbose:
+        if failures:
+            failure()
+        elif warnings:
+            warning()
+        else:
+            success()
 
-    return all_ok
+    for msg in warnings:
+        msg_warning(f"- {msg}")
+
+    for msg in failures:
+        msg_failure(f"- {msg}")
+
+    if failures:
+        return False
+    return True
 
 
 ################################################################################
 # Environment validation
 ################################################################################
-def _validate_environment(configuration: Configuration) -> bool:
+def _validate_environment(configuration: Configuration) -> TWarnsFails:
     """Validate that our run-time environment is copacetic."""
     messages = []
 
@@ -70,19 +89,13 @@ def _validate_environment(configuration: Configuration) -> bool:
         if not shutil.which(executable):
             messages.append("Can't find [italic]{executable}[/] on your path.")
 
-    if not messages:
-        return True
-
-    warning()
-    for msg in messages:
-        msg_warning(f"- {msg}")
-    return False
+    return messages, []
 
 
 ################################################################################
 # CLI step arguments
 ################################################################################
-def _validate_step_args(configuration: Configuration, method_classes: dict[str, TClass]) -> bool:
+def _validate_step_args(configuration: Configuration, method_classes: dict[str, TClass]) -> TWarnsFails:
     """Validate all cli dynamic/step arguments against our Method Classes."""
 
     def __get_all_args() -> list[str]:
@@ -97,81 +110,63 @@ def _validate_step_args(configuration: Configuration, method_classes: dict[str, 
     args_possible = __get_all_args()
 
     # Confirm all method args show up in *any* method_class.
-    invalid = []
+    fails = []
     for arg_name in configuration.method_args.keys():
         if arg_name not in args_possible:
-            invalid.append(arg_name)
-    if not invalid:
-        return True
+            fails.append(arg_name)
 
-    warning()
-    for arg in invalid:
-        msg_warning(f"- '[italic]--{arg}[/]' is not supported by any methods")
-    return False
+    fails = [f"'[italic]--{arg}[/]' is not supported by any methods" for arg in fails]
+    return [], fails
 
 
 ################################################################################
 # Method classes
 ################################################################################
-def _validate_method_classes(configuration: Configuration, recipes: Recipes, method_classes: dict[str, TClass]) -> bool:
+def _validate_method_classes(
+    configuration: Configuration,
+    recipes: Recipes,
+    method_classes: dict[str, TClass],
+) -> TWarnsFails:
     """Find and run all 'validate' methods defined on our Method Classes."""
-    messages = []
+    fails = []
     for method, class_ in method_classes.items():
         instance = class_(configuration, recipes, {})  # Don't need "step" arg here..
         if validate_method := getattr(instance, "validate", None):
             if results := validate_method():
-                messages.extend(results)
-
-    if not messages:
-        return True
-
-    warning()
-    for msg in messages:
-        msg_failure(f"- {msg}")
-    return False
+                fails.extend(results)
+    return [], fails
 
 
 ################################################################################
 # Recipes themselves..
 ################################################################################
-def _validate_recipes(recipes: Recipes, method_classes: dict[str, TClass]) -> bool:
+def _validate_recipes(recipes: Recipes, method_classes_defined: dict[str, TClass]) -> TWarnsFails:
     """Make sure all the the methods and steps from our recipes are defined and available."""
-    if invalid_method_steps := __validate_steps(recipes, method_classes):
-        failure()
-        for method_step in invalid_method_steps:
-            msg_failure(method_step)
-        return False
-    return True
-
-
-def __validate_steps(recipes: Recipes, method_classes_defined: dict[TClass]) -> list:
-    """Each step in each recipe needs to be either a "built-in" method/class or refer to another valid step."""
-    return_ = list()
+    fails = list()
     for id_, recipe in recipes:
         for step in recipe:
             if step.method:
                 if step.method not in method_classes_defined:
-                    return_.append(f"- Method: '{step.method}' in recipe={id_} is NOT a valid step method!")
+                    fails.append(f"Method: '{step.method}' in recipe={id_} is NOT a valid step method!")
             else:
                 if recipes.get(step.recipe) is None:
-                    return_.append(f"- Step: '{step.recipe}' in recipe={id_} can't be found in this file!")
-    return return_
+                    fails.append(f"Step: '{step.recipe}' in recipe={id_} can't be found in this file!")
+    return [], fails
 
 
 ################################################################################
 # Version number validation...
 ################################################################################
-def _validate_existing_version_numbers(configuration: Configuration) -> bool:
+def _validate_existing_version_numbers(configuration: Configuration) -> TWarnsFails:
     """Check that the last released version in README is consistent with canonical version in pyproject.toml."""
     last_release_version = __get_last_release_from_readme()
     if last_release_version != configuration.version_:
-        warning()
-        msg_warning(
-            f"- Warning, pyproject.toml has version: [italic]{configuration.version_}[/] "
-            f"while last release in README is [italic]{last_release_version}[/]",
+        msg = (
+            f"Warning, pyproject.toml has version: [italic]{configuration.version_}[/] "
+            f"while last release in README is [italic]{last_release_version}[/]"
         )
-        return False
-    return True
+        return [msg], []
+    return [], []
 
 
 def __get_last_release_from_readme() -> [str, str]:
@@ -189,7 +184,7 @@ def __get_last_release_from_readme() -> [str, str]:
             return path_readme, None
 
     if debug:
-        msg_status(f"\nReading from {path_readme}")
+        msg_debug(f"\nReading from {path_readme}")
 
     method = __get_last_release_from_markdown if format_ == "markdown" else __get_last_release_from_org
     return method(path_readme)
@@ -204,13 +199,13 @@ def __get_last_release_from_org(path_readme: Path) -> str:
         if line.casefold().startswith(unreleased_header):
             take_next_release = True
             if debug:
-                msg_status(f"Found '{unreleased_header}' on line: {i_line+1}")
+                msg_debug(f"Found '{unreleased_header}' on line: {i_line+1}")
             continue
         if take_next_release and line.casefold().startswith(header):  # eg "*** vX.Y.Z - <aDate>"
             tag = line.split()[1]
             version = tag[1:]
             if debug:
-                msg_status(f"Found next header matching '{line}' on line: {i_line+1}")
+                msg_debug(f"Found next header matching '{line}' on line: {i_line+1}")
             return version
     return None
 
@@ -224,12 +219,12 @@ def __get_last_release_from_markdown(path_readme: Path) -> str:
         if line.casefold().startswith(unreleased_header):
             take_next_release = True
             if debug:
-                msg_status(f"Found '{unreleased_header}' on line: {i_line+1}")
+                msg_debug(f"Found '{unreleased_header}' on line: {i_line+1}")
             continue
         if take_next_release and line.startswith(header):  # eg "### vX.Y.Z - <aDate>"
             tag = line.split()[1]
             version = tag[1:]
             if debug:
-                msg_status(f"Found next header matching '{line}' on line: {i_line+1}")
+                msg_debug(f"Found next header matching '{line}' on line: {i_line+1}")
             return version
     return None

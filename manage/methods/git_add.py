@@ -28,7 +28,7 @@ class Method(AbstractMethod):
 
     def validate(self) -> list | None:
         """Perform any pre-step validation."""
-        return self.validate_pathspec()
+        return self.validate_pathspec("git_add")
 
     def run(self, repo: Repo | None = None) -> bool:
         """Do a 'git add' command, either with a specific wildcard or all (if no argument specified).
