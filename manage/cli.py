@@ -182,7 +182,7 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
         ),
     )
 
-    panel: Panel = Panel(table, title=green("COMMAND-LINE OPTIONS"), title_align="left")
+    panel: Panel = Panel(table, title=green("BUILT-IN COMMAND OPTIONS"), title_align="left")
     console.print(panel)
 
     ################################################################################
@@ -196,6 +196,21 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
             green(cls_.__doc__),
         )
     panel: Panel = Panel(table, title=green("CONFIGURATION METHODS AVAILABLE"), title_align="left")
+    console.print(panel)
+
+    ################################################################################
+    # Method-based command-line arguments available
+    ################################################################################
+    table: Table = Table.grid(expand=True)
+
+    for name, cls_ in method_classes.items():
+        for arg in getattr(cls_, "args", []):
+            line = f"Method: {name}"
+            if arg.default:
+                line += f"; default is [italic][bold]{arg.default}[/]"
+            table.add_row(blue(f"--{arg.name}"), green(line))
+
+    panel: Panel = Panel(table, title=green("METHOD-BASED COMMAND OPTIONS"), title_align="left")
     console.print(panel)
 
 

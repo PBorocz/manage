@@ -67,7 +67,7 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
 ################################################################################
 def _validate_environment(configuration: Configuration) -> TWarnsFails:
     """Validate that our run-time environment is copacetic."""
-    messages = []
+    warns = []
 
     ################################################################################
     # Check Github configuration environment variables..
@@ -79,7 +79,7 @@ def _validate_environment(configuration: Configuration) -> TWarnsFails:
         "GITHUB_PROJECT_RELEASE_HISTORY",
     ]:
         if env_var not in os.environ:
-            messages.append(f"Can't find environment variable '[italic]{env_var}[/]'")
+            warns.append(f"Can't find environment variable '[italic]{env_var}[/]'")
 
     ################################################################################
     # Check for various executable:
@@ -87,9 +87,9 @@ def _validate_environment(configuration: Configuration) -> TWarnsFails:
     # Check we have a poetry on our path to run against..
     for executable in ["poetry", "git", "pandoc", "sass"]:
         if not shutil.which(executable):
-            messages.append("Can't find [italic]{executable}[/] on your path.")
+            warns.append("[italic]{executable}[/] on your path, some methods won't work.")
 
-    return messages, []
+    return warns, []
 
 
 ################################################################################
