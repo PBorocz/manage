@@ -538,9 +538,11 @@ arguments = {readme: "./subDir/README.txt"}
 ## Release History
 ### Unreleased
 
-- CHANGED: **BREAKING!** -> Move from standalone `manage.yaml` to reading targets & recipes directly into project's respective `pyproject.toml`.
+- CHANGED: **BREAKING!** -> Move from standalone `manage.yaml` to reading targets & recipes directly into project's respective `pyproject.toml`. Conversion can be as easy as using ChatGPT (or ilk) to convert from yaml to toml and inserting the `tool.manage` prefix.
 
 - CHANGED: **BREAKING!** -> Renamed `poetry_bump_version` method to `poetry_version` to more closely align with Poetry's command structure. Similarly, the method's argument `poetry_version` is now `bump_rule`.
+
+- CHANGED: Added support for command-line options on behalf of methods that require arguments. For instance, the specific `poetry_version` to go "up to" (aka "bump level" in poetry parlance) was an argument setting on the respective step definition in `pyproject.toml` (e.g. patch or minor). While a default value of "patch" is sufficient for most releases, if a "minor" release was required, the `pyproject.toml` argument would need to be manually changed. Now, the following will work:
 
 - CHANGED: The `print` target is now simply a command-line flag, that runs and then exits; for example:
 
@@ -555,8 +557,6 @@ arguments = {readme: "./subDir/README.txt"}
 - CHANGED: Removed unused `echo-stdout` step attribute (mostly in documentation), wasn't actually implemented as we use `verbose` instead.
 
 - CHANGED: Removed unused `no-confirm` documentation (wasn't actually implemented either).
-
-- CHANGED: Added support for command-line options on behalf of methods that require arguments. For instance, the specific `poetry_version` to go "up to" (aka "bump level" in poetry parlance) was an argument setting on the respective step definition in `pyproject.toml` (e.g. patch or minor). While a default value of "patch" is sufficient for most releases, if a "minor" release was required, the `pyproject.toml` argument would need to be manually changed. Now, the following will work:
 
 ``` shell
 % manage build --bump_rule minor
