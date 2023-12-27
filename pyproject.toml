@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manage"
-version = "0.1.11"
+version = "0.2.0"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
@@ -43,62 +43,55 @@ verbose = false
 description = "Bump the version number to the next /patch/ level and commit locally"
 
 [[tool.manage.recipes."1_bump".steps]]
-method = "poetry_version"
-arguments = { bump_rule = "patch" }
+  method = "poetry_version"
+  arguments = { bump_rule = "patch" }
 
 [[tool.manage.recipes."1_bump".steps]]
-method = "update_readme"
+  method = "update_readme"
 
 [[tool.manage.recipes."1_bump".steps]]
-method = "git_add"
-arguments = { pathspec = "README.md pyproject.toml" }
+  method = "git_add"
+  arguments = { pathspec = "README.md pyproject.toml" }
 
 [[tool.manage.recipes."1_bump".steps]]
-method = "git_commit"
+  method = "git_commit"
 
-# ------------------------------------------------------------------------------
-[tool.manage.recipes."2_release"]
-description = "Build & release current version's distribution to our github repository"
-
-[[tool.manage.recipes."2_release".steps]]
-recipe = "build"
-
-[[tool.manage.recipes."2_release".steps]]
-method = "git_push_to_github"
-confirm = false
-
-# ------------------------------------------------------------------------------
-[tool.manage.recipes.ALL]
-description = "Bump to next version, build & release!"
-
-[[tool.manage.recipes.ALL.steps]]
-recipe = "1_bump"
-
-[[tool.manage.recipes.ALL.steps]]
-recipe = "2_release"
-
-# ------------------------------------------------------------------------------
-# Utility recipes (multi-user)
-# ------------------------------------------------------------------------------
-[tool.manage.recipes.build]
+  # ------------------------------------------------------------------------------
+[tool.manage.recipes."2_build"]
 description = "Build our distribution(s)"
 
-[[tool.manage.recipes.build.steps]]
-method = "poetry_lock_check"
-confirm = false
+[[tool.manage.recipes."2_build".steps]]
+  method = "poetry_lock_check"
+  confirm = false
 
-[[tool.manage.recipes.build.steps]]
-recipe = "clean"
-confirm = false
+[[tool.manage.recipes."2_build".steps]]
+  method = "clean"
+  confirm = false
 
-[[tool.manage.recipes.build.steps]]
-method = "poetry_build"
-confirm = false
+[[tool.manage.recipes."2_build".steps]]
+  method = "poetry_build"
+  confirm = false
 
-# ------------------------------------------------------------------------------
-[tool.manage.recipes.clean]
-description = "Clean out our temp files and ALL previous builds"
+  # ------------------------------------------------------------------------------
+[tool.manage.recipes."3_release"]
+description = "Build & release current version's distribution to our github repository"
 
-[[tool.manage.recipes.clean.steps]]
-method = "clean"
-confirm = false
+[[tool.manage.recipes."3_release".steps]]
+  method = "poetry_build"
+
+[[tool.manage.recipes."3_release".steps]]
+  method = "git_push_to_github"
+  confirm = false
+
+  # ------------------------------------------------------------------------------
+[tool.manage.recipes.ALL]
+description = "Bump to next version, Build *and* Release!"
+
+[[tool.manage.recipes.ALL.steps]]
+  recipe = "1_bump"
+
+[[tool.manage.recipes.ALL.steps]]
+  recipe = "2_build"
+
+[[tool.manage.recipes.ALL.steps]]
+  recipe = "3_release"

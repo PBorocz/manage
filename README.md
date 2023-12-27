@@ -537,6 +537,7 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+### v0.2.0 - 2023-12-26
 
 - CHANGED: **BREAKING!** -> Move from standalone `manage.yaml` to reading targets & recipes directly into project's respective `pyproject.toml`. Conversion can be as easy as using ChatGPT (or ilk) to convert from yaml to toml and inserting the `tool.manage` prefix.
 
@@ -763,6 +764,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.2.0 - 2023-12-26
     - FIX: Made the gizmo fit into the whatchamacallit.
     - ADD: Capability to make time go backwards (requires confirmation beforehand)
     - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
@@ -783,6 +785,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.2.0 - 2023-12-26
 
 ### v1.5.11 - 2023-07-12
     - FIX: Made the gizmo fit into the whatchamacallit.
