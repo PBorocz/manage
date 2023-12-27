@@ -1,6 +1,7 @@
 """Create github release."""
 import os
 from datetime import datetime
+from pprint import pformat
 
 import requests
 from rich import print
@@ -55,10 +56,11 @@ class Method(AbstractMethod):
         }
 
         if self.step.verbose:
-            message(f"Running [italic]HTTPS:Post {url} release: {self.configuration.version}[/]")
+            message(f"Running [italic]{url}[/] Release: [italic]{self.configuration.version}[/]")
 
         response = requests.post(url, headers=headers, auth=auth, json=json)
-        if response.status_code == 200:
+
+        if response.status_code in (200, 201):
             if self.step.verbose:
                 success()
             return True
@@ -66,6 +68,6 @@ class Method(AbstractMethod):
         if self.step.verbose:
             failure()
 
-        print(f"[red]≫ {response.text}[/]")
+        print(f"[red]≫ {pformat(response.json())}[/]")
 
         return False
