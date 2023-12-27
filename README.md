@@ -134,15 +134,13 @@ This tool is based on _my_ common python project standards, allowing for the abi
 | `GITHUB_USER`                      | User id                | `John-Jacob_JingleheimerSchmidt`
 | `GITHUB_API_TOKEN`                 | Personal API token     | `ghp_1234567890ABCDEFG1234567890`
 | `GITHUB_API_RELEASES`              | URL to release API     | `https://api.github.com/repos/><user>/<project>/releases`
-| `GITHUB_PROJECT_RELEASE_HISTORY`   | URL to release history | `https://github.com/<user>/<project>/blob/trunk/README.org#release-history`
+| `GITHUB_PROJECT_RELEASE_HISTORY`   | URL to release history | `https://github.com/<user>/<project>/blob/<mainline>/README.org#release-history`
 
-Note: technically, we might be able to infer `GITHUB_PROJECT_RELEASE_HISTORY` based on the `GITHUB_USER` and project name but I think we'd can infer the name of the "mainline" branch, ie. some have moved `master` to `main` while others move to `trunk`.
+Note: technically, we might be able to infer `GITHUB_PROJECT_RELEASE_HISTORY` based on the `GITHUB_USER` and project name but I don't think we'd can infer the name of the "mainline" branch, ie. some have moved `master` to `main` while others have moved to `trunk`.
 
 ## Installation
 
-This isn't packaged for PyPI. However, distribution files are released to github.
-
-If you use `poetry`, this should suffice (and is how I use it from my projects). Specifically, we're installing the package's from it's github repository directly into our environment.
+While this isn't packaged for PyPI release, build/distribution files (ie. wheel and tgz) are released to github. If you use `poetry`, this should suffice (and is how I use it from my projects):
 
 ``` shell
 % poetry add git+https://github.com/PBorocz/manage --group dev
@@ -172,7 +170,7 @@ confirm = false
 allow_error = false
 ```
 
-At this point, you should be able to run: `% manage --print` and your `pyproject.toml` entries will be checked and validated. Note that `poetry add` will create a `manage` command into your respective python /bin environment (hopefully, your virtual env).
+At this point, you should be able to run: `% manage --print` and your `pyproject.toml` entries will be checked and validated. Note that `poetry add` will create a `manage` command into your respective python /bin environment (hopefully this is your virtual env, right?).
 
 ## Documentation
 *NB: This section is **big** and should probably be moved to stand-alone documentation!*
@@ -273,7 +271,7 @@ allow_error = true
 ##### **poetry_build**
 
 - Method to "poetry" build a package distribution, ie. `poetry build`.
-- This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 - A complete example of this might be:
 
 ``` toml
@@ -296,7 +294,7 @@ confirm = false
 ##### **clean**
 
 - Method to delete build artifacts, ie. `rm -rf build \*.egg-info`.
-- This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line (confirm: false is set on the step).
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -349,7 +347,7 @@ message ="Auto-commit"}
 
 - Specifically, other methods will update these files for version management and this method is provided to get them into git on behalf of a release. Alternately, you can use the more general `git_commit` method, specifying these two files to be added.
 
-- This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -362,7 +360,7 @@ confirm = true
 
 - Method to create a git **release** using the appropriate version string (from `pyproject.toml`). This method uses the GitHub API so the environment variables listed above are required to use this method.
 
-- This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -373,7 +371,8 @@ method = "git_create_release"
 ##### **git_create_tag**
 
 - Method to create a local git **tag** using the appropriate version string (from the potentially updated `pyproject.toml`), e.g. `git tag -a <version> -m <version>`
-- This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -384,7 +383,8 @@ method = "git_create_release"
 ##### **git_push_to_github**
 
 - Method command to perform a `git push --follow-tags`.
-- This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -438,7 +438,8 @@ arguments = {bump_rule: "patch"}
 ##### **poetry_lock_check**
 
 - Method to perform a poetry lock "check" to verify that `poetry.lock` is consistent with `pyproject.toml`. If it isn't, will update/refresh `poetry.lock` (after confirmation).
-- This command takes **no** arguments but **will** ask for confirmation before running `poetry lock` unless `--no-confirm` is set on the command-line.
+
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -451,7 +452,8 @@ allow_errors = false
 ##### **publish_to_pypi**
 
 - Method to publish your package to PyPI, e.g. `poetry publish`.
-- This command takes **no** arguments but **will** ask for confirmation unless `--no-confirm` is set on the command-line as it will update the current `poetry.lock` file.
+
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -463,8 +465,10 @@ allow_errors = false
 ##### **run_command**
 
 - General method to run essentially any local command for it's respective side-effects. 
+
 - For example, in one of my projects, I don't use the version number in `pyproject.toml` but instead in an `app/version.py` that is updated from a small script (using the date & respective branch of the last git commit performed).
-- This command **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+
+- This command **may** ask for confirmation depending on the `confirm` flag.
 
 ```toml
 ...
@@ -481,7 +485,8 @@ arguments = {command: "./app/cli/update_settings.py"}
 ##### **run_precommit**
 
 - Method to run the `pre-commit` tool (if you use it), e.g. `pre-commit run --all-files`
-- This command takes no argument and **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+
+- This command takes **no** arguments but **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -509,9 +514,12 @@ arguments = {pathspec: "./app/static/css/sass/mystyles.scss ./app/static/css/mys
 ##### **update_readme**
 
 - Specialised method to move "Unreleased" items into a dedicated release section of a README file.
+
 - README file can be in either [Org](https://orgmode.org/) or Markdown format, ie. `README.md` or `README.org`.
+
 - We assume `README.org/md` is in the same directory as your `pyproject.toml` and `manage.yaml`. This is almost always the root directory of your project.
-- This command **will** ask for confirmation unless `--no-confirm` is set on the command-line.
+
+- This command **may** ask for confirmation depending on the `confirm` flag.
 
 ``` toml
 ...
@@ -537,6 +545,9 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+
+- FIXED: Minor updates to README.md file.
+
 ### v0.2.0 - 2023-12-26
 
 - CHANGED: **BREAKING!** -> Move from standalone `manage.yaml` to reading targets & recipes directly into project's respective `pyproject.toml`. Conversion can be as easy as using ChatGPT (or ilk) to convert from yaml to toml and inserting the `tool.manage` prefix.
