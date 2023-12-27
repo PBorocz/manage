@@ -74,13 +74,18 @@ description = "Build our distribution(s)"
 
   # ------------------------------------------------------------------------------
 [tool.manage.recipes."3_release"]
-description = "Build & release current version's distribution to our github repository"
+description = "Release current version's distribution to our github repository"
 
 [[tool.manage.recipes."3_release".steps]]
-  method = "poetry_build"
+  method = "git_create_tag"
+  confirm = false
 
 [[tool.manage.recipes."3_release".steps]]
   method = "git_push_to_github"
+  confirm = false
+
+[[tool.manage.recipes."3_release".steps]]
+  method = "git_create_release"
   confirm = false
 
   # ------------------------------------------------------------------------------

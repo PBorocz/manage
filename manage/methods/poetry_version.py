@@ -42,13 +42,6 @@ class Method(AbstractMethod):
         cmd = f"poetry version {bump_rule}"
 
         ################################################################################
-        # Dry-run?
-        ################################################################################
-        if self.configuration.dry_run:
-            self.dry_run(cmd)
-            return True
-
-        ################################################################################
         # For confirmation purposes, use poetry to get what our next
         # version *should* be (NOTE: This is a DRY-RUN only!!!!)
         ################################################################################
@@ -61,6 +54,13 @@ class Method(AbstractMethod):
             )
             message(msg)
             sys.exit(1)
+
+        ################################################################################
+        # Dry-run?
+        ################################################################################
+        if self.configuration.dry_run:
+            self.dry_run(cmd)
+            return True
 
         confirm = (
             f"Ok to '[italic]{self.configuration.version}[/]' "
