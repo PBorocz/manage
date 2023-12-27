@@ -545,6 +545,7 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+### v0.2.1 - 2023-12-26
 
 - FIXED: Minor updates to README.md file.
 
@@ -775,6 +776,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.2.1 - 2023-12-26
 ### v0.2.0 - 2023-12-26
     - FIX: Made the gizmo fit into the whatchamacallit.
     - ADD: Capability to make time go backwards (requires confirmation beforehand)
@@ -796,6 +798,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.2.1 - 2023-12-26
 ### v0.2.0 - 2023-12-26
 
 ### v1.5.11 - 2023-07-12
