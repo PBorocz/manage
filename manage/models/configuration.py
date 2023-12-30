@@ -18,11 +18,12 @@ class Configuration(BaseModel):
     help        : bool | None = None  # Were we requested to just display help?
     print       : bool | None = None  # Were we requested to print the recipes contents?
 
+    debug       : bool | None = False # Are we running in debug mode?
     verbose     : bool | None = None  # Are we running in verbose mode?
     target      : str  | None = None  # What is the target to be performed?
     confirm     : bool | None = None  # Should we perform confirmations on steps?
     dry_run     : bool | None = None  # Are we running in dry-run mode (True) or live mode (False)
-    method_args : dict | None = {}    # Set of "dynamic" arguments for particular methods (from CLI)
+    method_args : list | None = []    # Set of "dynamic" arguments for specific methods (from CLI)
 
     version_    : str  | None = None  # Note: This is the current version # of the project we're working on!
     version     : str  | None = None  # " In nice format..
@@ -41,6 +42,13 @@ class Configuration(BaseModel):
         self.version_ = version_raw
         self.version = version_formatted
 
+    def find_method_arg_value(self, cls: str, arg: str) -> str | None:
+        """Find/return the the command-line argument for the respective method/class and argument."""
+        for (method, arg), value in self.method_args:
+            if cls.casefold() == method and arg.casefold() == arg:
+                return value
+        return None
+
     @classmethod
     def factory(cls, args: tuple[Namespace, dict], pyproject: TPyProject, test: bool = False, **kwargs) -> Self:
         """Create a Configuration object instance from our args and user's pyproject.toml."""
@@ -54,7 +62,7 @@ class Configuration(BaseModel):
 
         # Get the rest of the known command-line parameters (whose
         # default values could have come from pyproject.toml!)
-        for attr in ["confirm", "verbose", "help", "target", "dry_run", "print"]:
+        for attr in ["confirm", "verbose", "help", "target", "dry_run", "print", "debug"]:
             if hasattr(static_args, attr):
                 setattr(configuration, attr, getattr(static_args, attr))
 

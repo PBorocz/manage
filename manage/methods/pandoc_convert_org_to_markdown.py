@@ -30,7 +30,7 @@ class Method(AbstractMethod):
 
     def validate(self) -> list | None:
         """Perform any pre-step validation."""
-        if path_md := self.configuration.method_args.get("path_md"):
+        if path_md := self.configuration.find_method_arg_value(Path(__file__).stem, "path_md"):
             if not Path(path_md).exists():
                 return [f"(pandoc_convert_org_to_markdown) '[italic]{path_md}[/]' does not exist."]
         return None

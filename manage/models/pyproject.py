@@ -23,9 +23,8 @@ class PyProject(BaseModel):
     package: str  | None = None  # Package name..
     recipes: dict | None = None  # These are RAW recipe dicts here!
     #
-    # NOTE: These are the ONLY place we're we set the default values
-    #       for "verbose", "dry-run" and "confirm" command-line
-    #       parameters unless they're NOT set/available from the
+    # NOTE: These are the ONLY place where we set the default values for "verbose", "dry-run"
+    #       and "confirm" command-line parameters unless they're NOT set/available from the
     #       pyproject.toml file:
     #
     cli_defaults: dict = {

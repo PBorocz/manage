@@ -46,7 +46,7 @@ Here's an example of building and releasing a python package:
 verbose = true
 ```
 
-- Other command-line defaults that can be set in this section are: `confirm`, `dry-run`/`live` (these last two are mutually-exclusive).
+- Other command-line defaults that can be set in this section are: `confirm` and `dry-run`.
 
 ### Example
 
@@ -54,6 +54,12 @@ An example `[tool.manage]` section that defines three targets (bump a version nu
 
 ``` toml
 ################################################################################
+[tool.manage]
+verbose = true  # Remember that in TOML, it's lowercase true/false!
+confirm = true
+dry_run = true
+
+#-------------------------------------------------------------------------------
 [[tool.manage.recipes.bump]]
 description = "Bump the version number to the next /patch/ level and commit locally"
 
@@ -66,7 +72,7 @@ method = "update_readme"
 [[tool.manage.recipes.bump.steps]]
 method = "git_commit_version_files"
 
-################################################################################
+#-------------------------------------------------------------------------------
 [[tool.manage.recipes.clean]]
 description = "Clean out our temp files and ALL previous builds."
 
@@ -75,7 +81,7 @@ method = "clean"
 confirm = false
 allow_error = true
 
-################################################################################
+#-------------------------------------------------------------------------------
 [[tool.manage.recipes.build]]
 description = "Build our distribution(s)."
 
@@ -88,11 +94,11 @@ confirm = false
 allow_error = false
 ```
 
-Note: If you want "non-standard" recipe names (for instance, in some projects, I like to name my recipes by the rough order of execution: 1_bump, 2_build, 3_release), you can do that by quoting the respective string:
+Note: If you want "non-standard" recipe names (for instance, in some projects, I like to name my recipes by the rough order of execution: 1\_bump, 2\_build, 3\_release), you can do that by quoting the respective string:
 
 
 ``` toml
-################################################################################
+#-------------------------------------------------------------------------------
 [[tool.manage.recipes."1_bump"]]
 description = "Bump the version number to the next /patch/ level and commit locally"
 
@@ -124,20 +130,6 @@ This tool is based on _my_ common python project standards, allowing for the abi
 ### CHANGELOG/Release History Management
 
 - We do **not** use a stand-alone `CHANGELOG` file, instead we use a specific section in `README.org/md`. We assume that list of completed but unreleased items exist under an "**Unreleased**" header. This format provides reasonably clean automation of version/release management within the README file.
-
-### Configuration
-
-- We assume the following GitHub entries are available in our environment (either set in your respective shell or through .env):
-
-| Environment Variable               | Explanation            | Example
-| ---------------------------------- | ---------------------- | --------------------------------------------------------------------------------
-| `GITHUB_USER`                      | User id                | `John-Jacob_JingleheimerSchmidt`
-| `GITHUB_API_TOKEN`                 | Personal API token     | `ghp_1234567890ABCDEFG1234567890`
-| `GITHUB_API_RELEASES`              | URL to release API     | `https://api.github.com/repos/><user>/<project>/releases`
-| `GITHUB_PROJECT_RELEASE_HISTORY`   | URL to release history | `https://github.com/<user>/<project>/blob/<mainline>/README.org#release-history`
-
-Note: technically, we might be able to infer `GITHUB_PROJECT_RELEASE_HISTORY` based on the `GITHUB_USER` and project name but I don't think we'd can infer the name of the "mainline" branch, ie. some have moved `master` to `main` while others have moved to `trunk`.
-
 ## Installation
 
 While this isn't packaged for PyPI release, build/distribution files (ie. wheel and tgz) are released to github. If you use `poetry`, this should suffice (and is how I use it from my projects):
@@ -172,6 +164,29 @@ allow_error = false
 
 At this point, you should be able to run: `% manage --print` and your `pyproject.toml` entries will be checked and validated. Note that `poetry add` will create a `manage` command into your respective python /bin environment (hopefully this is your virtual env, right?).
 
+## Configuration
+
+- Several of the built-in methods make assumptions about your configuration, either specific environment variables necessary or specific executable on your path.
+
+- Several of these are rather fundamental to the operation of the system, e.g. `git` (`git_add`, `git_commit` etc.) and `poetry` (eg. `poetry_build`, `poetry_version` etc.). However, there are a few specialty commands that your environment will need to support if you want to use them, specifically:
+
+| Method Name                      | Executable    |
+|----------------------------------|---------------|
+| `pandoc_convert_org_to_markdown` | `pandoc`      |
+| `pre_commit`                     | `pre-commit`  |
+| `sass`                           | `sass`        |
+
+- Finally, the `git_create_release` method uses github API access to create a git release. Thus, for this method, we assume the following GitHub entries are available in our environment (either set in your respective shell or through .env):
+
+| Environment Variable               | Explanation            | Example
+| ---------------------------------- | ---------------------- | --------------------------------------------------------------------------------
+| `GITHUB_USER`                      | User id                | `John-Jacob_JingleheimerSchmidt`
+| `GITHUB_API_TOKEN`                 | Personal API token     | `ghp_1234567890ABCDEFG1234567890`
+| `GITHUB_API_RELEASES`              | URL to release API     | `https://api.github.com/repos/><user>/<project>/releases`
+| `GITHUB_PROJECT_RELEASE_HISTORY`   | URL to release history | `https://github.com/<user>/<project>/blob/<mainline>/README.org#release-history`
+
+NB: technically, we might be able to infer `GITHUB_PROJECT_RELEASE_HISTORY` based on the `GITHUB_USER` and project name but I don't know how we'd infer the name of the "mainline" branch, i.e. some have moved `master` to `main` while others have moved to `trunk`.
+
 ## Documentation
 *NB: This section is **big** and should probably be moved to stand-alone documentation!*
 
@@ -181,20 +196,24 @@ At this point, you should be able to run: `% manage --print` and your `pyproject
 
     Override any `confirm = false` entries in your pyproject.toml and force all methods with confirmation (ie. state-change) to do so.
 
-2.  --verbose
+2.  --verbose/-v
 
-    Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
+    Displays an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
 
-3.  --verbose
+3.  --debug
 
-    Provide an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
+    Displays internal debugging information (not high-volume).
 
-4.  --print
+4.  --dry_run/--live
+
+    Run all steps in either `dry_run` or `live` mode, overriding any settings within recipe step definitions.
+
+5.  --print
 
     Does a "pretty-print" of your recipe configuration either for either recipes or just the specific target if provided and exits. For example:
 	
 ``` shell
-% python manage --print build
+% manage --print build
 
 build ≫ Build our distribution(s)
 [
@@ -222,6 +241,23 @@ build ≫ Build our distribution(s)
 ]
 
 %
+```
+
+4.  --<method>:<argument>
+
+    Provide a method a specific argument value. For example, the git_commit method supports an optional git commit message. This can be either be supplied on a standardized basis in your `pyproject.toml` file like this:
+	
+``` toml
+[[tool.manage.recipes.<aRecipeName>.steps]]
+	method = "git_commit"
+	confirm = true
+	arguments: {message = "Auto Commit"}
+```	
+
+or overridden from the command-line:
+
+``` shell
+% manage 1_bump --git_commit:message "Build of $(date +'%Y-%m-%d')" --poetry_version:bump_level minor
 ```
 
 ### Common Method Options
@@ -262,8 +298,8 @@ allow_error = true
 | [`poetry_bump_version`](#poetry_bump_version)							| Yes | Required   | `poetry_version`
 | [`poetry_lock_check`](#poetry_lock_check)								| No  | \-         |
 | [`publish_to_pypi`](#publish_to_pypi)									| Yes | \-         |
-| [`run_command`](#run_command)											| Yes | Required   | `command`
-| [`run_pre_commit`](#run_precommit)									| No  | \-         |
+| [`command`](#command)											        | Yes | Required   | `command`
+| [`pre_commit`](#precommit)									        | No  | \-         |
 | [`sass`](#sass)														| Yes | Required   | `pathspec`
 | [`update_readme`](#update_readme)										| Yes | Optional   | `readme`
 
@@ -462,7 +498,7 @@ method = "publish_to_pypi"
 allow_errors = false
 ```
 
-##### **run_command**
+##### **command**
 
 - General method to run essentially any local command for it's respective side-effects. 
 
@@ -473,7 +509,7 @@ allow_errors = false
 ```toml
 ...
 [[tool.manage.recipes.<aRecipeName>.steps]]
-method = "run_command"
+method = "command"
 allow_error = false
 arguments = {command: "./app/cli/update_settings.py"}
 ...
@@ -482,7 +518,7 @@ arguments = {command: "./app/cli/update_settings.py"}
 ###### Arguments
 * `command` Required, a string containing the full shell command to execute.
 
-##### **run_precommit**
+##### **precommit**
 
 - Method to run the `pre-commit` tool (if you use it), e.g. `pre-commit run --all-files`
 
@@ -491,7 +527,7 @@ arguments = {command: "./app/cli/update_settings.py"}
 ``` toml
 ...
 [[tool.manage.recipes.<aRecipeName>.steps]]
-method = "run_precommit"
+method = "precommit"
 allow_error = true
 ...
 ```
@@ -545,6 +581,19 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+
+- CHANGED **BREAKING**: Changed the name of the `pre-commit` method to `pre_commit` (previously was `run_pre_commit`).
+
+- CHANGED **BREAKING**: Changed the name of the command to run arbitrary script to `command` (previously was `run_command`).
+
+- CHANGED: Command-line overrides to method arguments are now _specific_ to the method. For example, if your `pyproject.toml` file contained the default argument to poetry\_version's bump\_level to be _patch_ (as that's your most common release), but you wanted to perform a _major_ release, simply override the bump_level on the command-line:
+
+``` shell
+% manage 1_bump ... --poetry_version:bump_level major 
+```
+
+- ADDED: New command-line flag `--debug` for more detailed/operational debugging output.
+
 ### v0.2.1 - 2023-12-26
 
 - FIXED: Minor updates to README.md file.

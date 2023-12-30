@@ -5,6 +5,7 @@ from typing import Any, Dict, Self, TypeVar
 
 from pydantic import BaseModel, validator
 
+from manage.utilities import msg_debug
 
 TClass = TypeVar("Class")
 TConfiguration = TypeVar("TConfiguration")
@@ -14,17 +15,19 @@ class Step(BaseModel):
     """A step in a recipe."""
 
     # FROM inbound manage file:
-    method: str | None = None  # Reference to the built-in method to run
-    recipe: str | None = None  # Reference to the id_ of another recipe.
+    # fmt: off
+    method      : str  | None = None  # Reference to the built-in method to run
+    recipe      : str  | None = None  # Reference to the id_ of another recipe.
 
-    confirm: bool | None = None
-    verbose: bool | None = False
-    allow_error: bool | None = False
+    confirm     : bool | None = None
+    verbose     : bool | None = None
+    allow_error : bool | None = None
 
-    arguments: Dict[str, Any] = {}  # Supplemental arguments for the callable
+    arguments   : Dict[str, Any] = {}  # Supplemental arguments for the callable
 
     # NOT from inbound manage file:
     class_: TClass | None = None  # Python method we'll instantiate and call if this is a "method" step.
+    # fmt: off
 
     @validator("recipe", always=True)
     @classmethod
@@ -53,34 +56,35 @@ class Step(BaseModel):
         """Update the step based on any/all arguments received on the command-line."""
         # Two STATIC command-line args can trickle down to individual step execution: 'confirm' and 'verbose':
         if configuration.confirm is not None and self.confirm != configuration.confirm:
-            # if configuration.verbose:
-            #     msg = (
-            #         f"- (overriding [italic]confirm[/] in {self.name()} from "
-            #         f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/])"
-            #     )
-            #     msg_debug(msg)
+            if configuration.debug:
+                msg = (
+                    f"- {self.name()}: overriding [italic]confirm[/] from "
+                    f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]"
+                )
+                msg_debug(msg)
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
-            # if configuration.verbose:
-            #     msg = (
-            #         f"- (overriding [italic]verbose[/] in {self.name()} from "
-            #         f"[italic]{self.verbose}[/] to [italic]{configuration.verbose}[/])"
-            #     )
-            #     msg_debug(msg)
+            if configuration.debug:
+                msg = (
+                    f"- {self.name()}: overriding [italic]verbose[/] from "
+                    f"[italic]{self.verbose}[/] to [italic]{configuration.debug}[/]"
+                )
+                msg_debug(msg)
             self.verbose = configuration.verbose
 
-        # However, we might have any number of DYNAMIC command-line args specific to this method:
-        if self.method:  # Only true if this step is a method!
-            for cli_arg, cli_value in configuration.method_args.items():
-                if cli_arg in self.arguments:
-                    # if configuration.verbose:
-                    #     msg = (
-                    #         f"- (overriding [italic]{cli_arg}[/] in {self.name()} from "
-                    #         f"[italic]{self.arguments[cli_arg]}[/] to [italic]{cli_value}[/])"
-                    #     )
-                    #     msg_debug(msg)
-                    self.arguments[cli_arg] = cli_value
+        # However, we might have any number of DYNAMIC command-line args *specific* to this method:
+        if self.method:  # Only true if this step is a method, e.g. git_commit
+            for (method_name, method_arg), cli_value in configuration.method_args:  # e.g. ("git_commit","message"),".."
+                if method_name.casefold() == self.method.casefold():
+                    if method_arg in self.arguments:
+                        if configuration.debug:
+                            msg = (
+                                f"- {self.name()}: overriding [italic]{method_arg}[/] from "
+                                f"[italic]{self.arguments[method_arg]}[/] to [italic]{cli_value}[/]"
+                            )
+                            msg_debug(msg)
+                        self.arguments[method_arg] = cli_value
 
         return self
 

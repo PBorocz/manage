@@ -98,24 +98,31 @@ def _validate_environment(configuration: Configuration) -> TWarnsFails:
 def _validate_step_args(configuration: Configuration, method_classes: dict[str, TClass]) -> TWarnsFails:
     """Validate all cli dynamic/step arguments against our Method Classes."""
 
-    def __get_all_args() -> list[str]:
+    def __get_all_args() -> list[tuple[str, str]]:
         return_ = []
         for method, class_ in method_classes.items():
             if not hasattr(class_, "args"):
                 continue
             for arg in class_.args:
-                return_.append(arg.name)
+                return_.append((method.casefold(), arg.name.casefold()))
         return return_
 
     args_possible = __get_all_args()
 
-    # Confirm all method args show up in *any* method_class.
+    # Confirm dynamic/method arguments:
     fails = []
-    for arg_name in configuration.method_args.keys():
-        if arg_name not in args_possible:
-            fails.append(arg_name)
+    for (method, arg), _ in configuration.method_args:  # e.g. ("git_commit", "message"), "aMessage"
+        # 1. Confirm all method args are actually bound to know methods:
+        if method.casefold() not in method_classes:
+            fail = f"'[italic]{method}[/]' is not a recognised method, please check."
+            fails.append(fail)
+            continue
 
-    fails = [f"'[italic]--{arg}[/]' is not supported by any methods" for arg in fails]
+        # 2. Confirm that the argument provided is valid for the respective method/class:
+        if (method.casefold(), arg.casefold()) not in args_possible:
+            fail = f"'[italic]{arg}[/]' is not a valid argument for '[italic]{method}[/]', please check."
+            fails.append(fail)
+
     return [], fails
 
 

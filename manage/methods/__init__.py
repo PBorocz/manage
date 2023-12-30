@@ -149,13 +149,13 @@ class AbstractMethod:
         msg_failure(f"Sorry, command requires a supplemental argument for '{arg_name}'")
         return None
 
-    def validate_pathspec(self, method: str) -> list | None:
+    def validate_pathspec(self, cls: str, arg: str) -> list | None:
         """Perform a validation of a 'pathspec' parameter.
 
         We define this here as there are several method-classes that use
         this logic.
         """
-        if pathspec := self.configuration.method_args.get("pathspec"):
+        if pathspec := self.configuration.find_method_arg_value(cls, arg):
             if not Path(pathspec).exists():
-                return [f"({method}) '[italic]{pathspec}[/]' does not exist."]
+                return [f"({cls}:{arg}) '[italic]{pathspec}[/]' does not exist."]
         return None

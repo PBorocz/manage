@@ -1,5 +1,6 @@
 """Manage step."""
 import sys
+from pathlib import Path
 
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
@@ -27,7 +28,7 @@ class Method(AbstractMethod):
 
     def validate(self) -> list | None:
         """Perform any pre-step validation."""
-        if bump_rule := self.configuration.method_args.get("bump_rule"):
+        if bump_rule := self.configuration.find_method_arg_value(Path(__file__).stem, "bump_rule"):
             if bump_rule not in BUMP_RULES:
                 versions = smart_join(BUMP_RULES, with_or=True)
                 return [f"(poetry_version) '[italic]{bump_rule}[/]' is not a valid bump_rule: \\[{versions}]."]

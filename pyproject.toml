@@ -56,6 +56,7 @@ description = "Bump the version number to the next /patch/ level and commit loca
 [[tool.manage.recipes."1_bump".steps]]
   method = "git_commit"
 
+
   # ------------------------------------------------------------------------------
 [tool.manage.recipes."2_build"]
 description = "Build our distribution(s)"
@@ -67,6 +68,7 @@ description = "Build our distribution(s)"
 [[tool.manage.recipes."2_build".steps]]
   method = "clean"
   confirm = false
+  verbose = true
 
 [[tool.manage.recipes."2_build".steps]]
   method = "poetry_build"

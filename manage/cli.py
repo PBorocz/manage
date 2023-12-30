@@ -59,6 +59,13 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -103,13 +110,41 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
     parser.set_defaults(dry_run=pyproject.get_parm("dry_run"))
 
     # Parse all the command-line args/parameters provided (both those above and unknown ones)
-    args_static, unexpected_args = parser.parse_known_args()
+    args_static, args_dynamic = parser.parse_known_args()
 
-    # Convert the unexpected args from ['--foo', 'bar', '--color', 'red'] to {'color': 'red', 'foo': 'bar'}:
-    chunked_args = [[x, y] for x, y in zip(unexpected_args[::2], unexpected_args[1::2])]
-    args_dynamic: dict[str, str] = dict((arg.replace("--", ""), value) for arg, value in chunked_args)
+    # Convert to a better data representation
+    args_dynamic = _parse_dynamic_args(args_dynamic)
 
     return args_static, args_dynamic
+
+
+def _parse_dynamic_args(dynamic_args) -> list[tuple[str, str], str]:
+    """Convert/validate the dynamic args to a better data representation."""
+    # First, convert from arbitrary inbound list to pairs, ie:
+    #   [ "--foo:bar", "baz",   "--method:color", "red"]
+    # to:
+    #   (["--foo:bar", "baz"], ["--method:color", "red"]):
+    paired = [(x, y) for x, y in zip(dynamic_args[::2], dynamic_args[1::2])]
+
+    # Validate that these are all in the right format (ie. as paired method-arg's):
+    for method_arg, value in paired:
+        if ":" not in method_arg:
+            CONSOLE.print(
+                "[red]Sorry, unexpected argument or invalid method argument, "
+                "must be in the form [italic]<method_name>:<method_argument> <value>[/]",
+            )
+            CONSOLE.print("[red]For example, [italic]--git_commit:message[/] or [italic]--poetry_version:patch[/]")
+            sys.exit(1)
+
+    # Finally, convert from
+    #   (["--foo:bar"  , "baz"], ["--method:color"   , "red"])
+    # to:
+    #   ([(foo", "bar"), "baz"], [("method", "color"), "red"]):
+    return_ = []
+    for name, value in paired:
+        method, arg = name.replace("--", "").split(":")
+        return_.append(((method.casefold(), arg.casefold()), value))
+    return return_
 
 
 def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CONSOLE) -> None:
@@ -123,8 +158,7 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
         return f"[blue]{str_}[/]"
 
     console.print()
-    console.print("Usage: manage [OPTIONS] <target>")
-    # console.print("Usage: manage [OPTIONS] <target> [METHOD_ARGS]")
+    console.print("Usage: manage [OPTIONS] <target> [METHOD_ARGS]")
     console.print()
 
     ################################################################################
@@ -156,6 +190,13 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
         green(
             "Run steps in verbose mode [italic](including method stdout if available)[/]; "
             f'default is [italic][bold]{pyproject.get_parm("verbose")}[/].',
+        ),
+    )
+
+    table.add_row(
+        blue("--debug/-d"),
+        green(
+            "Run in debug mode; default is [italic]False[/].",
         ),
     )
 
@@ -253,7 +294,7 @@ def main():
     if configuration.target:
         if not pyproject.is_valid_target(configuration.target):
             msg = (
-                f"Sorry, [red]{configuration.target}[/] is not a valid recipe, "
+                f"[red]Sorry, [italic]{configuration.target}[/] is not a valid recipe, "
                 f"must be one of [yellow][italic]{s_targets}[/]."
             )
             CONSOLE.print(msg)

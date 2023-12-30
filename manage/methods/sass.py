@@ -1,4 +1,6 @@
 """Method to run SASS pre-processor."""
+from pathlib import Path
+
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration, Recipes
 
@@ -22,7 +24,7 @@ class Method(AbstractMethod):
 
     def validate(self) -> list | None:
         """Perform any pre-step validation."""
-        return self.validate_pathspec("sass")
+        return self.validate_pathspec(Path(__file__).stem, "sass")
 
     def run(self) -> bool:
         """Do it."""
