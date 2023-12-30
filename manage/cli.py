@@ -246,10 +246,10 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
 
     for name, cls_ in method_classes.items():
         for arg in getattr(cls_, "args", []):
-            line = f"Method: {name}"
+            line = ""
             if arg.default:
-                line += f"; default is [italic][bold]{arg.default}[/]"
-            table.add_row(blue(f"--{arg.name}"), green(line))
+                line = f"Default is [italic][bold]{arg.default}[/]"
+            table.add_row(blue(f"--{name}:{arg.name}"), green(line))
 
     panel: Panel = Panel(table, title=green("METHOD-BASED COMMAND OPTIONS"), title_align="left")
     console.print(panel)
