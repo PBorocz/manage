@@ -49,7 +49,7 @@ def test_validation_invalid_default(capsys):
 
 def test_validation_no_package(capsys):
     # Setup
-    raw_pp = tomllib.loads(Path("tests/test_models_pyproject_no_package.toml").read_text())
+    raw_pp = tomllib.loads(Path("tests/models/test_pyproject_no_package.toml").read_text())
     pyproject = PyProject.factory(raw_pp)
 
     # Test
@@ -60,7 +60,7 @@ def test_validation_no_package(capsys):
 
 def test_validation_no_version(capsys):
     # Setup
-    raw_pp = tomllib.loads(Path("tests/test_models_pyproject_no_version.toml").read_text())
+    raw_pp = tomllib.loads(Path("tests/models/test_pyproject_no_version.toml").read_text())
     pyproject = PyProject.factory(raw_pp)
 
     # Test
