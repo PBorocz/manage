@@ -581,6 +581,7 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+### v0.3.0 - 2023-12-30
 
 - CHANGED **BREAKING**: Changed the name of the `pre-commit` method to `pre_commit` (previously was `run_pre_commit`).
 
@@ -825,6 +826,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.3.0 - 2023-12-30
 ### v0.2.1 - 2023-12-26
 ### v0.2.0 - 2023-12-26
     - FIX: Made the gizmo fit into the whatchamacallit.
@@ -847,6 +849,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.3.0 - 2023-12-30
 ### v0.2.1 - 2023-12-26
 ### v0.2.0 - 2023-12-26
 
