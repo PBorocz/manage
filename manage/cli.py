@@ -272,7 +272,7 @@ def main():
     ################################################################################
     # Gather available methods from package's library:
     ################################################################################
-    if not (method_classes := gather_available_method_classes(configuration.verbose)):
+    if not (method_classes := gather_available_method_classes(configuration.debug)):
         sys.exit(1)
 
     ################################################################################

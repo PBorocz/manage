@@ -16,7 +16,7 @@ from manage.utilities import ask_confirm, failure, message, msg_failure, msg_deb
 TClass = TypeVar("Class")
 
 
-def gather_available_method_classes(verbose: bool) -> dict[str, TClass]:
+def gather_available_method_classes(debug: bool) -> dict[str, TClass]:
     """Read and return all the python-defined step methods available."""
 
     def __gather_method_classes():
@@ -36,7 +36,7 @@ def gather_available_method_classes(verbose: bool) -> dict[str, TClass]:
         msg_failure("Unable to find [bold]any[/] valid method classes in manage/methods/*.py?")
         sys.exit(1)
 
-    if verbose:
+    if debug:
         msg_debug(f"{len(classes)} run-time methods found and registered")
 
     return classes

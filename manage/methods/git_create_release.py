@@ -30,7 +30,7 @@ class Method(AbstractMethod):
 
         # Dry-run?
         if self.configuration.dry_run:
-            self.dry_run("HTTPS:POST to github: name/release: '[italic]{self.configuration.version}[/]'")
+            self.dry_run(f"HTTPS:POST to github: name/release: '[italic]{self.configuration.version}[/]'")
             return True
 
         # Confirm?
