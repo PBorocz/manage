@@ -332,6 +332,6 @@ def main():
 
     # "Real" run..
     try:
-        recipes.run(configuration, False)
+        recipes.run(configuration)
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)
