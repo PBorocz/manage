@@ -574,6 +574,7 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+### v0.3.1 - 2023-12-31
 
 - Miscellaneous updates to diagnostics and added method specific validation.
 
@@ -826,6 +827,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.3.1 - 2023-12-31
 ### v1.9.11 - 2023-12-30
 ### v1.9.11 - 2023-12-30
 ### v1.9.11 - 2023-12-30
@@ -852,6 +854,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.3.1 - 2023-12-31
 ### v1.9.11 - 2023-12-30
 ### v1.9.11 - 2023-12-30
 ### v1.9.11 - 2023-12-30
