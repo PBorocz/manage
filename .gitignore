@@ -1,6 +1,7 @@
 # Local additions
 poetry.toml
 PROJECT_MANAGEMENT.org
+release_screenshots
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -41,7 +41,7 @@ def test_build(configuration, recipes, capsys):
     ################################################################################
     # Test
     ################################################################################
-    build(configuration, recipes, step).run()
+    build(configuration, step).run()
 
     ################################################################################
     # Confirm: Build artifacts now exist

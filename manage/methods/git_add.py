@@ -1,11 +1,12 @@
 """Method to perform a 'git add' (aka stage) command."""
+import shutil
 from pathlib import Path
 
 from git import Repo
 from rich.markup import escape
 
 from manage.methods import AbstractMethod
-from manage.models import Configuration, Recipes, Arguments, Argument
+from manage.models import Configuration, Arguments, Argument
 from manage.utilities import msg_failure, msg_success, smart_join
 
 
@@ -22,13 +23,17 @@ class Method(AbstractMethod):
         ],
     )
 
-    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+    def __init__(self, configuration: Configuration, step: dict):
         """Define git add."""
-        super().__init__(configuration, recipes, step)
+        super().__init__(__file__, configuration, step)
 
-    def validate(self) -> list | None:
-        """Perform any pre-step validation."""
-        return self.validate_pathspec(Path(__file__).stem, "git_add")
+    def validate(self) -> None:
+        """Perform any pre-method validation."""
+        # Check to see if executable is available
+        exec_ = "git"
+        if not shutil.which(exec_):
+            msg = f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method."
+            self.exit_with_fails([msg])
 
     def run(self, repo: Repo | None = None) -> bool:
         """Do a 'git add' command, either with a specific wildcard or all (if no argument specified).

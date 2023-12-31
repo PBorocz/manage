@@ -39,13 +39,6 @@ Here's an example of building and releasing a python package:
 
 - For each command within the step, the contents of either `stdout` or `stderr`  man displayed based on the return code of the command's execution. Specifically, on a non-zero return status, `stderr` will always be displayed. For a return code of zero, `stdout` will be displayed if `verbose` mode is active for the respective step.
 
-- Command-line defaults can be set in the `[tool.manage.defaults]` section. For instance, if you always want to run in verbose-mode, simple set a section in your pyproject.toml like this: 
-
-``` toml
-[tool.manage.defaults]
-verbose = true
-```
-
 - Other command-line defaults that can be set in this section are: `confirm` and `dry-run`.
 
 ### Example
@@ -194,19 +187,19 @@ NB: technically, we might be able to infer `GITHUB_PROJECT_RELEASE_HISTORY` base
 
 1.  --confirm
 
-    Override any `confirm = false` entries in your pyproject.toml and force all methods with confirmation (ie. state-change) to do so.
+    Require a priori confirmation for all methods that may make state changes. Default is False.
 
 2.  --verbose/-v
 
-    Displays an extra-level of output regarding method execution (for example, including a method command's stdout stream if available)
+    Displays an extra-level of output regarding method execution (for example, including a method command's stdout stream if available). Default is False.
 
 3.  --debug
 
-    Displays internal debugging information (not high-volume).
+    Displays internal debugging information (not high-volume). Default is False
 
 4.  --dry_run/--live
 
-    Run all steps in either `dry_run` or `live` mode, overriding any settings within recipe step definitions.
+    Run all steps in either `dry_run` or `live` mode, overriding any settings within recipe step definitions. Default is `dry_run` of True.
 
 5.  --print
 
@@ -245,7 +238,7 @@ build ≫ Build our distribution(s)
 
 4.  --<method>:<argument>
 
-    Provide a method a specific argument value. For example, the git_commit method supports an optional git commit message. This can be either be supplied on a standardized basis in your `pyproject.toml` file like this:
+Provide a method a specific argument value. For example, the git_commit method supports an optional git commit message. This can be either be supplied on a standardized basis in your `pyproject.toml` file like this:
 	
 ``` toml
 [[tool.manage.recipes.<aRecipeName>.steps]]
@@ -297,7 +290,7 @@ allow_error = true
 | [`poetry_build`](#poetry_build)										| Yes | \-         |
 | [`poetry_bump_version`](#poetry_bump_version)							| Yes | Required   | `poetry_version`
 | [`poetry_lock_check`](#poetry_lock_check)								| No  | \-         |
-| [`publish_to_pypi`](#publish_to_pypi)									| Yes | \-         |
+| [`poetry_publish`](#poetry_publish)									| Yes | \-         |
 | [`command`](#command)											        | Yes | Required   | `command`
 | [`pre_commit`](#precommit)									        | No  | \-         |
 | [`sass`](#sass)														| Yes | Required   | `pathspec`
@@ -485,7 +478,7 @@ allow_errors = false
 ...
 ```
 
-##### **publish_to_pypi**
+##### **poetry_publish**
 
 - Method to publish your package to PyPI, e.g. `poetry publish`.
 
@@ -494,7 +487,7 @@ allow_errors = false
 ``` toml
 ...
 [[tool.manage.recipes.<aRecipeName>.steps]]
-method = "publish_to_pypi"
+method = "poetry_publish"
 allow_errors = false
 ```
 
@@ -585,7 +578,11 @@ arguments = {readme: "./subDir/README.txt"}
 
 - CHANGED **BREAKING**: Changed the name of the `pre-commit` method to `pre_commit` (previously was `run_pre_commit`).
 
+- CHANGED **BREAKING**: Changed the name of the command to publish a package to PyPI to `poetry_publish` (previously was `publish_to_pypi`).
+
 - CHANGED **BREAKING**: Changed the name of the command to run arbitrary script to `command` (previously was `run_command`).
+
+- CHANGED **BREAKING**: Removed the ability to set command-line defaults in the `[tool.manage.defaults]` section of `pyproject.toml`.
 
 - CHANGED: Command-line overrides to method arguments are now _specific_ to the method. For example, if your `pyproject.toml` file contained the default argument to poetry\_version's bump\_level to be _patch_ (as that's your most common release), but you wanted to perform a _major_ release, simply override the bump_level on the command-line:
 
@@ -826,6 +823,9 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v1.9.11 - 2023-12-30
+### v1.9.11 - 2023-12-30
+### v1.9.11 - 2023-12-30
 ### v0.3.0 - 2023-12-30
 ### v0.2.1 - 2023-12-26
 ### v0.2.0 - 2023-12-26
@@ -849,6 +849,9 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v1.9.11 - 2023-12-30
+### v1.9.11 - 2023-12-30
+### v1.9.11 - 2023-12-30
 ### v0.3.0 - 2023-12-30
 ### v0.2.1 - 2023-12-26
 ### v0.2.0 - 2023-12-26

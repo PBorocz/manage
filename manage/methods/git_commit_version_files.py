@@ -1,15 +1,25 @@
 """Commits updated files that contain version information locally."""
+import shutil
+
 from manage.methods import AbstractMethod
-from manage.models import Configuration, Recipes
+from manage.models import Configuration
 from manage.utilities import message
 
 
 class Method(AbstractMethod):
     """Commit version-related files."""
 
-    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+    def __init__(self, configuration: Configuration, step: dict):
         """Commit version-related files."""
-        super().__init__(configuration, recipes, step)
+        super().__init__(__file__, configuration, step)
+
+    def validate(self) -> None:
+        """Perform any pre-method validation."""
+        # Check to see if executable is available
+        exec_ = "git"
+        if not shutil.which(exec_):
+            msg = f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method."
+            self.exit_with_fails([msg])
 
     def run(self) -> bool:
         """Commits updated files that contain version information locally."""

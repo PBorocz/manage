@@ -54,37 +54,44 @@ class Step(BaseModel):
 
     def __reflect_runtime_arguments(self, configuration: TConfiguration) -> Self:
         """Update the step based on any/all arguments received on the command-line."""
+        msgs = []
         # Two STATIC command-line args can trickle down to individual step execution: 'confirm' and 'verbose':
         if configuration.confirm is not None and self.confirm != configuration.confirm:
-            if configuration.debug:
-                msg = (
-                    f"- {self.name()}: overriding [italic]confirm[/] from "
-                    f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]"
-                )
-                msg_debug(msg)
+            msgs.append(
+                f"- {self.name()}: overriding [italic]confirm[/] from "
+                f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]",
+            )
             self.confirm = configuration.confirm
 
         if configuration.verbose is not None and self.verbose != configuration.verbose:
-            if configuration.debug:
-                msg = (
-                    f"- {self.name()}: overriding [italic]verbose[/] from "
-                    f"[italic]{self.verbose}[/] to [italic]{configuration.debug}[/]"
-                )
-                msg_debug(msg)
+            msgs.append(
+                f"- {self.name()}: overriding [italic]verbose[/] from "
+                f"[italic]{self.verbose}[/] to [italic]{configuration.debug}[/]",
+            )
             self.verbose = configuration.verbose
 
         # However, we might have any number of DYNAMIC command-line args *specific* to this method:
-        if self.method:  # Only true if this step is a method, e.g. git_commit
-            for (method_name, method_arg), cli_value in configuration.method_args:  # e.g. ("git_commit","message"),".."
-                if method_name.casefold() == self.method.casefold():
-                    if method_arg in self.arguments:
-                        if configuration.debug:
-                            msg = (
-                                f"- {self.name()}: overriding [italic]{method_arg}[/] from "
-                                f"[italic]{self.arguments[method_arg]}[/] to [italic]{cli_value}[/]"
-                            )
-                            msg_debug(msg)
-                        self.arguments[method_arg] = cli_value
+        if not self.method:  # Only true if this step is a method, e.g. git_commit
+            return self
+        for (method_name, method_arg), cli_value in configuration.method_args:  # e.g. ("git_commit","message"),".."
+            if method_name == self.method:
+                if default_arg := self.class_.args.get_argument(method_arg):
+                    if default_arg.default:
+                        msgs.append(
+                            f"- {self.name()}: overriding [italic]{method_arg}[/] from "
+                            f"[italic]{default_arg.default}[/] to [italic]{cli_value}[/] "
+                            "from command-line",
+                        )
+                    else:
+                        msgs.append(
+                            f"- {self.name()}: setting [italic]{method_arg}[/] to [italic]{cli_value}[/] "
+                            "from command-line",
+                        )
+                    self.arguments[method_arg] = cli_value
+
+        if configuration.debug:
+            for msg in msgs:
+                msg_debug(msg)
 
         return self
 

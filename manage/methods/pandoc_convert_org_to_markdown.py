@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from manage.methods import AbstractMethod
-from manage.models import Argument, Arguments, Configuration, Recipes
+from manage.models import Argument, Arguments, Configuration
 from manage.utilities import failure, msg_failure, message, success
 
 
@@ -24,12 +24,16 @@ class Method(AbstractMethod):
         ],
     )
 
-    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+    def __init__(self, configuration: Configuration, step: dict):
         """Init."""
-        super().__init__(configuration, recipes, step)
+        super().__init__(__file__, configuration, step)
 
-    def validate(self) -> list | None:
+    def validate(self) -> None:
         """Perform any pre-step validation."""
+        # Check to make sure executable is available
+        return self.validate_pathspec(Path(__file__).stem, "sass")
+
+        # Check for required and valid argument
         if path_md := self.configuration.find_method_arg_value(Path(__file__).stem, "path_md"):
             if not Path(path_md).exists():
                 return [f"(pandoc_convert_org_to_markdown) '[italic]{path_md}[/]' does not exist."]

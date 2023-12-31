@@ -22,16 +22,6 @@ class PyProject(BaseModel):
     version: str  | None = None  # Current version string..
     package: str  | None = None  # Package name..
     recipes: dict | None = None  # These are RAW recipe dicts here!
-    #
-    # NOTE: These are the ONLY place where we set the default values for "verbose", "dry-run"
-    #       and "confirm" command-line parameters unless they're NOT set/available from the
-    #       pyproject.toml file:
-    #
-    cli_defaults: dict = {
-        "verbose" : False,
-        "confirm" : False,
-        "dry_run" : True,
-    }
     # fmt: on
 
     def get_formatted_list_of_targets(self, supplements: list[str] = []) -> str:
@@ -52,26 +42,8 @@ class PyProject(BaseModel):
         """Return true if proposed target name is a valid recipe."""
         return target.casefold() in [recipe.casefold() for recipe in self.recipes.keys()]
 
-    def get_parm(self, parm: str) -> bool:
-        """Return the value associated with the parameter name specified."""
-        return self.cli_defaults.get(parm)
-
     def validate(self) -> bool:
         """Return True is everything's OK with our pyproject object."""
-        # Check for valid cli_defaults:
-        temp_instance = PyProject()
-        s_defaults = smart_join(temp_instance.cli_defaults.keys())
-
-        ok = True
-        for name in self.cli_defaults.keys():
-            if name not in temp_instance.cli_defaults:
-                msg_failure(
-                    f"Unexpected setting found in 'tool.manage.defaults': " f"'{name}', allowed are: {s_defaults}",
-                )
-                ok = False
-        if not ok:
-            return False
-
         # Do we have any recipes?
         if not self.recipes:
             msg_failure("No recipes found in 'tool.manage.recipes?")
@@ -92,11 +64,7 @@ class PyProject(BaseModel):
         """Use the raw_pyproject dict from pyproject.toml path and return a instance."""
         instance = PyProject()
 
-        # 1. Default command-line defaults (ie, that override those in the class definition above)
-        for name, value in raw_pyproject.get("tool", {}).get("manage", {}).get("defaults", {}).items():
-            instance.cli_defaults[name] = value
-
-        # 2. Actual recipes!
+        # Actual recipes!
         instance.recipes = raw_pyproject.get("tool", {}).get("manage", {}).get("recipes", {})
 
         # OPTIONAL: Parse "main" portion of pyproject.toml to find the *current* package the user want's management for:

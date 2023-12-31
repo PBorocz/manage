@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from manage.models import Configuration, Recipes, Step
+from manage.models import Configuration, Step
 from manage.methods.pandoc_convert_org_to_markdown import Method as pandoc_convert_org_to_markdown  # noqa: N813
 
 test_org_text = """
@@ -43,7 +43,7 @@ def test_normal_case(path_org, path_md):
     )
 
     # Test
-    assert pandoc_convert_org_to_markdown(Configuration(dry_run=False), Recipes.parse_obj({}), step).run()
+    assert pandoc_convert_org_to_markdown(Configuration(dry_run=False), step).run()
 
     # Confirm
     assert path_md.exists()
@@ -59,4 +59,4 @@ def test_missing_arg_s(path_org, path_md):
     step = Step(method="aMethod", confirm=False, verbose=False)
 
     # Test
-    assert not pandoc_convert_org_to_markdown(Configuration(), Recipes.parse_obj({}), step).run()
+    assert not pandoc_convert_org_to_markdown(Configuration(), step).run()

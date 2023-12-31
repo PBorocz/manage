@@ -1,5 +1,5 @@
 """Test git_add method."""
-from manage.models import Configuration, Recipes, Step
+from manage.models import Configuration, Step
 from manage.methods.git_add import Method as git_add  # noqa: N813
 
 
@@ -18,7 +18,7 @@ def test_git_add(git_repo, capsys):
     step = Step(method="testGitAdd", confirm=False, verbose=True, arguments=dict(pathspec=str(path)))
 
     # Test
-    assert git_add(Configuration(dry_run=False, confirm=False), Recipes.parse_obj({}), step).run(git_repo.api)
+    assert git_add(Configuration(dry_run=False, confirm=False), step).run(git_repo.api)
 
     # Confirm
     diff = git_repo.api.index.diff("HEAD")

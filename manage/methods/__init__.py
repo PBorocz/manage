@@ -9,7 +9,7 @@ from typing import Any, TypeVar
 
 from rich import print
 
-from manage.models import Configuration, Recipes
+from manage.models import Configuration, Step
 from manage.utilities import ask_confirm, failure, message, msg_failure, msg_debug, msg_success, success
 
 
@@ -37,7 +37,7 @@ def gather_available_method_classes(debug: bool) -> dict[str, TClass]:
         sys.exit(1)
 
     if debug:
-        msg_debug(f"{len(classes)} run-time methods found and registered")
+        msg_debug(f"- {len(classes)} run-time methods found and registered")
 
     return classes
 
@@ -46,11 +46,11 @@ class AbstractMethod:
     """Abstract SuperClass for all command classes."""
 
     @abstractmethod
-    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+    def __init__(self, file: str, configuration: Configuration, step: Step):
         """."""
         self.configuration = configuration
-        self.recipes = recipes
         self.step = step
+        self.name = Path(file).stem  # Name of the respective method
         self.cmd: str = None  # Provided on concrete class instantiation
         self.confirm: str = None  # "
 
@@ -76,7 +76,11 @@ class AbstractMethod:
         return ask_confirm(msg)
 
     def run(self) -> bool:
-        """Run a single command after dry-run-check and possible confirmation."""
+        """Run a single command after dry-run-check and possible confirmation.
+
+        This is a "default" method for simple classes that only have a single, single command,
+        e.g. git_add, poetry_version etc.
+        """
         if self.configuration.dry_run:
             self.dry_run(self.cmd)
             return True
@@ -146,7 +150,7 @@ class AbstractMethod:
             return None
 
         # Otherwise, we expected to find an argument and no default was provided!!
-        msg_failure(f"Sorry, command requires a supplemental argument for '{arg_name}'")
+        # msg_failure(f"Sorry, command requires a supplemental argument for '{arg_name}'")
         return None
 
     def validate_pathspec(self, cls: str, arg: str) -> list | None:
@@ -159,3 +163,9 @@ class AbstractMethod:
             if not Path(pathspec).exists():
                 return [f"({cls}:{arg}) '[italic]{pathspec}[/]' does not exist."]
         return None
+
+    def exit_with_fails(self, fails: list[str]) -> None:
+        """Print the validation failure messages and exit."""
+        for fail in fails:
+            msg_failure(f"- {fail}")
+        sys.exit(1)

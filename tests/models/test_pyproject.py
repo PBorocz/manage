@@ -5,27 +5,6 @@ from pathlib import Path
 from manage.models import PyProject
 
 
-def test_internal_defaults():
-    # Setup
-    pyproject = PyProject.factory({})
-
-    # Test
-    assert pyproject.get_parm("verbose") is False
-    assert pyproject.get_parm("confirm") is False
-    assert pyproject.get_parm("dry_run") is True
-
-
-def test_override():
-    # Setup
-    raw_pp = {"tool": {"manage": {"defaults": {"confirm": True, "verbose": True}}}}
-    pyproject = PyProject.factory(raw_pp)
-
-    # Test
-    assert pyproject.get_parm("verbose") is True
-    assert pyproject.get_parm("confirm") is True
-    assert pyproject.get_parm("dry_run") is True
-
-
 def test_validation_no_recipes(capsys):
     # Setup
     pyproject = PyProject.factory({})
@@ -44,7 +23,7 @@ def test_validation_invalid_default(capsys):
     # Test
     assert not pyproject.validate()
     captured = capsys.readouterr()
-    assert "UNKNOWN" in captured.out
+    assert "No recipes found" in captured.out
 
 
 def test_validation_no_package(capsys):

@@ -34,11 +34,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.manage]
 
 # ------------------------------------------------------------------------------
-[tool.manage.defaults]
-dry_run = true
-verbose = false
-
-# ------------------------------------------------------------------------------
 [tool.manage.recipes."1_bump"]
 description = "Bump the version number to the next /patch/ level and commit locally"
 
@@ -57,42 +52,36 @@ description = "Bump the version number to the next /patch/ level and commit loca
   method = "git_commit"
 
 
-  # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 [tool.manage.recipes."2_build"]
 description = "Build our distribution(s)"
 
 [[tool.manage.recipes."2_build".steps]]
   method = "poetry_lock_check"
-  confirm = false
 
 [[tool.manage.recipes."2_build".steps]]
   method = "clean"
-  confirm = false
   verbose = true
 
 [[tool.manage.recipes."2_build".steps]]
   method = "poetry_build"
-  confirm = false
 
-  # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 [tool.manage.recipes."3_release"]
 description = "Release current version's distribution to our github repository"
 
 [[tool.manage.recipes."3_release".steps]]
   method = "git_create_tag"
-  confirm = false
 
 [[tool.manage.recipes."3_release".steps]]
   method = "git_push_to_github"
-  confirm = false
 
 [[tool.manage.recipes."3_release".steps]]
   method = "git_create_release"
-  confirm = false
 
-  # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 [tool.manage.recipes.ALL]
-description = "Bump to next version, Build *and* Release!"
+description = "Bump to next version, build *and* release!"
 
 [[tool.manage.recipes.ALL.steps]]
   recipe = "1_bump"
@@ -102,3 +91,10 @@ description = "Bump to next version, Build *and* Release!"
 
 [[tool.manage.recipes.ALL.steps]]
   recipe = "3_release"
+
+# ------------------------------------------------------------------------------
+[tool.manage.recipes.test]
+description = "test harness for running single commands."
+
+[[tool.manage.recipes.test.steps]]
+  method = "sass"

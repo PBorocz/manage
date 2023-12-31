@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from manage.methods import AbstractMethod
-from manage.models import Argument, Arguments, Configuration, Recipes
+from manage.models import Argument, Arguments, Configuration
 from manage.utilities import msg_failure, message, failure, success
 
 
@@ -17,17 +17,31 @@ class Method(AbstractMethod):
                 type_=str,
                 default=None,
             ),
-            Argument(
-                name="cwd",
-                type_=str,
-                default=Path.cwd(),
-            ),
         ],
     )
 
-    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+    def __init__(self, configuration: Configuration, step: dict):
         """Update README."""
-        super().__init__(configuration, recipes, step)
+        super().__init__(__file__, configuration, step)
+
+    def validate(self) -> None:
+        """Perform any pre-method validation."""
+        # Check to see if optional argument exists if provided
+        if readme := self.get_arg("readme"):
+            if not Path(readme).exists():
+                msg = f"Sorry, path '[italic]{readme}[/]' could not be found for the {self.name} method."
+                self.exit_with_fails([msg])
+
+        # Check to see if we have one in the current directory
+        cwd = Path.cwd()
+        for format_ in ("org", "md"):
+            readme_name = f"README.{format_}"
+            path_readme = cwd / readme_name
+            if path_readme.exists():
+                break
+        else:
+            msg = "Sorry, couldn't find either a README.org or " "README.md in the top-level directory!"
+            self.exit_with_fails(msg)
 
     def run(self) -> bool:
         """Search for 'Unreleased...' header in Changelog portion of README and replace with current version and date.
@@ -52,8 +66,7 @@ class Method(AbstractMethod):
         ...
         """
         # Has the user provided an explicit path to the README file to work on?
-        status, path_readme, readme_name = self._get_readme_path()
-        if not status:
+        if not (path_readme := self._get_readme_path()):
             return False
 
         release_tag = f"{self.configuration.version} - {datetime.now().strftime('%Y-%m-%d')}"  # eg. vA.B.C - 2023-05-15
@@ -74,7 +87,7 @@ class Method(AbstractMethod):
         # Confirm that we actually *found* the "Unreleased" header (irrespective of format):
         if not unreleased_header:
             failure()
-            msg_failure(f"Sorry, couldn't find a header-line with 'Unreleased' in {readme_name}!")
+            msg_failure(f"Sorry, couldn't find a header-line with 'Unreleased' in {path_readme.name}!")
             return False
 
         # We want to place the new version header at the same level as the current 'Unreleased',
@@ -88,7 +101,7 @@ class Method(AbstractMethod):
         ################################################################################
         # Dry-run
         ################################################################################
-        cmd = f"update {readme_name}'s '[italic]Unreleased[/]' header to '[italic]{release_tag}[/]'"
+        cmd = f"update {path_readme.name}'s '[italic]Unreleased[/]' header to '[italic]{release_tag}[/]'"
         if self.configuration.dry_run:
             self.dry_run(cmd)
             return True
@@ -101,7 +114,7 @@ class Method(AbstractMethod):
 
         # RUN!!
         if self.step.verbose:
-            message(f"Running update on {readme_name} version to: '{unreleased_header}'")
+            message(f"Running update on {path_readme.name} version to: '{unreleased_header}'")
 
         path_readme.write_text(readme_contents)
 
@@ -110,7 +123,7 @@ class Method(AbstractMethod):
 
         return True
 
-    def _get_readme_path(self) -> tuple[bool, Path, str]:
+    def _get_readme_path(self) -> Path | None:
         """Get the default path we'll be working on?.
 
         Note: this is primarily for testing purposes, as manage
@@ -118,23 +131,11 @@ class Method(AbstractMethod):
         """
         if s_readme := self.get_arg("readme", optional=True):
             # Yes, make sure we can find it..
-            path_readme = Path(s_readme)
-            if not path_readme.exists():
-                failure()
-                msg_failure(f"Sorry, couldn't find file with path '{path_readme}'!")
-                return False, None, None
-            readme_name = path_readme.name
+            return Path(s_readme)
         else:
             # Not specified, look for default README
-            cwd = Path(self.get_arg("cwd", optional=True, default=Path.cwd()))
             for format_ in ("org", "md"):
-                readme_name = f"README.{format_}"
-                path_readme = cwd / readme_name
+                path_readme = Path.cwd() / f"README.{format_}"
                 if path_readme.exists():
-                    break
-            else:
-                failure()
-                msg_failure("Sorry, couldn't find either a README.org or " "README.md in the top-level directory!")
-                return False, None, None
-
-        return True, path_readme, readme_name
+                    return path_readme
+        return None

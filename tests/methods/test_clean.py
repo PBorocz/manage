@@ -41,7 +41,7 @@ def test_clean(configuration, recipes, mock_input, capsys, build_file):
     step = Step(method="aMethod", confirm=False, verbose=False)
 
     # Test
-    clean(configuration, recipes, step).run()
+    clean(configuration, step).run()
 
     # Confirm: Path is now gone & nothing came to output.
     assert not build_file.exists()
@@ -56,7 +56,7 @@ def test_clean_verbose(configuration, recipes, mock_input, capsys):
     step = Step(method="aMethod", confirm=False, verbose=True)
 
     # Test
-    clean(configuration, recipes, step).run()
+    clean(configuration, step).run()
 
     # Confirm verbose output:
     captured = capsys.readouterr()
@@ -71,7 +71,7 @@ def test_clean_confirm(configuration, recipes, mock_input, capsys, build_file):
 
     # Test
     mock_input.return_value = "yes"
-    clean(configuration, recipes, step).run()
+    clean(configuration, step).run()
 
     # Confirm confirm message
     assert not build_file.exists()
@@ -87,7 +87,7 @@ def test_clean_dryrun(recipes, mock_input, capsys, build_file):
     step = Step(method="aMethod", confirm=False, verbose=False)
 
     # Test
-    clean(configuration, recipes, step).run()
+    clean(configuration, step).run()
 
     # Confirm dry-run message
     captured = capsys.readouterr()
@@ -103,7 +103,7 @@ def test_clean_confirm_verbose(configuration, recipes, mock_input, capsys):
 
     # Test
     mock_input.return_value = "y"
-    clean(configuration, recipes, step).run()
+    clean(configuration, step).run()
 
     # Confirm confirm and verbose output
     captured = capsys.readouterr()

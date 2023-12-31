@@ -37,3 +37,9 @@ class Arguments(BaseModel):
             if arg.name == argument_name:
                 return arg
         return None
+
+    def __contains__(self, argument_name: str) -> bool:
+        for arg in self.arguments:
+            if arg.name == argument_name:
+                return True
+        return False

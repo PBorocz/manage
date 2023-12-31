@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from manage import DEFAULT_PROJECT_PATH
-from manage.dispatch import dispatch
 from manage.methods import gather_available_method_classes
 from manage.models import Configuration, PyProject, Recipes
 from manage.validate import validate
@@ -69,7 +68,7 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         "-v",
         "--verbose",
         action="store_true",
-        default=pyproject.get_parm("verbose"),
+        default=False,
     )
 
     parser.add_argument(
@@ -90,7 +89,7 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         help="Override recipe's 'confirm' setting to run all confirmable steps in confirm mode.",
         type=bool,
         action=argparse.BooleanOptionalAction,
-        default=pyproject.get_parm("confirm"),
+        default=False,
     )
 
     # Setup a sub-parser to handle mutually-exclusive setting of --live or --dry-run.
@@ -107,7 +106,7 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         dest="dry_run",
         action="store_false",
     )
-    parser.set_defaults(dry_run=pyproject.get_parm("dry_run"))
+    parser.set_defaults(dry_run=True)
 
     # Parse all the command-line args/parameters provided (both those above and unknown ones)
     args_static, args_dynamic = parser.parse_known_args()
@@ -189,7 +188,7 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
         blue("--verbose/-v"),
         green(
             "Run steps in verbose mode [italic](including method stdout if available)[/]; "
-            f'default is [italic][bold]{pyproject.get_parm("verbose")}[/].',
+            "default is [italic][bold]False[/].",
         ),
     )
 
@@ -205,22 +204,18 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
         green(
             "Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "
             "all [bold]confirm[/]; "
-            f'default is [italic][bold]{pyproject.get_parm("confirm")}[/].',
+            "default is [italic][bold]False[/].",
         ),
     )
 
     table.add_row(
         blue("--dry_run"),
-        green(
-            "Run steps in 'dry-run' mode; " f'default is [italic][bold]{pyproject.get_parm("dry_run")}[/].',
-        ),
+        green("Run steps in 'dry-run' mode; default is [italic][bold]True[/]."),
     )
 
     table.add_row(
         blue("--live"),
-        green(
-            "Run steps in 'live' mode; " f'default is [italic][bold]{not pyproject.get_parm("dry_run")}[/].',
-        ),
+        green("Run steps in 'live' mode; default is [italic][bold]False[/]."),
     )
 
     panel: Panel = Panel(table, title=green("BUILT-IN COMMAND OPTIONS"), title_align="left")
@@ -318,9 +313,10 @@ def main():
         sys.exit(1)
 
     ################################################################################
-    # Dispatch to our target and run!
+    # Walk the tree twice, first to validate method instances and then to run.
     ################################################################################
     try:
-        dispatch(configuration, recipes)
+        recipes.walk(configuration, True)
+        recipes.walk(configuration, False)
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)

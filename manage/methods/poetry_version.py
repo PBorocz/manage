@@ -1,9 +1,10 @@
 """Manage step."""
+import shutil
 import sys
 from pathlib import Path
 
 from manage.methods import AbstractMethod
-from manage.models import Argument, Arguments, Configuration, Recipes
+from manage.models import Argument, Arguments, Configuration
 from manage.utilities import failure, message, smart_join
 
 BUMP_RULES = ("patch", "minor", "major", "prepatch", "preminor", "premajor", "prerelease")
@@ -22,16 +23,27 @@ class Method(AbstractMethod):
         ],
     )
 
-    def __init__(self, configuration: Configuration, recipes: Recipes, step: dict):
+    def __init__(self, configuration: Configuration, step: dict):
         """Init."""
-        super().__init__(configuration, recipes, step)
+        super().__init__(__file__, configuration, step)
 
-    def validate(self) -> list | None:
-        """Perform any pre-step validation."""
+    def validate(self) -> None:
+        """Perform any pre-method validation."""
+        fails = []
+
+        # Check to see if executable is available
+        exec_ = "poetry"
+        if not shutil.which(exec_):
+            fails.append(f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method.")
+
         if bump_rule := self.configuration.find_method_arg_value(Path(__file__).stem, "bump_rule"):
             if bump_rule not in BUMP_RULES:
                 versions = smart_join(BUMP_RULES, with_or=True)
-                return [f"(poetry_version) '[italic]{bump_rule}[/]' is not a valid bump_rule: \\[{versions}]."]
+                fails.append(f"(poetry_version) '[italic]{bump_rule}[/]' is not a valid bump_rule: \\[{versions}].")
+
+        if fails:
+            self.exit_with_fails(fails)
+
         return None
 
     def run(self) -> bool:
@@ -56,6 +68,9 @@ class Method(AbstractMethod):
             message(msg)
             sys.exit(1)
 
+        # Side-effect! -> Make sure our configuration has the NEW version from now on!
+        self.configuration.set_version(new_version)
+
         ################################################################################
         # Dry-run?
         ################################################################################
@@ -74,10 +89,7 @@ class Method(AbstractMethod):
         ################################################################################
         # Run it by doing the REAL poetry version!
         ################################################################################
-        status, output = self.go(cmd)
+        status, _ = self.go(cmd)
         if status:
-            # Side-effect! -> Make sure our configuration has the NEW version from now on!
-            self.configuration.set_version(output.split()[-1])
             return True
-        else:
-            return False
+        return False

@@ -48,6 +48,24 @@ class Recipes(BaseModel):
             recipe.print(console, recipe_name, configuration)
         return True
 
+    def walk(self, configuration: TConfiguration, validate: bool = False):
+        """Walk the tree, either calling the 'run' or 'validate' method on the respective method."""
+        for step in self.get(configuration.target):
+            # Each step to be performed could be either a method OR another step:
+            if step.class_:
+                # Instantiate the method's class associated with the step
+                instance = step.class_(configuration, step)
+
+                # Either validate the step or run for realsies..
+                if validate:
+                    instance.validate()
+                else:
+                    instance.run()
+            else:
+                # Run another recipe!
+                configuration.target = step.recipe  # Override the target (but leave the rest)
+                self.walk(configuration, validate)
+
     @classmethod
     def factory(cls, configuration: TConfiguration, pyproject: TPyProject, method_classes: dict[str, TClass]) -> Self:
         """We want a clean/easy-to-use recipe file, thus, do our own deserialisation and embellishment."""

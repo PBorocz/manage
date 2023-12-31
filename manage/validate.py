@@ -1,5 +1,4 @@
 """Validation, both overall environment and method specific."""
-import os
 import shutil
 from pathlib import Path
 from typing import TypeVar
@@ -34,9 +33,9 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
     failures.extend(fails)
 
     # Check: Do any of method_classes have validation logic to run?
-    warns, fails = _validate_method_classes(configuration, recipes, method_classes)
-    warnings.extend(warns)
-    failures.extend(fails)
+    # warns, fails = _validate_method_classes(configuration, recipes, method_classes)
+    # warnings.extend(warns)
+    # failures.extend(fails)
 
     # Check: are version numbers consistent between pyproject.toml and README's change history?
     warns, fails = _validate_existing_version_numbers(configuration)
@@ -68,18 +67,6 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
 def _validate_environment(configuration: Configuration) -> TWarnsFails:
     """Validate that our run-time environment is copacetic."""
     warns = []
-
-    ################################################################################
-    # Check Github configuration environment variables..
-    ################################################################################
-    for env_var in [
-        "GITHUB_API_RELEASES",
-        "GITHUB_USER",
-        "GITHUB_API_TOKEN",
-        "GITHUB_PROJECT_RELEASE_HISTORY",
-    ]:
-        if env_var not in os.environ:
-            warns.append(f"Can't find environment variable '[italic]{env_var}[/]'")
 
     ################################################################################
     # Check for various executable:
@@ -129,19 +116,22 @@ def _validate_step_args(configuration: Configuration, method_classes: dict[str, 
 ################################################################################
 # Method classes
 ################################################################################
-def _validate_method_classes(
-    configuration: Configuration,
-    recipes: Recipes,
-    method_classes: dict[str, TClass],
-) -> TWarnsFails:
-    """Find and run all 'validate' methods defined on our Method Classes."""
-    fails = []
-    for method, class_ in method_classes.items():
-        instance = class_(configuration, recipes, {})  # Don't need "step" arg here..
-        if validate_method := getattr(instance, "validate", None):
-            if results := validate_method():
-                fails.extend(results)
-    return [], fails
+# def _validate_method_classes(
+#     configuration: Configuration,
+#     recipes: Recipes,
+#     method_classes: dict[str, TClass],
+# ) -> TWarnsFails:
+#     """Find and run all 'validate' methods defined on our recipes."""
+#     fails = []
+#     for _, recipe in recipes:
+#         for step in recipe:
+#             if not step.class_:
+#                 continue
+#             instance = step.class_(configuration, recipes, step)
+#             if validate_method := getattr(instance, "validate", None):
+#                 if results := validate_method():
+#                     fails.extend(results)
+#     return [], fails
 
 
 ################################################################################

@@ -1,5 +1,5 @@
 """Test git_commit method."""
-from manage.models import Configuration, Recipes, Step
+from manage.models import Configuration, Step
 from manage.methods.git_commit import Method as git_commit  # noqa: N813
 
 COMMIT_MESSAGE = "A commit message"
@@ -13,7 +13,7 @@ def test_git_commit(git_repo, capsys):
 
     # Test!
     step = Step(method="aMethod", confirm=False, verbose=True, arguments=dict(message=COMMIT_MESSAGE))
-    assert git_commit(Configuration(dry_run=False), Recipes.parse_obj({}), step).run(git_repo.api)
+    assert git_commit(Configuration(dry_run=False), step).run(git_repo.api)
 
     # Confirm: 1 - Did we get a commit?
     try:
