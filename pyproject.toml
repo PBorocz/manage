@@ -91,10 +91,3 @@ description = "Bump to next version, build *and* release!"
 
 [[tool.manage.recipes.ALL.steps]]
   recipe = "3_release"
-
-# ------------------------------------------------------------------------------
-[tool.manage.recipes.test]
-description = "test harness for running single commands."
-
-[[tool.manage.recipes.test.steps]]
-  method = "sass"

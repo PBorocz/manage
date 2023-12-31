@@ -574,6 +574,9 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+
+- Miscellaneous updates to diagnostics and added method specific validation.
+
 ### v0.3.0 - 2023-12-30
 
 - CHANGED **BREAKING**: Changed the name of the `pre-commit` method to `pre_commit` (previously was `run_pre_commit`).

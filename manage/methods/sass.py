@@ -27,7 +27,7 @@ class Method(AbstractMethod):
         fails = []
 
         # Check to see if executable is available
-        if msg := self.validate_executable("sass_asdfasdfasdf"):
+        if msg := self.validate_executable("sass"):
             fails.append(msg)
 
         # Check to make sure argument is provided
