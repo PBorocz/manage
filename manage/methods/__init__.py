@@ -95,6 +95,10 @@ class AbstractMethod:
     ################################################################################
     # Validation support methods
     ################################################################################
+    def validate(self) -> list[str]:
+        """Dummy method in case a method class doesn't need any validation."""
+        return []
+
     def validate_executable(self, executable: str) -> str | None:
         """Confirm that the executable name specified actually exists on our path."""
         if not shutil.which(executable):
