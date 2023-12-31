@@ -20,24 +20,17 @@ class Method(AbstractMethod):
         """Init."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Perform any pre-method validation."""
-        fails = []
-
         # Check to make sure argument is provided
         if not self.get_arg("command"):
-            fails.append(f"Sorry, The {self.name} method requires a [italic]command[/] argument.")
-
-        if fails:
-            self.exit_with_fails(fails)
-
-        return fails
+            return [f"Sorry, The {self.name} method requires a [italic]command[/] argument."]
+        return []
 
     def run(self) -> bool:
         """Run a local command."""
         # Get argument...
-        if not (command := self.get_arg("command")):
-            return False
+        command = self.get_arg("command")
 
         if self.configuration.dry_run:
             self.dry_run(command)

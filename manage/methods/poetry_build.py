@@ -1,5 +1,4 @@
 """Build a poetry distribution."""
-import shutil
 from manage.methods import AbstractMethod
 from manage.models import Configuration
 
@@ -13,10 +12,8 @@ class Method(AbstractMethod):
         self.cmd = "poetry build"
         self.confirm = f"Ok to build distribution files? ['[italic]{self.cmd}[/]']"
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Perform any pre-method validation."""
-        # Check to see if executable is available
-        exec_ = "poetry"
-        if not shutil.which(exec_):
-            msg = f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method."
-            self.exit_with_fails([msg])
+        if msg := self.validate_executable("poetry"):
+            return [msg]
+        return []

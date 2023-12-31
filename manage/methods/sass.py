@@ -1,5 +1,4 @@
 """Method to run SASS pre-processor."""
-import shutil
 from pathlib import Path
 
 from manage.methods import AbstractMethod
@@ -23,14 +22,13 @@ class Method(AbstractMethod):
         """Init."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Perform any pre-method validation."""
         fails = []
 
         # Check to see if executable is available
-        exec_ = "sass"
-        if not shutil.which(exec_):
-            fails.append(f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method.")
+        if msg := self.validate_executable("sass_asdfasdfasdf"):
+            fails.append(msg)
 
         # Check to make sure argument is provided
         if not (pathspec := self.get_arg("pathspec")):
@@ -39,9 +37,6 @@ class Method(AbstractMethod):
         # Check to make sure argument provided actually exists on disk
         elif not Path(pathspec).exists():
             fails.append(f"Sorry, path '[italic]{pathspec}[/]' could not be found for the {self.name} method.")
-
-        if fails:
-            self.exit_with_fails(fails)
 
         return fails
 

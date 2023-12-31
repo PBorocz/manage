@@ -7,11 +7,11 @@ from typing import TypeVar
 from dotenv import load_dotenv
 from rich.console import Console
 
-from manage import DEFAULT_PROJECT_PATH
+from manage import PYPROJECT_PATH
 from manage.methods import gather_available_method_classes
 from manage.models import Configuration, PyProject, Recipes
 from manage.validate import validate
-from manage.utilities import message, shorten_path
+from manage.utilities import message, msg_failure, shorten_path
 
 load_dotenv(verbose=True)
 
@@ -23,7 +23,7 @@ CONSOLE = Console()
 def process_arguments() -> [Configuration, PyProject]:
     """Create and run out CLI argument parser with a "raw" read of our pyproject.toml, return it and configuration."""
     # Read our pyproject.toml
-    raw_pyproject = tomllib.loads(DEFAULT_PROJECT_PATH.read_text())
+    raw_pyproject = tomllib.loads(PYPROJECT_PATH.read_text())
 
     # Create our pyproject instance and make sure it's copacetic.
     pyproject = PyProject.factory(raw_pyproject)
@@ -34,7 +34,7 @@ def process_arguments() -> [Configuration, PyProject]:
     args: tuple = get_args(pyproject)
 
     if args[0].verbose:
-        shortened_path = shorten_path(DEFAULT_PROJECT_PATH, 76)
+        shortened_path = shorten_path(PYPROJECT_PATH, 76)
         message(f"Read {shortened_path}", end_success=True)
 
     # Given our command-line arguments, create our more structured configuration instance:
@@ -250,9 +250,29 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
     console.print(panel)
 
 
+def validate_target(configuration: Configuration, pyproject: PyProject) -> bool:
+    """Make sure the user's requested target is valid."""
+    s_targets = pyproject.get_formatted_list_of_targets()
+    if configuration.target:
+        if not pyproject.is_valid_target(configuration.target):
+            msg = (
+                f"[red]Sorry, [italic]{configuration.target}[/] is not a valid recipe, "
+                f"must be one of [yellow][italic]{s_targets}[/]."
+            )
+            CONSOLE.print(msg)
+            return False
+
+    elif not configuration.print:
+        msg = f"[red]Sorry, we need a valid recipe target to execute, must be one of [yellow][italic]{s_targets}[/]."
+        CONSOLE.print(msg)
+        return False
+
+    return True
+
+
 def main():
     # Before anything else, make sure we're working from the root-level of the target project and have a pyproject.toml.
-    if not DEFAULT_PROJECT_PATH.exists():
+    if not PYPROJECT_PATH.exists():
         CONSOLE.print(
             "[red]Sorry, you need to run this from the same directory that your pyproject.toml file exists in.",
         )
@@ -262,7 +282,6 @@ def main():
     # Read our pyproject.toml file and parse (but don't validate) our command-line:
     ################################################################################
     configuration, pyproject = process_arguments()
-    s_targets = pyproject.get_formatted_list_of_targets()
 
     ################################################################################
     # Gather available methods from package's library:
@@ -286,17 +305,7 @@ def main():
     ################################################################################
     # Validate the user's specific target requested:
     ################################################################################
-    if configuration.target:
-        if not pyproject.is_valid_target(configuration.target):
-            msg = (
-                f"[red]Sorry, [italic]{configuration.target}[/] is not a valid recipe, "
-                f"must be one of [yellow][italic]{s_targets}[/]."
-            )
-            CONSOLE.print(msg)
-            sys.exit(1)
-    elif not configuration.print:
-        msg = f"Sorry, we need a valid recipe target to execute, must be one of [yellow]{s_targets}[/]."
-        CONSOLE.print(msg)
+    if not validate_target(configuration, pyproject):
         sys.exit(1)
 
     ################################################################################
@@ -307,7 +316,7 @@ def main():
         sys.exit(0)
 
     ################################################################################
-    # Do some validation:
+    # Do general validation (ie. not specific to a particular method)
     ################################################################################
     if not validate(configuration, recipes, method_classes):
         sys.exit(1)
@@ -315,8 +324,14 @@ def main():
     ################################################################################
     # Walk the tree twice, first to validate method instances and then to run.
     ################################################################################
+    # Validation run..
+    if fails := recipes.validate(configuration):
+        for fail in fails:
+            msg_failure(f"- {fail}")
+        sys.exit(1)
+
+    # "Real" run..
     try:
-        recipes.walk(configuration, True)
-        recipes.walk(configuration, False)
+        recipes.run(configuration, False)
     except (KeyboardInterrupt, EOFError):
         sys.exit(0)

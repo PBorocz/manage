@@ -1,6 +1,7 @@
 """Method root classes and methods."""
 import importlib
 import shlex
+import shutil
 import subprocess
 import sys
 from abc import abstractmethod
@@ -92,6 +93,26 @@ class AbstractMethod:
         return status
 
     ################################################################################
+    # Validation support methods
+    ################################################################################
+    def validate_executable(self, executable: str) -> str | None:
+        """Confirm that the executable name specified actually exists on our path."""
+        if not shutil.which(executable):
+            return f" [italic]{self.name}[/]: Sorry, couldn't find '[italic]{executable}[/]' on your path."
+        return None
+
+    def validate_pathspec(self, cls: str, arg: str) -> list | None:
+        """Perform a validation of a 'pathspec' parameter.
+
+        We define this here as there are several method-classes that use
+        this logic.
+        """
+        if pathspec := self.configuration.find_method_arg_value(cls, arg):
+            if not Path(pathspec).exists():
+                return [f"({cls}:{arg}) '[italic]{pathspec}[/]' does not exist."]
+        return None
+
+    ################################################################################
     # Utility methods
     ################################################################################
     def go(self, command) -> tuple[bool, str]:
@@ -152,20 +173,3 @@ class AbstractMethod:
         # Otherwise, we expected to find an argument and no default was provided!!
         # msg_failure(f"Sorry, command requires a supplemental argument for '{arg_name}'")
         return None
-
-    def validate_pathspec(self, cls: str, arg: str) -> list | None:
-        """Perform a validation of a 'pathspec' parameter.
-
-        We define this here as there are several method-classes that use
-        this logic.
-        """
-        if pathspec := self.configuration.find_method_arg_value(cls, arg):
-            if not Path(pathspec).exists():
-                return [f"({cls}:{arg}) '[italic]{pathspec}[/]' does not exist."]
-        return None
-
-    def exit_with_fails(self, fails: list[str]) -> None:
-        """Print the validation failure messages and exit."""
-        for fail in fails:
-            msg_failure(f"- {fail}")
-        sys.exit(1)

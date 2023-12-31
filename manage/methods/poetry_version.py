@@ -1,5 +1,4 @@
 """Manage step."""
-import shutil
 import sys
 from pathlib import Path
 
@@ -27,24 +26,20 @@ class Method(AbstractMethod):
         """Init."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Perform any pre-method validation."""
         fails = []
 
         # Check to see if executable is available
-        exec_ = "poetry"
-        if not shutil.which(exec_):
-            fails.append(f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method.")
+        if msg := self.validate_executable("poetry"):
+            fails.append(msg)
 
         if bump_rule := self.configuration.find_method_arg_value(Path(__file__).stem, "bump_rule"):
             if bump_rule not in BUMP_RULES:
                 versions = smart_join(BUMP_RULES, with_or=True)
                 fails.append(f"(poetry_version) '[italic]{bump_rule}[/]' is not a valid bump_rule: \\[{versions}].")
 
-        if fails:
-            self.exit_with_fails(fails)
-
-        return None
+        return fails
 
     def run(self) -> bool:
         """Do a version "bump" of pyproject.toml using poetry to a specified poetry "level"."""

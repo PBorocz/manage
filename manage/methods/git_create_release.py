@@ -19,7 +19,7 @@ class Method(AbstractMethod):
         """Create github release."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Check to make sure we have the right credentials configured."""
         fails = []
         for env_var in [
@@ -31,8 +31,7 @@ class Method(AbstractMethod):
             if env_var not in os.environ:
                 msg = f"Can't find environment variable '[italic]{env_var}[/]' (required for {Path(__file__).stem})"
                 fails.append(msg)
-        if fails:
-            self.exit_with_fails(fails)
+        return fails
 
     def run(self) -> bool:
         """Create github release."""

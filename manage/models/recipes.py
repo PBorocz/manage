@@ -48,23 +48,31 @@ class Recipes(BaseModel):
             recipe.print(console, recipe_name, configuration)
         return True
 
-    def walk(self, configuration: TConfiguration, validate: bool = False):
-        """Walk the tree, either calling the 'run' or 'validate' method on the respective method."""
+    def validate(self, configuration: TConfiguration, fails: list[str] = []) -> list[str]:
+        """Walk the tree, calling 'validate' on the respective method and gather all the results."""
+        for step in self.get(configuration.target):
+            # Each step to be performed could be either a method OR another step:
+            if step.class_:
+                # Instantiate the method's class associated with the step and validate it!
+                if msgs := step.class_(configuration, step).validate():
+                    fails.extend(msgs)
+            else:
+                # Run another recipe!
+                configuration.target = step.recipe  # Override the target (but leave the rest)
+                self.validate(configuration, fails)
+        return fails
+
+    def run(self, configuration: TConfiguration):
+        """Walk the tree, either calling 'run' on the respective method."""
         for step in self.get(configuration.target):
             # Each step to be performed could be either a method OR another step:
             if step.class_:
                 # Instantiate the method's class associated with the step
-                instance = step.class_(configuration, step)
-
-                # Either validate the step or run for realsies..
-                if validate:
-                    instance.validate()
-                else:
-                    instance.run()
+                step.class_(configuration, step).run()
             else:
                 # Run another recipe!
                 configuration.target = step.recipe  # Override the target (but leave the rest)
-                self.walk(configuration, validate)
+                self.walk(configuration)
 
     @classmethod
     def factory(cls, configuration: TConfiguration, pyproject: TPyProject, method_classes: dict[str, TClass]) -> Self:

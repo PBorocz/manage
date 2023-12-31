@@ -1,5 +1,4 @@
 """Verify that poetry.lock is consistent with pyproject.toml and update if not (good security practice)."""
-import shutil
 from manage.methods import AbstractMethod
 from manage.models import Configuration
 from manage.utilities import msg_warning, warning
@@ -12,13 +11,11 @@ class Method(AbstractMethod):
         """Init method."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Perform any pre-method validation."""
-        # Check to see if executable is available
-        exec_ = "poetry"
-        if not shutil.which(exec_):
-            msg = f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method."
-            self.exit_with_fails([msg])
+        if msg := self.validate_executable("poetry"):
+            return [msg]
+        return []
 
     def run(self) -> bool:
         """Poetry lock check and optional update."""

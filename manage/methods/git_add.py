@@ -1,5 +1,4 @@
 """Method to perform a 'git add' (aka stage) command."""
-import shutil
 from pathlib import Path
 
 from git import Repo
@@ -27,13 +26,12 @@ class Method(AbstractMethod):
         """Define git add."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Perform any pre-method validation."""
         # Check to see if executable is available
-        exec_ = "git"
-        if not shutil.which(exec_):
-            msg = f"Sorry, Couldn't find '[italic]{exec_}[/]' is your path for the {self.name} method."
-            self.exit_with_fails([msg])
+        if msg := self.validate_executable("git"):
+            return [msg]
+        return []
 
     def run(self, repo: Repo | None = None) -> bool:
         """Do a 'git add' command, either with a specific wildcard or all (if no argument specified).

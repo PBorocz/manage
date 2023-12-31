@@ -28,7 +28,7 @@ class PyProject(BaseModel):
         """Return a comma-delimited list of available recipe targets."""
         targets_recipes = list(self.recipes.keys()) + supplements
         if targets_recipes:
-            return ": " + smart_join(sorted(targets_recipes), with_or=True)
+            return smart_join(sorted(targets_recipes), with_or=True)
         return ""
 
     def get_target_names_and_descriptions(self) -> list[tuple[str, str]]:

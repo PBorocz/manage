@@ -24,13 +24,13 @@ class Method(AbstractMethod):
         """Update README."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list[str]:
         """Perform any pre-method validation."""
+        fails = []
         # Check to see if optional argument exists if provided
         if readme := self.get_arg("readme"):
             if not Path(readme).exists():
-                msg = f"Sorry, path '[italic]{readme}[/]' could not be found for the {self.name} method."
-                self.exit_with_fails([msg])
+                fails.append(f"Sorry, path '[italic]{readme}[/]' could not be found for the {self.name} method.")
 
         # Check to see if we have one in the current directory
         cwd = Path.cwd()
@@ -40,8 +40,9 @@ class Method(AbstractMethod):
             if path_readme.exists():
                 break
         else:
-            msg = "Sorry, couldn't find either a README.org or " "README.md in the top-level directory!"
-            self.exit_with_fails(msg)
+            fails.append("Sorry, couldn't find either a README.org or " "README.md in the top-level directory!")
+
+        return fails
 
     def run(self) -> bool:
         """Search for 'Unreleased...' header in Changelog portion of README and replace with current version and date.

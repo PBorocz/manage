@@ -21,6 +21,7 @@ class Step(BaseModel):
 
     confirm     : bool | None = None
     verbose     : bool | None = None
+    debug       : bool | None = None
     allow_error : bool | None = None
 
     arguments   : Dict[str, Any] = {}  # Supplemental arguments for the callable
@@ -52,49 +53,6 @@ class Step(BaseModel):
             return self.method
         return self.recipe
 
-    def __reflect_runtime_arguments(self, configuration: TConfiguration) -> Self:
-        """Update the step based on any/all arguments received on the command-line."""
-        msgs = []
-        # Two STATIC command-line args can trickle down to individual step execution: 'confirm' and 'verbose':
-        if configuration.confirm is not None and self.confirm != configuration.confirm:
-            msgs.append(
-                f"- {self.name()}: overriding [italic]confirm[/] from "
-                f"[italic]{self.confirm}[/] to [italic]{configuration.confirm}[/]",
-            )
-            self.confirm = configuration.confirm
-
-        if configuration.verbose is not None and self.verbose != configuration.verbose:
-            msgs.append(
-                f"- {self.name()}: overriding [italic]verbose[/] from "
-                f"[italic]{self.verbose}[/] to [italic]{configuration.debug}[/]",
-            )
-            self.verbose = configuration.verbose
-
-        # However, we might have any number of DYNAMIC command-line args *specific* to this method:
-        if not self.method:  # Only true if this step is a method, e.g. git_commit
-            return self
-        for (method_name, method_arg), cli_value in configuration.method_args:  # e.g. ("git_commit","message"),".."
-            if method_name == self.method:
-                if default_arg := self.class_.args.get_argument(method_arg):
-                    if default_arg.default:
-                        msgs.append(
-                            f"- {self.name()}: overriding [italic]{method_arg}[/] from "
-                            f"[italic]{default_arg.default}[/] to [italic]{cli_value}[/] "
-                            "from command-line",
-                        )
-                    else:
-                        msgs.append(
-                            f"- {self.name()}: setting [italic]{method_arg}[/] to [italic]{cli_value}[/] "
-                            "from command-line",
-                        )
-                    self.arguments[method_arg] = cli_value
-
-        if configuration.debug:
-            for msg in msgs:
-                msg_debug(msg)
-
-        return self
-
     @classmethod
     def factory(cls, configuration: TConfiguration, method_classes: dict[str, TClass], **step_args) -> Self:
         """Return a new Step instance based on args and current configuration."""
@@ -104,9 +62,65 @@ class Step(BaseModel):
         step.class_ = method_classes.get(step.method, None)
 
         # Ripple command-line argument overrides to each step:
-        step.__reflect_runtime_arguments(configuration)
+        step._reflect_runtime_arguments(configuration)
 
         return step
+
+    def __reflect_variable(self, configuration: TConfiguration, var: str) -> None:
+        msgs = []
+        self_value = getattr(self, var)          # Current value of the attribute from the recipe file.
+        conf_value = getattr(configuration, var) # Potential override value of the attribute from the CLI.
+
+        # Shortcut..
+        if conf_value is None:
+            return []
+
+        if self_value is None:
+            setattr(self, var, conf_value)
+            msg = f"- {self.name():30s}: setting [italic]{var}[/] to [italic]{conf_value}[/]"
+            msgs.append(msg)
+
+        elif self_value != conf_value:
+            setattr(self, var, conf_value)
+            msg = f"- {self.name():30s}: overriding [italic]{var}[/] from " \
+                f"[italic]{self_value}[/] to [italic]{conf_value}[/]"
+            msgs.append(msg)
+
+        return msgs
+
+    def _reflect_runtime_arguments(self, configuration: TConfiguration) -> Self:
+        """Update the step based on any/all arguments received on the command-line."""
+        debugs = []
+
+        # Some command-line args can trickle down to individual step execution, do those here:
+        debugs.extend(self.__reflect_variable(configuration, "debug"))
+        debugs.extend(self.__reflect_variable(configuration, "verbose"))
+        debugs.extend(self.__reflect_variable(configuration, "confirm"))
+
+        # However, we might have any number of DYNAMIC command-line args *specific* to this method:
+        if not self.method:  # Only true if this step is a method, e.g. git_commit
+            return self
+        for (method_name, method_arg), cli_value in configuration.method_args:  # e.g. ("git_commit","message"),".."
+            if method_name == self.method:
+                if default_arg := self.class_.args.get_argument(method_arg):
+                    if default_arg.default:
+                        debugs.append(
+                            f"- {self.name()}: overriding [italic]{method_arg}[/] from "
+                            f"[italic]{default_arg.default}[/] to [italic]{cli_value}[/] "
+                            "from command-line",
+                        )
+                    else:
+                        debugs.append(
+                            f"- {self.name()}: setting [italic]{method_arg}[/] to [italic]{cli_value}[/] "
+                            "from command-line",
+                        )
+                    self.arguments[method_arg] = cli_value
+
+        if configuration.debug:
+            for debug in debugs:
+                msg_debug(debug)
+
+        return self
 
     def _str_(self) -> dict:
         """Return a 'cleaned-up' copy of this step for printing."""
