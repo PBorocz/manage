@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manage"
-version = "0.3.1"
+version = "0.3.2a0"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
@@ -27,6 +27,10 @@ pytest-git = "^1.7.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# Keep version above in-sync with that in __init__.py
+# [tool.poetry-version-plugin]
+# source = "init"
 
 # ##############################################################################
 # Manager Tool
