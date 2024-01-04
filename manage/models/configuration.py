@@ -18,7 +18,7 @@ class Configuration(BaseModel):
     help        : bool | None = None  # Were we requested to just display help?
     print       : bool | None = None  # Were we requested to print the recipes contents?
 
-    debug       : bool | None = False # Are we running in debug mode?
+    debug       : bool | None = None  # Are we running in debug mode?
     verbose     : bool | None = None  # Are we running in verbose mode?
     target      : str  | None = None  # What is the target to be performed?
     confirm     : bool | None = None  # Should we perform confirmations on steps?

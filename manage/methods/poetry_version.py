@@ -17,7 +17,7 @@ class Method(AbstractMethod):
             Argument(
                 name="bump_rule",
                 type_=str,
-                default="bump",
+                default="patch",
             ),
         ],
     )

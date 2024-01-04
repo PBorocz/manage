@@ -7,7 +7,7 @@ from typing import TypeVar
 from dotenv import load_dotenv
 from rich.console import Console
 
-from manage import PYPROJECT_PATH
+from manage import PYPROJECT_PATH, __version__
 from manage.methods import gather_available_method_classes
 from manage.models import Configuration, PyProject, Recipes
 from manage.validate import validate
@@ -31,7 +31,12 @@ def process_arguments() -> [Configuration, PyProject]:
         sys.exit(1)
 
     # Get (and do some simple validation on) the command-line arguments:
-    args: tuple = get_args(pyproject)
+    args: tuple[argparse.Namespace, list[str, str]] = get_args(pyproject)
+
+    # Earliest, simplest exit:
+    if args[0].version:
+        CONSOLE.print(__version__)
+        sys.exit(0)
 
     if args[0].verbose:
         shortened_path = shorten_path(PYPROJECT_PATH, 76)
@@ -80,6 +85,12 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
 
     parser.add_argument(
         "--print",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--version",
         action="store_true",
         default=False,
     )
@@ -146,7 +157,12 @@ def _parse_dynamic_args(dynamic_args) -> list[tuple[str, str], str]:
     return return_
 
 
-def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CONSOLE) -> None:
+def do_help(
+    configuration: Configuration,
+    pyproject: PyProject,
+    method_classes: dict[str, TClass],
+    console=CONSOLE,
+) -> None:
     from rich.panel import Panel
     from rich.table import Table
 
@@ -185,6 +201,11 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
     )
 
     table.add_row(
+        blue("--version"),
+        green("Display current version of this package."),
+    )
+
+    table.add_row(
         blue("--verbose/-v"),
         green(
             "Run steps in verbose mode [italic](including method stdout if available)[/]; "
@@ -218,20 +239,7 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
         green("Run steps in 'live' mode; default is [italic][bold]False[/]."),
     )
 
-    panel: Panel = Panel(table, title=green("BUILT-IN COMMAND OPTIONS"), title_align="left")
-    console.print(panel)
-
-    ################################################################################
-    # Methods available
-    ################################################################################
-    table: Table = Table.grid(expand=True)
-
-    for name, cls_ in method_classes.items():
-        table.add_row(
-            blue(name),
-            green(cls_.__doc__),
-        )
-    panel: Panel = Panel(table, title=green("CONFIGURATION METHODS AVAILABLE"), title_align="left")
+    panel: Panel = Panel(table, title=green("OPTIONS"), title_align="left")
     console.print(panel)
 
     ################################################################################
@@ -244,10 +252,24 @@ def do_help(pyproject: PyProject, method_classes: dict[str, TClass], console=CON
             line = ""
             if arg.default:
                 line = f"Default is [italic][bold]{arg.default}[/]"
-            table.add_row(blue(f"--{name}:{arg.name}"), green(line))
+            table.add_row(blue(f"--{name}:{arg.name} [italic]<{arg.name}>[/]"), green(line))
 
     panel: Panel = Panel(table, title=green("METHOD-BASED COMMAND OPTIONS"), title_align="left")
     console.print(panel)
+
+    ################################################################################
+    # Methods available (if verbose)
+    ################################################################################
+    if configuration.verbose:
+        table: Table = Table.grid(expand=True)
+
+        for name, cls_ in method_classes.items():
+            table.add_row(
+                blue(name),
+                green(cls_.__doc__),
+            )
+        panel: Panel = Panel(table, title=green("METHODS AVAILABLE"), title_align="left")
+        console.print(panel)
 
 
 def validate_target(configuration: Configuration, pyproject: PyProject) -> bool:
@@ -294,7 +316,7 @@ def main():
     # after incorporating both pyproject.toml defaults and cli args)
     ################################################################################
     if configuration.help:
-        do_help(pyproject, method_classes)
+        do_help(configuration, pyproject, method_classes)
         sys.exit(0)
 
     ################################################################################

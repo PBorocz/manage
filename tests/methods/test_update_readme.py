@@ -114,9 +114,10 @@ def test_file_not_found(configuration):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme="/tmp/foobar"))
 
     # Test
-    with pytest.raises(SystemExit) as e:
-        update_readme(configuration, step).validate()
-        assert e.value.code == 1
+    result = update_readme(configuration, step).validate()
+    assert len(result) == 1
+    assert "Sorry, path" in result[0]
+    assert "/tmp/foobar" in result[0]
 
 
 def test_no_unreleased_header(configuration, path_readme_org_no_header):

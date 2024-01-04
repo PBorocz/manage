@@ -57,7 +57,7 @@ dry_run = true
 description = "Bump the version number to the next /patch/ level and commit locally"
 
 [[tool.manage.recipes.bump.steps]]
-method = "poetry_bump_version"
+method = "poetry_version"
 
 [[tool.manage.recipes.bump.steps]]
 method = "update_readme"
@@ -96,7 +96,10 @@ Note: If you want "non-standard" recipe names (for instance, in some projects, I
 description = "Bump the version number to the next /patch/ level and commit locally"
 
 [[tool.manage.recipes."1_bump".steps]]
-method = "poetry_bump_version"
+method = "poetry_version"
+
+[[tool.manage.recipes."1_bump".steps]]
+method = "poetry_version_sync"
 
 [[tool.manage.recipes."1_bump".steps]]
 method = "update_readme"
@@ -259,7 +262,7 @@ or overridden from the command-line:
 
 ``` toml
 [[tool.manage.recipes."1_bump".steps]]
-method = "poetry_bump_version"
+method = "poetry_version"
 confirm = true
 arguments = { poetry_version = "patch" }
 
@@ -288,7 +291,8 @@ allow_error = true
 | [`git_push_to_github`](#git_push_to_github)							| Yes | \-         |
 | [`pandoc_convert_org_to_markdown`](#pandoc_convert_org_to_markdown)   | No  | Required   | `path_md, path_org`
 | [`poetry_build`](#poetry_build)										| Yes | \-         |
-| [`poetry_bump_version`](#poetry_bump_version)							| Yes | Required   | `poetry_version`
+| [`poetry_version`](#poetry_version)							        | Yes | Required   | `poetry_version`
+| [`poetry_version_sync`](#poetry_version_sync)							| Yes | Required   | `init_path`
 | [`poetry_lock_check`](#poetry_lock_check)								| No  | \-         |
 | [`poetry_publish`](#poetry_publish)									| Yes | \-         |
 | [`command`](#command)											        | Yes | Required   | `command`
@@ -459,10 +463,30 @@ arguments = {bump_rule: "patch"}
 ```
 
 ``` shell
-% manage aRecipeName --live --bump_rule minor
+% manage aRecipeName --live --poetry_version:bump_rule minor
 ```
 ###### Arguments
 * `bump_rule` Required, the default level of version "bump" to perform. Must be one of 'patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor', 'prerelease' (see [Poetry version command](https://python-poetry.org/docs/cli/#version) for more information).
+
+
+##### **poetry_version_sync**
+
+- Specialised method to update your `__init__.py`'s file's `__version__ = "version"` line to the most current version in pyproject.toml.
+- This is commonly used *after* `poetry_version` has updated a version number AND when you want to use this common pattern (without resorting to importlib.metadata): `import myPackage; print(myPackage.__version__)`
+
+``` toml
+...
+[[tool.manage.recipes.<aRecipeName>.steps]]
+method = "poetry_version_sync"
+arguments = {bump_rule: "patch"}
+...
+```
+
+``` shell
+% manage aRecipeName --live --poetry_version_sync:init_path "manage/__init__.py"
+```
+###### Arguments
+* `init_path` Required, path to the specific .py file that contains your __version__ line (usually, this is in your package's (not your project's) top-level directory.
 
 ##### **poetry_lock_check**
 
@@ -574,7 +598,9 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
-### v0.3.2a0 - 2024-01-03
+
+- Added new method `poetry_version_sync` to keep `__version__` attribute of a python file (usually `<module>/__init__.py`) up to date with the version in `pyproject.toml` (without have to resort to `importlib.metadata` approach)
+
 ### v0.3.1 - 2023-12-31
 
 - Miscellaneous updates to diagnostics and added method specific validation.
@@ -776,7 +802,7 @@ The workflow I use is the following:
 
 * During development, as GTD items are addressed and committed (also tested, ruff'ed, etc..), I move their entries to the *Unreleased* section of the README file.
 
-* Through a master "release" recipe (or set of recipes), I include the `update_readme` recipe that relabels the *Unreleased* items to the specific release version with today's date (note: doing a `poetry_bump_version` before `update_readme` is important as otherwise, an old version identifier will be used!).
+* Through a master "release" recipe (or set of recipes), I include the `update_readme` recipe that relabels the *Unreleased* items to the specific release version with today's date (note: doing a `poetry_version` before `update_readme` is important as otherwise, an old version identifier will be used!).
 
 README files are usually one of two formats, .org or .md. In either case, we assume that *Unreleased* appears on a line by itself (irrespective of it's header depth).
 

@@ -17,7 +17,7 @@ class Method(AbstractMethod):
             Argument(
                 name="message",
                 type_=str,
-                default=f"Commit as of {datetime.now().isoformat()}",
+                default=f"Commit as of {datetime.now().isoformat().split('.')[0]}",
             ),
         ],
     )

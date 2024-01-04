@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manage"
-version = "0.3.2a0"
+version = "0.3.1"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
@@ -46,11 +46,15 @@ description = "Bump the version number to the next /patch/ level and commit loca
   arguments = { bump_rule = "patch" }
 
 [[tool.manage.recipes."1_bump".steps]]
+  method = "poetry_version_sync"
+  arguments = {init_path = "manage/__init__.py" }
+
+[[tool.manage.recipes."1_bump".steps]]
   method = "update_readme"
 
 [[tool.manage.recipes."1_bump".steps]]
   method = "git_add"
-  arguments = { pathspec = "README.md pyproject.toml" }
+  arguments = { pathspec = "README.md pyproject.toml manage/__init__.py" }
 
 [[tool.manage.recipes."1_bump".steps]]
   method = "git_commit"

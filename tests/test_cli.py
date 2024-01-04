@@ -1,11 +1,12 @@
 """Test cli methods."""
 from manage.cli import do_help
-from manage.models import PyProject
+from manage.models import Configuration, PyProject
 
 
 def test_help(capsys):
     # Setup
-    do_help(PyProject(), {})
+    configuration = Configuration.factory([{}, []], {}, test=True)
+    do_help(configuration, PyProject(), {})
     captured = capsys.readouterr()
     assert "OPTIONS" in captured.out
     assert "RECIPES" in captured.out

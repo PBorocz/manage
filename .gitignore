@@ -1,4 +1,5 @@
 # Local additions
+.DS_Store
 poetry.toml
 PROJECT_MANAGEMENT.org
 release_screenshots
