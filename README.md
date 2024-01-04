@@ -598,8 +598,11 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+### v0.3.2 - 2024-01-03
 
-- Added new method `poetry_version_sync` to keep `__version__` attribute of a python file (usually `<module>/__init__.py`) up to date with the version in `pyproject.toml` (without have to resort to `importlib.metadata` approach)
+- ADDED: Added new command-line argument `--version` to display current package version (and exit).
+
+- ADDED: Added new method `poetry_version_sync` to keep `__version__` attribute of a python file (usually `<module>/__init__.py`) up to date with the version in `pyproject.toml` (without have to resort to `importlib.metadata` approach).
 
 ### v0.3.1 - 2023-12-31
 
@@ -854,6 +857,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.3.2 - 2024-01-03
 ### v0.3.2a0 - 2024-01-03
 ### v0.3.1 - 2023-12-31
 ### v1.9.11 - 2023-12-30
@@ -882,6 +886,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.3.2 - 2024-01-03
 ### v0.3.2a0 - 2024-01-03
 ### v0.3.1 - 2023-12-31
 ### v1.9.11 - 2023-12-30
