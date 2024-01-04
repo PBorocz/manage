@@ -28,10 +28,6 @@ pytest-git = "^1.7.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-# Keep version above in-sync with that in __init__.py
-# [tool.poetry-version-plugin]
-# source = "init"
-
 # ##############################################################################
 # Manager Tool
 # ##############################################################################
