@@ -15,9 +15,12 @@ class Configuration(BaseModel):
     """Configuration, primarily associated with command-line args to filter through step execution."""
 
     # fmt: off
-    help        : bool | None = None  # Were we requested to just display help?
-    print       : bool | None = None  # Were we requested to print the recipes contents?
+    # Commands to use once and then exit
+    do_help     : bool | None = None  # Were we requested to just display help?
+    do_print    : bool | None = None  # Were we requested to print the recipes contents?
+    do_validate : bool | None = None  # Validate recipes and quit?
 
+    # Standard execution arguments (including method specific ones)
     debug       : bool | None = None  # Are we running in debug mode?
     verbose     : bool | None = None  # Are we running in verbose mode?
     target      : str  | None = None  # What is the target to be performed?
@@ -25,22 +28,16 @@ class Configuration(BaseModel):
     dry_run     : bool | None = None  # Are we running in dry-run mode (True) or live mode (False)
     method_args : list | None = []    # Set of "dynamic" arguments for specific methods (from CLI)
 
-    version_    : str  | None = None  # Note: This is the current version # of the project we're working on!
-    version     : str  | None = None  # " In nice format..
-    package_    : str  | None = None  # "
-    _messages_  : list[str] = []
+    # Attributes gleaned from respective pyproject.toml
+    version_    : str  | None = None  # Note: This is the current version # of the project we're working on, eg. "5.4.3"
+    version     : str  | None = None  # Same as above but in "nice" format, eg. v5.4.3
+    package_    : str  | None = None  #
     # fmt: on
 
-    def set_value(self, attr: str, value: any, source: str) -> None:
-        """Set the specified attr to the value given with verbosity."""
-        setattr(self, attr, value)
-        self._messages_.append(f"- (setting [italic]{attr}[/] to {value} {source})")
-
-    def set_version(self, version_raw: str | None) -> None:
-        """Set both the version attributes based on that provided from poetry."""
-        version_formatted = f"v{version_raw}" if version_raw else ""
-        self.version_ = version_raw
-        self.version = version_formatted
+    @classmethod
+    def get_version_fmt(cls, version_raw: str | None) -> str:
+        """Get formatted version from a raw one."""
+        return f"v{version_raw}" if version_raw else ""
 
     def find_method_arg_value(self, cls: str, arg: str) -> str | None:
         """Find/return the the command-line argument for the respective method/class and argument."""
@@ -49,33 +46,36 @@ class Configuration(BaseModel):
                 return value
         return None
 
+    def __setattr__(self, attr, value):
+        """See if this works to make every instance "frozen."""
+        raise ValueError("This instance of Configuration is frozen and attributes cannot be modified.")
+
     @classmethod
-    def factory(cls, args: tuple[Namespace, dict], pyproject: TPyProject, test: bool = False, **kwargs) -> Self:
+    def factory(cls, args: tuple[Namespace, dict], pyproject: TPyProject, test: bool = False, **kwargs_testing) -> Self:
         """Create a Configuration object instance from our args and user's pyproject.toml."""
         static_args, method_args = args
+        version_ = getattr(pyproject, "version", "")  # eg. M.m.p
+        version = f"v{version_}" if version_ else ""  # eg. vM.m.p
 
-        ############################################################
-        # CREATE our Configuration instance with these values
-        ############################################################
-        configuration = Configuration(package_=getattr(pyproject, "", ""), method_args=method_args)
-        configuration.set_version(getattr(pyproject, "version", ""))
+        conf_parms = {
+            "package_": getattr(pyproject, "", ""),
+            "method_args": method_args,
+            "version_": version_,
+            "version": version,
+        }
 
-        # Get the rest of the known command-line parameters (whose
-        # default values could have come from pyproject.toml!)
-        for attr in ["confirm", "verbose", "help", "target", "dry_run", "print", "debug"]:
-            if hasattr(static_args, attr):
-                setattr(configuration, attr, getattr(static_args, attr))
+        # Get the rest of the "standard" command-line parameters
+        if static_args:
+            for arg in vars(static_args):
+                conf_parms[arg] = getattr(static_args, arg)
 
         # Finally, for testing only, override any other attrs:
-        if kwargs:
-            for attr, value in kwargs.items():
-                configuration.set_value(attr, value, "from (testing) kwargs")
+        if kwargs_testing:
+            for attr, value in kwargs_testing.items():
+                conf_parms[attr] = value
 
-        ############################################################
-        # Verbose output to be nice??
-        ############################################################
-        for msg in configuration._messages_:
-            if configuration.verbose or test:
-                msg_debug(msg)
+                # Verbose output to be nice??
+                if conf_parms.get("verbose") or test:
+                    msg_debug(f"- (setting [italic]{attr}[/] to {value} from kwargs_testing")
 
-        return configuration
+        return Configuration(**conf_parms)

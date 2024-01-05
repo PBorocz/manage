@@ -28,7 +28,7 @@ class Method(AbstractMethod):
             msg_warning("poetry.lock is not consistent with pyproject.toml, attempting fix.")
 
             if self.configuration.dry_run:
-                self.dry_run(cmd_lock)
+                self.dry_run(cmd_lock, shell=True)
                 return True
 
             confirm = "Ok to run '[italic]{cmd_lock}[/]' to fix it?"

@@ -46,6 +46,7 @@ class Method(AbstractMethod):
         for line in init_contents.split("\n"):
             if line.casefold().startswith(match_pattern):
                 version_line = line
+                old_version = line.replace(match_pattern, "").strip().replace('"', "")
 
         # Did we find it?
         if not version_line:
@@ -53,18 +54,22 @@ class Method(AbstractMethod):
             msg_failure(f"Sorry, couldn't find line starting with '[italic]{match_pattern}[/]' in {path_init_py.name}!")
             return False
 
+        action = (
+            f"update {path_init_py.name}'s [italic]__version__[/] line "
+            f"from [italic]{old_version}[/] to [italic]{release_tag}[/]"
+        )
+
         ################################################################################
         # Dry-run
         ################################################################################
-        cmd = f"update {path_init_py.name}'s '[italic]{version_line}[/]' to '[italic]{new_version_line}[/]'"
         if self.configuration.dry_run:
-            self.dry_run(cmd)
+            self.dry_run(action)
             return True
 
         ################################################################################
         # Confirmation
         ################################################################################
-        if not self.do_confirm(f"Ok to {cmd}?"):
+        if not self.do_confirm(f"Ok to {action}?"):
             return False
 
         # RUN!! Replace the current unrelease_header line with the new contents and write it out!

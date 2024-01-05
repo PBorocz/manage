@@ -33,7 +33,7 @@ class Method(AbstractMethod):
         command = self.get_arg("command")
 
         if self.configuration.dry_run:
-            self.dry_run(command)
+            self.dry_run(command, shell=True)
             return True
 
         if self.do_confirm(f"Ok to run command: '[italic]{command}[/]'?"):

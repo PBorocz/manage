@@ -50,7 +50,7 @@ class Method(AbstractMethod):
             confirm = "Ok to 'git add *'?"
 
         if self.configuration.dry_run:
-            self.dry_run(f"git add {smart_join(pathspec, delim='')}")
+            self.dry_run(f"git add {smart_join(pathspec, delim='')}", shell=True)
             return True
 
         # State changing commmand...confirm execution beforehand...

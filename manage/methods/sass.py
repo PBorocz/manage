@@ -48,7 +48,7 @@ class Method(AbstractMethod):
         cmd = f"sass {pathspec}"
 
         if self.configuration.dry_run:
-            self.dry_run(cmd)
+            self.dry_run(cmd, shell=True)
             return True
 
         if not self.do_confirm(f"Ok to run '[italic]{cmd}[/]'?"):

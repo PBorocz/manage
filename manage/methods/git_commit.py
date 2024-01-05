@@ -49,7 +49,7 @@ class Method(AbstractMethod):
 
         # Dry-run?
         if self.configuration.dry_run:
-            self.dry_run(cmd)
+            self.dry_run(cmd, shell=True)
             return True
 
         # State changing commmand...if we're going to run live, confirm execution beforehand.

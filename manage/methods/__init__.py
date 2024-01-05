@@ -102,7 +102,7 @@ class AbstractMethod:
     def validate_executable(self, executable: str) -> str | None:
         """Confirm that the executable name specified actually exists on our path."""
         if not shutil.which(executable):
-            return f" [italic]{self.name}[/]: Sorry, couldn't find '[italic]{executable}[/]' on your path."
+            return f"[italic]{self.name}[/]: Sorry, couldn't find '[italic]{executable}[/]' on your path."
         return None
 
     def validate_pathspec(self, cls: str, arg: str) -> list | None:
@@ -157,9 +157,10 @@ class AbstractMethod:
         for line in std.strip().split("\n"):
             print(f"[{color}]≫ {line}[/]")
 
-    def dry_run(self, cmd: str) -> None:
+    def dry_run(self, cmd: str, shell: bool = False) -> None:
         """Wrap-up format for dry-run command messages."""
-        msg_success(f"DRY-RUN -> '{cmd}'")
+        msg = f"$ {cmd}" if shell else f"({cmd})"
+        msg_success(f"DRY-RUN -> {msg}")
 
     def get_arg(self, arg_name: str, optional: bool = False, default: Any | None = None) -> str | None:
         """Find the value of the specified argument in the step, else look for default."""

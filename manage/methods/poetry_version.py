@@ -1,5 +1,6 @@
 """Manage step."""
 import sys
+from copy import copy
 from pathlib import Path
 
 from manage.methods import AbstractMethod
@@ -64,13 +65,17 @@ class Method(AbstractMethod):
             sys.exit(1)
 
         # Side-effect! -> Make sure our configuration has the NEW version from now on!
-        self.configuration.set_version(new_version)
+        # (we jump a little hoop here as we want configuration instances to be read-only)
+        mapping = copy(self.configuration.__dict__)
+        mapping["version_"] = new_version
+        mapping["version"] = Configuration.get_version_fmt(new_version)
+        self.configuration = Configuration(**mapping)
 
         ################################################################################
         # Dry-run?
         ################################################################################
         if self.configuration.dry_run:
-            self.dry_run(cmd)
+            self.dry_run(cmd, shell=True)
             return True
 
         confirm = (

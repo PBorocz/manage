@@ -28,7 +28,7 @@ class Method(AbstractMethod):
         # Dry-run?
         if self.configuration.dry_run:
             for cmd in cmds:
-                self.dry_run(cmd)
+                self.dry_run(cmd, shell=True)
             return True
 
         # Confirmation
