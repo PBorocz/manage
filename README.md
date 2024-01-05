@@ -598,6 +598,7 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+### v0.3.2 - 2024-01-04
 
 - ADDED: New command-line argument `--validate` to validate steps _all_ recipes defined (and exit).
 
@@ -860,6 +861,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-03
 ### v0.3.2a0 - 2024-01-03
 ### v0.3.1 - 2023-12-31
@@ -889,6 +891,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-03
 ### v0.3.2a0 - 2024-01-03
 ### v0.3.1 - 2023-12-31
