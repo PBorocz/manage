@@ -10,10 +10,15 @@ TClass = TypeVar("Class")
 TWarnsFails = tuple[list[str], list[str]]
 
 
-def validate(configuration: Configuration, recipes: Recipes, method_classes: dict[str, TClass]) -> bool:
-    """Run the complete validation suite, returning False if anything's wrong."""
-    if configuration.verbose:
-        message("Validating environment & recipes")
+def validate_environment(
+    verbose: bool,
+    configuration: Configuration,
+    recipes: Recipes,
+    method_classes: dict[str, TClass],
+) -> bool:
+    """Run the non method-based validation suite, returning False if anything's wrong."""
+    if verbose:
+        message("Validating environment")
 
     warnings, failures = [], []
 
@@ -32,17 +37,12 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
     warnings.extend(warns)
     failures.extend(fails)
 
-    # Check: Do any of method_classes have validation logic to run?
-    # warns, fails = _validate_method_classes(configuration, recipes, method_classes)
-    # warnings.extend(warns)
-    # failures.extend(fails)
-
     # Check: are version numbers consistent between pyproject.toml and README's change history?
     warns, fails = _validate_existing_version_numbers(configuration)
     warnings.extend(warns)
     failures.extend(fails)
 
-    if configuration.verbose:
+    if verbose:
         if failures:
             failure()
         elif warnings:
@@ -58,6 +58,18 @@ def validate(configuration: Configuration, recipes: Recipes, method_classes: dic
 
     if failures:
         return False
+    return True
+
+
+def validate_method_classes(configuration: Configuration, recipes: Recipes, method_classes: dict[str, TClass]) -> bool:
+    """Run the method-based validation suite, returning False if anything's wrong."""
+    message("Validating recipes")  # Always run in "verbose" mode if this is called.
+    if msgs := recipes.validate_all_recipes(configuration):
+        warning()
+        for msg in msgs:
+            msg_warning(f"- {msg}")
+        return False
+    success()
     return True
 
 
@@ -111,27 +123,6 @@ def _validate_step_args(configuration: Configuration, method_classes: dict[str, 
             fails.append(fail)
 
     return [], fails
-
-
-################################################################################
-# Method classes
-################################################################################
-# def _validate_method_classes(
-#     configuration: Configuration,
-#     recipes: Recipes,
-#     method_classes: dict[str, TClass],
-# ) -> TWarnsFails:
-#     """Find and run all 'validate' methods defined on our recipes."""
-#     fails = []
-#     for _, recipe in recipes:
-#         for step in recipe:
-#             if not step.class_:
-#                 continue
-#             instance = step.class_(configuration, recipes, step)
-#             if validate_method := getattr(instance, "validate", None):
-#                 if results := validate_method():
-#                     fails.extend(results)
-#     return [], fails
 
 
 ################################################################################
@@ -225,3 +216,24 @@ def __get_last_release_from_markdown(path_readme: Path) -> str:
                 msg_debug(f"Found next header matching '{line}' on line: {i_line+1}")
             return version
     return None
+
+
+################################################################################
+# Method classes
+################################################################################
+# def _validate_method_classes(
+#     configuration: Configuration,
+#     recipes: Recipes,
+#     method_classes: dict[str, TClass],
+# ) -> TWarnsFails:
+#     """Find and run all 'validate' methods defined on ALL our recipes."""
+#     fails = []
+#     for _, recipe in recipes:
+#         for step in recipe:
+#             if not step.class_:
+#                 continue
+#             instance = step.class_(configuration, recipes, step)
+#             if validate_method := getattr(instance, "validate", None):
+#                 if results := validate_method():
+#                     fails.extend(results)
+#     return [], fails

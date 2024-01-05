@@ -4,7 +4,6 @@ from typing import Iterable, Self, TypeVar
 
 from pydantic import BaseModel
 
-
 TClass = TypeVar("Class")
 TRecipe = TypeVar("TRecipes")
 TConfiguration = TypeVar("TConfiguration")
@@ -25,7 +24,7 @@ class Recipes(BaseModel):
 
     def get(self, id_: str) -> TRecipe | None:
         """Treat Recipes as a mapping, return a specific Recipe by it's id."""
-        return self.__root__.get(id_.casefold())
+        return self.__root__.get(id_)
 
     def set(self, id_: str, recipe: TRecipe) -> None:
         """Treat Recipes as a mapping, setting a specific Recipe using it's id."""
@@ -48,9 +47,17 @@ class Recipes(BaseModel):
             recipe.print(console, recipe_name, configuration)
         return True
 
-    def validate(self, configuration: TConfiguration, fails: list[str] = []) -> list[str]:
-        """Walk the tree, calling 'validate' on the respective method and gather all the results."""
-        for step in self.get(configuration.target):
+    def validate_all_recipes(self, configuration: TConfiguration, fails: list[str] = []) -> list[str]:
+        """Validate all recipes defined (using method above to walk each one) and returning all issues encountered."""
+        all_msgs = set()
+        for recipe_id, recipe in self:
+            if msgs := self.validate_recipe(configuration, recipe_id):
+                all_msgs.update(msgs)
+        return list(all_msgs)
+
+    def validate_recipe(self, configuration: TConfiguration, target: str, fails: list[str] = []) -> list[str]:
+        """Walk the tree and validate a *specific* recipe."""
+        for step in self.get(target):
             # Each step to be performed could be either a method OR another step:
             if step.class_:
                 # Instantiate the method's class associated with the step and validate it!
@@ -58,8 +65,7 @@ class Recipes(BaseModel):
                     fails.extend(msgs)
             else:
                 # Run another recipe!
-                configuration.target = step.recipe  # Override the target (but leave the rest)
-                self.validate(configuration, fails)
+                self.validate_recipe(configuration, step.recipe, fails)
         return fails
 
     def run(self, configuration: TConfiguration):

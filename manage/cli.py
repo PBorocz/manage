@@ -10,7 +10,7 @@ from rich.console import Console
 from manage import PYPROJECT_PATH, __version__
 from manage.methods import gather_available_method_classes
 from manage.models import Configuration, PyProject, Recipes
-from manage.validate import validate
+from manage.validate import validate_environment, validate_method_classes
 from manage.utilities import message, msg_failure, shorten_path
 
 load_dotenv(verbose=True)
@@ -34,7 +34,7 @@ def process_arguments() -> [Configuration, PyProject]:
     args: tuple[argparse.Namespace, list[str, str]] = get_args(pyproject)
 
     # Earliest, simplest exit:
-    if args[0].version:
+    if args[0].do_version:
         CONSOLE.print(__version__)
         sys.exit(0)
 
@@ -77,25 +77,6 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "-h",
-        "--help",
-        action="store_true",
-        default=False,
-    )
-
-    parser.add_argument(
-        "--print",
-        action="store_true",
-        default=False,
-    )
-
-    parser.add_argument(
-        "--version",
-        action="store_true",
-        default=False,
-    )
-
-    parser.add_argument(
         "--confirm",
         help="Override recipe's 'confirm' setting to run all confirmable steps in confirm mode.",
         type=bool,
@@ -118,6 +99,36 @@ def get_args(pyproject: PyProject) -> argparse.Namespace:
         action="store_false",
     )
     parser.set_defaults(dry_run=True)
+
+    # "Action" arguments (ie. do something and exit early)
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        dest="do_help",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--print",
+        action="store_true",
+        dest="do_print",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--version",
+        action="store_true",
+        dest="do_version",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        dest="do_validate",
+        default=False,
+    )
 
     # Parse all the command-line args/parameters provided (both those above and unknown ones)
     args_static, args_dynamic = parser.parse_known_args()
@@ -196,13 +207,41 @@ def do_help(
     )
 
     table.add_row(
-        blue("--print"),
+        blue("--version"),
+        green("Display current version of this package and exit."),
+    )
+
+    table.add_row(
+        blue("--print [<recipeName>]"),
         green("Print either all recipes or specified target's recipe and exit."),
     )
 
     table.add_row(
-        blue("--version"),
-        green("Display current version of this package."),
+        blue("--validate"),
+        green("Validate your environment and all recipe definitions and exit."),
+    )
+
+    table.add_row(
+        blue("----------"),
+        green("----------"),
+    )
+
+    table.add_row(
+        blue("--dry_run"),
+        green("Run steps in 'dry-run' mode; default is [italic][bold]True[/]."),
+    )
+
+    table.add_row(
+        blue("--live"),
+        green("Run steps in 'live' mode; default is [italic][bold]False[/]."),
+    )
+
+    table.add_row(
+        blue("--confirm"),
+        green(
+            "Run steps that have [italic]side-effects[/] with confirmation beforehand; "
+            "default is [italic][bold]False[/].",
+        ),
     )
 
     table.add_row(
@@ -218,25 +257,6 @@ def do_help(
         green(
             "Run in debug mode; default is [italic]False[/].",
         ),
-    )
-
-    table.add_row(
-        blue("--confirm"),
-        green(
-            "Override all method-based 'confirm' settings to run [italic]confirmable[/] methods as "
-            "all [bold]confirm[/]; "
-            "default is [italic][bold]False[/].",
-        ),
-    )
-
-    table.add_row(
-        blue("--dry_run"),
-        green("Run steps in 'dry-run' mode; default is [italic][bold]True[/]."),
-    )
-
-    table.add_row(
-        blue("--live"),
-        green("Run steps in 'live' mode; default is [italic][bold]False[/]."),
     )
 
     panel: Panel = Panel(table, title=green("OPTIONS"), title_align="left")
@@ -273,23 +293,47 @@ def do_help(
 
 
 def validate_target(configuration: Configuration, pyproject: PyProject) -> bool:
-    """Make sure the user's requested target is valid."""
-    s_targets = pyproject.get_formatted_list_of_targets()
-    if configuration.target:
-        if not pyproject.is_valid_target(configuration.target):
-            msg = (
-                f"[red]Sorry, [italic]{configuration.target}[/] is not a valid recipe, "
-                f"must be one of [yellow][italic]{s_targets}[/]."
-            )
-            CONSOLE.print(msg)
-            return False
+    """Make sure the user's requested target is valid.
 
-    elif not configuration.print:
-        msg = f"[red]Sorry, we need a valid recipe target to execute, must be one of [yellow][italic]{s_targets}[/]."
+    By this time, we've already taken care of --help, --version, --print and --validate,
+    thus, we *should* have a valid target now to work from.
+    """
+    # Get list of valid targets from the user's pyproject.toml recipe definitions
+    s_targets = pyproject.get_formatted_list_of_targets()
+
+    if not configuration.target:
+        msg = (
+            f"[red]Sorry, we're expecting a valid recipe target to execute, "
+            f"must be one of [yellow][italic]{s_targets}[/].",
+        )
+        CONSOLE.print(msg)
+        return False
+
+    if not pyproject.is_valid_target(configuration.target):
+        msg = (
+            f"[red]Sorry, [italic]{configuration.target}[/] is not a valid recipe, "
+            f"must be one of [yellow][italic]{s_targets}[/]."
+        )
         CONSOLE.print(msg)
         return False
 
     return True
+
+
+def _go(configuration: Configuration, recipes: Recipes) -> int:
+    """Walk the tree twice: first to validate methods for the specified target and then to run if ok."""
+    # Validation run..
+    if fails := recipes.validate_recipe(configuration, configuration.target):
+        for fail in fails:
+            msg_failure(f"- {fail}")
+        return 1
+
+    # "Real" run..
+    try:
+        recipes.run(configuration)
+    except (KeyboardInterrupt, EOFError):
+        ...
+    return 0
 
 
 def main():
@@ -315,7 +359,7 @@ def main():
     # Do help here AFTER we've setup the configuration object (ie.
     # after incorporating both pyproject.toml defaults and cli args)
     ################################################################################
-    if configuration.help:
+    if configuration.do_help:
         do_help(configuration, pyproject, method_classes)
         sys.exit(0)
 
@@ -325,35 +369,35 @@ def main():
     recipes: Recipes = Recipes.factory(configuration, pyproject, method_classes)
 
     ################################################################################
-    # Validate the user's specific target requested:
+    # If we're only doing "--print"...do so and WE'RE DONE!
+    ################################################################################
+    if configuration.do_print:
+        recipes.print(configuration)
+        sys.exit(0)
+
+    ################################################################################
+    # If we're only doing "--validate"...do so and WE'RE DONE!
+    ################################################################################
+    if configuration.do_validate:
+        stat_e = validate_environment(True, configuration, recipes, method_classes)  # Do general validation..
+        stat_m = validate_method_classes(configuration, recipes, method_classes)  # Do method validation..
+        if stat_e and stat_m:
+            sys.exit(0)
+        sys.exit(1)
+
+    ################################################################################
+    # Validate the user's specific target requested, if nothing valid, WE'RE DONE!
     ################################################################################
     if not validate_target(configuration, pyproject):
         sys.exit(1)
 
     ################################################################################
-    # If we're only doing, print...do so and WE'RE DONE!
+    # Do general validation, if bad, WE'RE DONE!
     ################################################################################
-    if configuration.print:
-        recipes.print(configuration)
-        sys.exit(0)
-
-    ################################################################################
-    # Do general validation (ie. not specific to a particular method)
-    ################################################################################
-    if not validate(configuration, recipes, method_classes):
+    if not validate_environment(False, configuration, recipes, method_classes):
         sys.exit(1)
 
     ################################################################################
-    # Walk the tree twice, first to validate method instances and then to run.
+    # Go!
     ################################################################################
-    # Validation run..
-    if fails := recipes.validate(configuration):
-        for fail in fails:
-            msg_failure(f"- {fail}")
-        sys.exit(1)
-
-    # "Real" run..
-    try:
-        recipes.run(configuration)
-    except (KeyboardInterrupt, EOFError):
-        sys.exit(0)
+    sys.exit(_go(configuration, recipes))

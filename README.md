@@ -598,11 +598,14 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+
+- ADDED: New command-line argument `--validate` to validate steps _all_ recipes defined (and exit).
+
 ### v0.3.2 - 2024-01-03
 
-- ADDED: Added new command-line argument `--version` to display current package version (and exit).
+- ADDED: New command-line argument `--version` to display current package version (and exit).
 
-- ADDED: Added new method `poetry_version_sync` to keep `__version__` attribute of a python file (usually `<module>/__init__.py`) up to date with the version in `pyproject.toml` (without have to resort to `importlib.metadata` approach).
+- ADDED: New method `poetry_version_sync` to keep `__version__` attribute of a python file (usually `<module>/__init__.py`) up to date with the version in `pyproject.toml` (without have to resort to `importlib.metadata` approach).
 
 ### v0.3.1 - 2023-12-31
 
