@@ -52,13 +52,9 @@ class PyProject(BaseModel):
             msg_failure("No recipes found in 'tool.manage.recipes?")
             return False
 
-        # WARNING: Do we have the name of the current package we're processing (eg. for builds etc.)
-        if self.package is None:
-            msg_warning("No 'packages' entry found in \\[tool.poetry] in pyproject.toml; FYI only.")
-
         # WARNING: Does our current package have a current version number? (eg. for build/release mgmt.)
         if not self.version:
-            msg_warning("No version label found in \\[tool.poetry] in pyproject.toml; FYI only.")
+            msg_warning("FYI, no version label in pyproject.toml's \\[tool.poetry] section.")
 
         return True
 
