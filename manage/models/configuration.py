@@ -12,7 +12,7 @@ TPyProject = TypeVar("TPyProject")
 
 
 class Configuration(BaseModel):
-    """Configuration, primarily associated with command-line args to filter through step execution."""
+    """Configuration, read-only instance to keep command-line args and particular pyproject attributes."""
 
     # fmt: off
     # Commands to use once and then exit
@@ -27,11 +27,6 @@ class Configuration(BaseModel):
     confirm     : bool | None = None  # Should we perform confirmations on steps?
     dry_run     : bool | None = None  # Are we running in dry-run mode (True) or live mode (False)
     method_args : list | None = []    # Set of "dynamic" arguments for specific methods (from CLI)
-
-    # Attributes gleaned from respective pyproject.toml
-    version_    : str  | None = None  # Note: This is the current version # of the project we're working on, eg. "5.4.3"
-    version     : str  | None = None  # Same as above but in "nice" format, eg. v5.4.3
-    package_    : str  | None = None  #
     # fmt: on
 
     @classmethod
@@ -46,22 +41,13 @@ class Configuration(BaseModel):
                 return value
         return None
 
-    def __setattr__(self, attr, value):
-        """See if this works to make every instance "frozen."""
-        raise ValueError("This instance of Configuration is frozen and attributes cannot be modified.")
-
     @classmethod
-    def factory(cls, args: tuple[Namespace, dict], pyproject: TPyProject, test: bool = False, **kwargs_testing) -> Self:
+    def factory(cls, args: tuple[Namespace, dict], test: bool = False, **kwargs_testing) -> Self:
         """Create a Configuration object instance from our args and user's pyproject.toml."""
         static_args, method_args = args
-        version_ = getattr(pyproject, "version", "")  # eg. M.m.p
-        version = f"v{version_}" if version_ else ""  # eg. vM.m.p
 
         conf_parms = {
-            "package_": getattr(pyproject, "", ""),
             "method_args": method_args,
-            "version_": version_,
-            "version": version,
         }
 
         # Get the rest of the "standard" command-line parameters

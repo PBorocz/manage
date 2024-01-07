@@ -7,7 +7,7 @@ from manage.utilities import failure, msg_failure, message, success
 
 
 class Method(AbstractMethod):
-    """Convert an emacs org file into a markdown version using Pandoc."""
+    """Convert an emacs Org file into a markdown version using Pandoc."""
 
     args = Arguments(
         arguments=[
@@ -28,16 +28,19 @@ class Method(AbstractMethod):
         """Init."""
         super().__init__(__file__, configuration, step)
 
-    def validate(self) -> None:
+    def validate(self) -> list:
         """Perform any pre-step validation."""
-        # Check to make sure executable is available
-        return self.validate_pathspec(Path(__file__).stem, "sass")
+        fails = []
 
-        # Check for required and valid argument
+        # Check to see if executable is available
+        if msg := self.validate_executable("pandoc"):
+            fails += msg
+
+        # Check for required and valid inbound markdown file argument
         if path_md := self.configuration.find_method_arg_value(Path(__file__).stem, "path_md"):
             if not Path(path_md).exists():
-                return [f"(pandoc_convert_org_to_markdown) '[italic]{path_md}[/]' does not exist."]
-        return None
+                fails += f"(pandoc_convert_org_to_markdown) '[italic]{path_md}[/]' does not exist."
+        return fails
 
     def run(self) -> bool:
         """Run pandoc.."""

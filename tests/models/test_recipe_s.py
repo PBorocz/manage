@@ -1,5 +1,4 @@
 """Test Recipe/Recipes models."""
-import tomllib
 from pathlib import Path
 
 from manage.models import Recipe, Step, PyProject, Configuration, Recipes
@@ -15,8 +14,8 @@ class Namespace:
 
 def test_recipe_factory(recipes):
     # Setup
-    raw_pyproject = PyProject.factory(tomllib.loads(Path("tests/models/test_models.toml").read_text()))
-    configuration = Configuration.factory([Namespace(), []], raw_pyproject, test=True)
+    raw_pyproject = PyProject.factory(Path("tests/models/test_models.toml"))
+    configuration = Configuration.factory([Namespace(), []], test=True)
 
     # Test
     recipes_from_file = Recipes.factory(configuration, raw_pyproject, {})

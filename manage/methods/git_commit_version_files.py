@@ -1,7 +1,7 @@
 """Commits updated files that contain version information locally."""
 
 from manage.methods import AbstractMethod
-from manage.models import Configuration
+from manage.models import Configuration, PyProject
 from manage.utilities import message
 
 
@@ -19,10 +19,12 @@ class Method(AbstractMethod):
         return []
 
     def run(self) -> bool:
-        """Commits updated files that contain version information locally."""
+        """Commits updated files that contain version information locally based on version from live pyproject."""
+        pyproject: PyProject = PyProject.factory()
+
         cmds = (
             "git add pyproject.toml README.*",
-            f'git commit --m "Bump version to {self.configuration.version}"',
+            f'git commit --m "Bump version to v{pyproject.version}"',
         )
 
         # Dry-run?
@@ -34,7 +36,7 @@ class Method(AbstractMethod):
         # Confirmation
         confirm = "Ok to stage & commit changes to pyproject.toml and README.*?"
         if not self.do_confirm(confirm):
-            message(f"To rollback, you may have to revert version to {self.configuration.version_} & re-commit.")
+            message(f"To rollback, you may have to revert version to {pyproject.version} & re-commit.")
             return False
 
         # Do em!

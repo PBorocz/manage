@@ -28,6 +28,7 @@ class Step(BaseModel):
 
     # NOT from inbound manage file:
     class_: TClass | None = None  # Python method we'll instantiate and call if this is a "method" step.
+
     # fmt: off
 
     @validator("recipe", always=True)

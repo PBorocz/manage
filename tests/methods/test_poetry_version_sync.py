@@ -22,6 +22,22 @@ foo = "bar"
 bar = 1.234
 """
 
+pyproject_toml = """
+[tool.poetry]
+name = "myPackage"
+version = "M.m.p"
+description = "Sample pyproject.toml"
+"""
+
+
+@pytest.fixture
+def path_pyproject():
+    path_ = Path("/tmp/pyproject.toml")
+    path_.write_text(pyproject_toml)
+    yield path_
+    if path_.exists():
+        path_.unlink()
+
 
 @pytest.fixture
 def path_init_base():
@@ -43,21 +59,21 @@ def path_init_no_version():
 
 @pytest.fixture
 def configuration():
-    yield Configuration.factory([None, []], None, version_="M.m.p", dry_run=False)
+    yield Configuration.factory([None, []], version_="M.m.p", dry_run=False)
 
 
-def test_init_base(configuration, path_init_base):
+def test_init_base(configuration, path_init_base, path_pyproject):
     """Test standard case."""
     # Setup
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(init_path=str(path_init_base)))
 
     # Test
-    result = poetry_version_sync(configuration, step).run()
+    result = poetry_version_sync(configuration, step).run(path_pyproject=path_pyproject)
 
     # Confirm
     assert result
 
-    # Do we still have a __init__ file..
+    # Make sure we still have a __init__ file..
     assert path_init_base.exists()
 
     # Make sure that it's been updated to have our new version value (from configuration fixture above)

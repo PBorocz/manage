@@ -105,16 +105,17 @@ class AbstractMethod:
             return f"[italic]{self.name}[/]: Sorry, couldn't find '[italic]{executable}[/]' on your path."
         return None
 
-    def validate_pathspec(self, cls: str, arg: str) -> list | None:
+    def validate_pathspec(self, cls: str, arg: str) -> list:
         """Perform a validation of a 'pathspec' parameter.
 
         We define this here as there are several method-classes that use
         this logic.
         """
-        if pathspec := self.configuration.find_method_arg_value(cls, arg):
-            if not Path(pathspec).exists():
-                return [f"({cls}:{arg}) '[italic]{pathspec}[/]' does not exist."]
-        return None
+        if not (pathspec := self.configuration.find_method_arg_value(cls, arg)):
+            return []
+        # Support pathspec's that are actually plural, e.g. git_add foo bar or sass in out
+        paths = [pathspec] if " " not in pathspec else pathspec.split(" ")
+        return [f"({cls}:{arg}) '[italic]{pth}[/]' does not exist." for pth in paths if not Path(pth).exists()]
 
     ################################################################################
     # Utility methods

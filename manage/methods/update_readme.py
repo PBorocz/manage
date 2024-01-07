@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from manage.methods import AbstractMethod
-from manage.models import Argument, Arguments, Configuration
+from manage.models import Argument, Arguments, Configuration, PyProject
 from manage.utilities import msg_failure, message, failure, success
 
 
@@ -44,8 +44,8 @@ class Method(AbstractMethod):
 
         return fails
 
-    def run(self) -> bool:
-        """Search for 'Unreleased...' header in Changelog portion of README and replace with current version and date.
+    def run(self, **testing_kwargs) -> bool:
+        """Search for 'Unreleased...' header in Changelog portion of README, update *current* pyproject.toml.
 
         We essentially take the portion of the README that looks like this:
         ...
@@ -60,7 +60,7 @@ class Method(AbstractMethod):
         ...
         * Release History
         ** Unreleased
-        ** vA.B.D - <today>    <-- Adding this line based on configuration.version_ and today
+        ** vA.B.D - <today>    <-- Adding this line based on pyproject.version_ and today
            - changed this
            - changed that
         ** vA.B.C - <older date>
@@ -70,7 +70,11 @@ class Method(AbstractMethod):
         if not (path_readme := self._get_readme_path()):
             return False
 
-        release_tag = f"{self.configuration.version} - {datetime.now().strftime('%Y-%m-%d')}"  # eg. vA.B.C - 2023-05-15
+        parms = dict(path_pyproject=testing_kwargs.get("path_pyproject", None))
+        pyproject: PyProject = PyProject.factory(**parms)
+        v_version = f"v{pyproject.version}"  # Use the vM.m.p format for the version here..
+
+        release_tag = f"{v_version} - {datetime.now().strftime('%Y-%m-%d')}"  # eg. vA.B.C - 2023-05-15
 
         ################################################################################
         # Read the changelog/release section embedded in our readme and update contents

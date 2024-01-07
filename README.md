@@ -598,7 +598,12 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
-### v0.3.2 - 2024-01-04
+
+- FIX: Bug in methods that use the "current" version of the project (eg. git\_create\_release). Now, we re-read the `pyproject.toml` file in case a previous step within the same execution might have updated the version (specifically, the `poetry_version` method). 
+
+- FIX: Bug in `sass` method that didn't support multiple paths on the method's pathspec argument. 
+ 
+### v0.3.3 - 2024-01-04
 
 - ADDED: New command-line argument `--validate` to validate steps _all_ recipes defined (and exit).
 

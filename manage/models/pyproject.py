@@ -1,9 +1,12 @@
 """Core data types."""
+import tomllib
+from pathlib import Path
 from typing import Self, TypeVar
 
 from pydantic import BaseModel
 
-from manage.utilities import msg_failure, msg_warning, smart_join
+from manage import PYPROJECT_PATH
+from manage.utilities import msg_debug, msg_failure, msg_warning, smart_join
 
 
 TConfiguration = TypeVar("TConfiguration")
@@ -60,24 +63,24 @@ class PyProject(BaseModel):
         return True
 
     @classmethod
-    def factory(cls, raw_pyproject: dict) -> Self:
-        """Use the raw_pyproject dict from pyproject.toml path and return a instance."""
-        instance = PyProject()
+    def factory(cls, path_pyproject: Path = PYPROJECT_PATH, debug: bool = False) -> Self:
+        """Read and instantiate a PyProject instance from teh specified pyproject.toml path."""
+        raw_pyproject = tomllib.loads(path_pyproject.read_text())
+        if debug:
+            msg_debug(f"Successfully read/re-read {path_pyproject}")
+        return PyProject.factory_from_raw(raw_pyproject)
 
+    @classmethod
+    def factory_from_raw(cls, raw_pyproject: dict) -> Self:
+        """Convert the raw_pyproject dict provided (from pyproject.toml) and return an instance."""
+        parms = {}
+
+        ################################################################################
         # Actual recipes!
-        instance.recipes = raw_pyproject.get("tool", {}).get("manage", {}).get("recipes", {})
+        ################################################################################
+        parms["recipes"] = raw_pyproject.get("tool", {}).get("manage", {}).get("recipes", {})
 
-        # OPTIONAL: Parse "main" portion of pyproject.toml to find the *current* package the user want's management for:
-        if packages := raw_pyproject.get("tool", {}).get("poetry", {}).get("packages", None):
-            try:
-                # FIXME: For now, use the *first* entry in tool.poetry.packages (even though multiple are allowed)
-                package_include = packages[0]
-                instance.package = package_include.get("include")
-            except IndexError:
-                ...
+        # *Current* version of it (note, might very likely be null if user isn't managing a formal package!)
+        parms["version"] = raw_pyproject.get("tool", {}).get("poetry", {}).get("version", None)
 
-        # OPTIONAL: Get the current version of it from the main portion of the pyproject file:
-        instance.version = raw_pyproject.get("tool", {}).get("poetry", {}).get("version", None)
-
-        # Done!
-        return instance
+        return PyProject(**parms)

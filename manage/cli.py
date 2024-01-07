@@ -1,7 +1,6 @@
 """'Manage' primary entry point."""
 import argparse
 import sys
-import tomllib
 from typing import TypeVar
 
 from dotenv import load_dotenv
@@ -22,11 +21,8 @@ CONSOLE = Console()
 
 def process_arguments() -> [Configuration, PyProject]:
     """Create and run out CLI argument parser with a "raw" read of our pyproject.toml, return it and configuration."""
-    # Read our pyproject.toml
-    raw_pyproject = tomllib.loads(PYPROJECT_PATH.read_text())
-
     # Create our pyproject instance and make sure it's copacetic.
-    pyproject = PyProject.factory(raw_pyproject)
+    pyproject = PyProject.factory()
     if not pyproject.validate():
         sys.exit(1)
 
@@ -43,7 +39,7 @@ def process_arguments() -> [Configuration, PyProject]:
         message(f"Read {shortened_path}", end_success=True)
 
     # Given our command-line arguments, create our more structured configuration instance:
-    if not (configuration := Configuration.factory(args, pyproject)):
+    if not (configuration := Configuration.factory(args)):
         sys.exit(1)
 
     return configuration, pyproject

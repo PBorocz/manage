@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 from typing import TypeVar
 
-from manage.models import Configuration, Recipes
+from manage.models import Configuration, PyProject, Recipes
 from manage.utilities import failure, message, msg_failure, msg_debug, msg_warning, success, warning
 
 TClass = TypeVar("Class")
@@ -147,11 +147,12 @@ def _validate_recipes(recipes: Recipes, method_classes_defined: dict[str, TClass
 ################################################################################
 def _validate_existing_version_numbers(configuration: Configuration) -> TWarnsFails:
     """Check that the last released version in README is consistent with canonical version in pyproject.toml."""
-    last_release_version = __get_last_release_from_readme()
-    if last_release_version != configuration.version_:
+    version_pyproject = PyProject.Factory().version
+    version_last_release = __get_last_release_from_readme()
+    if version_last_release != version_pyproject:
         msg = (
-            f"Warning, pyproject.toml has version: [italic]{configuration.version_}[/] "
-            f"while last release in README is [italic]{last_release_version}[/]"
+            f"Warning, pyproject.toml has version: [italic]{version_pyproject}[/] "
+            f"while last release in README is [italic]{version_last_release}[/]"
         )
         return [msg], []
     return [], []

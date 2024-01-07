@@ -5,7 +5,7 @@ from manage.models import Configuration, PyProject
 
 def test_help(capsys):
     # Setup
-    configuration = Configuration.factory([{}, []], {}, test=True)
+    configuration = Configuration.factory([{}, []], test=True)
     do_help(configuration, PyProject(), {})
     captured = capsys.readouterr()
     assert "OPTIONS" in captured.out

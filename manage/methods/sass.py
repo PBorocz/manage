@@ -28,15 +28,15 @@ class Method(AbstractMethod):
 
         # Check to see if executable is available
         if msg := self.validate_executable("sass"):
-            fails.append(msg)
+            fails += msg
 
         # Check to make sure argument is provided
         if not (pathspec := self.get_arg("pathspec")):
-            fails.append(f"Sorry, The {self.name} method requires a [italic]pathspec[/] argument.")
+            fails += f"Sorry, The {self.name} method requires a [italic]pathspec[/] argument."
 
-        # Check to make sure argument provided actually exists on disk
-        elif not Path(pathspec).exists():
-            fails.append(f"Sorry, path '[italic]{pathspec}[/]' could not be found for the {self.name} method.")
+        # Check to make sure path(s) provided actually exist on disk
+        if msgs := self.validate_pathspec(Path(__file__).stem, pathspec):
+            fails.extend(msgs)
 
         return fails
 

@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from manage.methods import AbstractMethod
-from manage.models import Argument, Arguments, Configuration
+from manage.models import Argument, Arguments, Configuration, PyProject
 from manage.utilities import msg_failure, message, failure, success
 
 
@@ -31,9 +31,16 @@ class Method(AbstractMethod):
                 msg = f"Sorry, path '[italic]{init_file}[/]' could not be found for the {self.name} method."
                 return [msg]
 
-    def run(self) -> bool:
-        """Search for line like '__version__ = <foo>' and replace foo with current version."""
-        release_tag = f"{self.configuration.version_}"  # eg. A.B.C
+    def run(self, **testing_kwargs) -> bool:
+        """Search for line like '__version__ = <foo>' and replace foo with current version from pyproject.toml."""
+        # We use the live version of the pyproject file (in case a previous step updated it since we started this run!)
+        kwargs = {"debug": self.configuration.debug}
+        if "path_pyproject" in testing_kwargs:  # Allow for testing override...
+            kwargs["path_pyproject"] = testing_kwargs["path_pyproject"]
+        pyproject: PyProject = PyProject.factory(**kwargs)
+
+        # Setup the new "version" line we'll be putting into the __init__.py
+        release_tag = f"{pyproject.version}"  # eg. A.B.C
         match_pattern = "__version__ ="
         new_version_line = f'{match_pattern} "{release_tag}"'
 
