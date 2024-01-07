@@ -147,7 +147,7 @@ def _validate_recipes(recipes: Recipes, method_classes_defined: dict[str, TClass
 ################################################################################
 def _validate_existing_version_numbers(configuration: Configuration) -> TWarnsFails:
     """Check that the last released version in README is consistent with canonical version in pyproject.toml."""
-    version_pyproject = PyProject.Factory().version
+    version_pyproject = PyProject.factory().version
     version_last_release = __get_last_release_from_readme()
     if version_last_release != version_pyproject:
         msg = (

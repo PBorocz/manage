@@ -70,8 +70,10 @@ class Method(AbstractMethod):
         if not (path_readme := self._get_readme_path()):
             return False
 
-        parms = dict(path_pyproject=testing_kwargs.get("path_pyproject", None))
-        pyproject: PyProject = PyProject.factory(**parms)
+        kwargs = {}
+        if "path_pyproject" in testing_kwargs:  # Allow for testing override...
+            kwargs["path_pyproject"] = testing_kwargs["path_pyproject"]
+        pyproject: PyProject = PyProject.factory(**kwargs)
         v_version = f"v{pyproject.version}"  # Use the vM.m.p format for the version here..
 
         release_tag = f"{v_version} - {datetime.now().strftime('%Y-%m-%d')}"  # eg. vA.B.C - 2023-05-15
