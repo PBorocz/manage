@@ -598,6 +598,7 @@ arguments = {readme: "./subDir/README.txt"}
 
 ## Release History
 ### Unreleased
+### v0.3.4 - 2024-01-07
 
 - FIX: Bug in methods that use the "current" version of the project (eg. git\_create\_release). Now, we re-read the `pyproject.toml` file in case a previous step within the same execution might have updated the version (specifically, the `poetry_version` method). 
 
@@ -866,6 +867,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.3.4 - 2024-01-07
 ### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-03
@@ -897,6 +899,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.3.4 - 2024-01-07
 ### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-03
