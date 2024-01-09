@@ -2,7 +2,7 @@
 from rich.console import Console
 from typing import Iterable, Self, TypeVar
 
-from pydantic import BaseModel
+from pydantic import RootModel
 
 TClass = TypeVar("Class")
 TRecipe = TypeVar("TRecipes")
@@ -11,28 +11,28 @@ TPyProject = TypeVar("TRecipes")
 TRecipes = TypeVar("TRecipes", bound="Recipes")
 
 
-class Recipes(BaseModel):
+class Recipes(RootModel):
     """A collection of recipes, maps 1-to-1 with an inbound file."""
 
-    __root__: dict[str, TRecipe] = {}
+    root: dict[str, TRecipe] = {}
 
     def __len__(self):
-        return len(self.__root__)
+        return len(self.root)
 
     def __iter__(self) -> Iterable[tuple[str, TRecipe]]:
-        return iter(self.__root__.items())
+        return iter(self.root.items())
 
     def get(self, id_: str) -> TRecipe | None:
         """Treat Recipes as a mapping, return a specific Recipe by it's id."""
-        return self.__root__.get(id_)
+        return self.root.get(id_)
 
     def set(self, id_: str, recipe: TRecipe) -> None:
         """Treat Recipes as a mapping, setting a specific Recipe using it's id."""
-        self.__root__[id_] = recipe
+        self.root[id_] = recipe
 
     def keys(self) -> Iterable[str]:
         """Get the names of all Recipes."""
-        return iter(sorted(self.__root__.keys()))
+        return iter(sorted(self.root.keys()))
 
     def check_target(self, recipe_target: str) -> bool:
         """Is the target provide valid against our current recipes? (on a case-folded basis)."""
@@ -89,4 +89,4 @@ class Recipes(BaseModel):
             (recipe_name, Recipe.factory(configuration, method_classes, **raw_recipe))
             for recipe_name, raw_recipe in pyproject.recipes.items()
         )
-        return cls.parse_obj(d_recipes)
+        return cls.model_validate(d_recipes)

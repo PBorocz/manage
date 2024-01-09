@@ -33,7 +33,7 @@ def recipes():
         ],
     )
 
-    return Recipes.parse_obj(
+    return Recipes.model_validate(
         {
             "clean": recipe_clean,
             "build": recipe_build,

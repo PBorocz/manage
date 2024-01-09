@@ -15,7 +15,7 @@ def configuration():
 
 @pytest.fixture
 def recipes():
-    return Recipes.parse_obj({})
+    return Recipes.model_validate({})
 
 
 def test_build(configuration, recipes, capsys):

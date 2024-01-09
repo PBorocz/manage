@@ -1,6 +1,6 @@
 """Test Step model."""
-import pydantic
 import pytest
+from pydantic import ValidationError
 
 from manage.models import Step
 
@@ -12,9 +12,9 @@ def test_step():
     Step(method="foo")
 
     # However, ValidatorErrors when neither is provided or if both are provided:
-    with pytest.raises(pydantic.ValidationError):
+    with pytest.raises(ValidationError):
         Step()
-    with pytest.raises(pydantic.ValidationError):
+    with pytest.raises(ValidationError):
         Step(recipe="aStep", method="aMethod")
 
 

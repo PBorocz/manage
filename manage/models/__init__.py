@@ -5,11 +5,11 @@ from typing import Any
 from pydantic import BaseModel
 
 # fmt: off
-from .recipe        import Recipe        # noqa: F401
-from .recipes       import Recipes       # noqa: F401
-from .step          import Step          # noqa: F401
-from .configuration import Configuration # noqa: F401
-from .pyproject     import PyProject     # noqa: F401
+from manage.models.pyproject     import PyProject     # noqa: F401
+from manage.models.configuration import Configuration # noqa: F401
+from manage.models.step          import Step          # noqa: F401
+from manage.models.recipe        import Recipe        # noqa: F401
+from manage.models.recipes       import Recipes       # noqa: F401
 # fmt: on
 
 

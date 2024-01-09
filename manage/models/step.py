@@ -1,9 +1,8 @@
 """Core data types."""
 from copy import deepcopy
-
 from typing import Any, Dict, Self, TypeVar
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, model_validator
 
 from manage.utilities import msg_debug
 
@@ -14,35 +13,30 @@ TConfiguration = TypeVar("TConfiguration")
 class Step(BaseModel):
     """A step in a recipe."""
 
-    # FROM inbound manage file:
     # fmt: off
-    method      : str  | None = None  # Reference to the built-in method to run
-    recipe      : str  | None = None  # Reference to the id_ of another recipe.
 
+    # FROM inbound manage file:
+    method      : str  | None = None   # Reference to the built-in method to run
+    recipe      : str  | None = None   # Reference to the id_ of another recipe.
     confirm     : bool | None = None
     verbose     : bool | None = None
     debug       : bool | None = None
     allow_error : bool | None = None
-
     arguments   : Dict[str, Any] = {}  # Supplemental arguments for the callable
 
     # NOT from inbound manage file:
-    class_: TClass | None = None  # Python method we'll instantiate and call if this is a "method" step.
+    class_: TClass | None = None       # Python method we'll instantiate and call for a "method" step.
 
-    # fmt: off
+    # fmt: on
 
-    @validator("recipe", always=True)
-    @classmethod
-    def check_consistency(cls, v, field, values):
-        """Ensure that EITHER method or another recipe is specified on creation.
-
-        NOTE: We use ~recipe~ here as it's *after* the ~method~ attribute in field definition order!
-        """
-        if v is None and values["method"] is None:
+    @model_validator(mode="after")
+    def check_consistency(self):
+        """Ensure that EITHER method or another recipe is specified on creation."""
+        if self.method is None and self.recipe is None:
             raise ValueError("must provide either method or recipe")
-        if v is not None and values["method"] is not None:
+        if self.method and self.recipe:
             raise ValueError("must not provide both method and recipe")
-        return v
+        return self
 
     def get_arg(self, arg_key: str, default: Any | None = None) -> Any | None:
         """Return the value associated with the specified argument (or None)."""
@@ -69,8 +63,8 @@ class Step(BaseModel):
 
     def __reflect_variable(self, configuration: TConfiguration, var: str) -> None:
         msgs = []
-        self_value = getattr(self, var)          # Current value of the attribute from the recipe file.
-        conf_value = getattr(configuration, var) # Potential override value of the attribute from the CLI.
+        self_value = getattr(self, var)  # Current value of the attribute from the recipe file.
+        conf_value = getattr(configuration, var)  # Potential override value of the attribute from the CLI.
 
         # Shortcut..
         if conf_value is None:
@@ -83,8 +77,10 @@ class Step(BaseModel):
 
         elif self_value != conf_value:
             setattr(self, var, conf_value)
-            msg = f"- {self.name():30s}: overriding [italic]{var}[/] from " \
+            msg = (
+                f"- {self.name():30s}: overriding [italic]{var}[/] from "
                 f"[italic]{self_value}[/] to [italic]{conf_value}[/]"
+            )
             msgs.append(msg)
 
         return msgs
@@ -124,7 +120,7 @@ class Step(BaseModel):
         return self
 
     def _str_(self) -> dict:
-        """Return a 'cleaned-up' copy of this step for printing."""
+        """Return a 'cleaned-up' copy of this step's __dict__ for printing."""
         step = deepcopy(self)
 
         # We don't need this for printing..
