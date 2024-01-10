@@ -15,7 +15,7 @@
 | [`poetry_lock_check`](#poetry_lock_check)                           | No            | \-         |                     |
 | [`poetry_publish`](#poetry_publish)                                 | Yes           | \-         |                     |
 | [`poetry_version_sync`](#poetry_version_sync)                       | Yes           | Required   | `init_path`         |
-| [`poetry_version`](#poetry_version)                                 | Yes           | Required   | `poetry_version`    |
+| [`poetry_version`](#poetry_version)                                 | Yes           | Required   | `bump_level`        |
 | [`pre_commit`](#precommit)                                          | No            | \-         |                     |
 | [`sass`](#sass)                                                     | Yes           | Required   | `pathspec`          |
 | [`update_readme`](#update_readme)                                   | Yes           | Optional   | `readme`            |
@@ -28,7 +28,7 @@
 [[tool.manage.recipes."1_bump".steps]]
 method = "poetry_version"
 confirm = true
-arguments = { poetry_version = "patch" }
+arguments = { bump_level = "patch" }
 
 ```
 
@@ -246,6 +246,7 @@ allow_errors = false
 ### **poetry_version_sync**
 
 - Specialised method to update your `__init__.py`'s file's `__version__ = "version"` line to the most current version in pyproject.toml.
+
 - This is commonly used *after* `poetry_version` has updated a version number AND when you want to use this common pattern (without resorting to importlib.metadata): `import myPackage; print(myPackage.__version__)`
 
 ``` toml
@@ -265,7 +266,6 @@ arguments = {bump_rule: "patch"}
 ### **poetry_version**
 
 - Specialised method to "bump" the version of a project/package using Poetry's version command. Takes one of three pre-defined version levels to bump and updates `pyproject.toml` with the new version value.
-- A common use of this method is to provide an command-line override for the `bump_rule` to from having to edit the `pyproject.toml` file.
 
 ``` toml
 ...
