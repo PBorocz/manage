@@ -9,7 +9,7 @@ However, even these left something to be desired which led me to [Thomas Feldman
 
 Thus, this package automates all the common operations for [Poetry](https://python-poetry.org/) & README-based project/package management that I perform on a day-to-day basis. In particular, those that I don't perform regularly and/or require multiple steps to perform (and thus, tend to forget how to do!)
 
-Here's an example of building and releasing a python package:
+Here's an example of building and pushing a python package (specifically, this one):
 
 ![Sample Session](Screenshot.png)
 
@@ -326,8 +326,11 @@ A detailed list of all the built-in methods available for your recipes can be fo
 
 ## Release History
 ### Unreleased
+### v0.3.5 - 2024-01-10
 
 - INTERNAL: Upgraded to pydantic 2.5.3 from 1.* version (well worth it!)
+
+- FIX: Address vulnerability of gitpython (based on inadequate previous fix): [CVE-2024-22190](https://github.com/advisories/GHSA-2mqj-m65w-jghx).
 
 ### v0.3.4 - 2024-01-07
 
@@ -598,6 +601,7 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
+### v0.3.5 - 2024-01-10
 ### v0.3.4 - 2024-01-07
 ### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-04
@@ -630,6 +634,7 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+### v0.3.5 - 2024-01-10
 ### v0.3.4 - 2024-01-07
 ### v0.3.2 - 2024-01-04
 ### v0.3.2 - 2024-01-04
