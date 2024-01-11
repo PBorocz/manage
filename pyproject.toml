@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manage"
-version = "0.3.4"
+version = "0.3.5"
 description = "'Manage' environment for poetry-based projects (at least mine)"
 authors = ["Peter Borocz <peter.borocz+manage@google.com>"]
 license = "MIT"
@@ -41,7 +41,7 @@ test = "pytest"
 run = "poetry run manage"
 
 # Version update (aka "bump")
-poetry_version = "poetry version" # Meant to be followed by bump_level if not patch.
+poetry_version = "poetry version patch"
 git_add_pyproject_toml = "git add pyproject.toml"
 #git_commit = "git commit -m '$(date '+%Y-%m-%dT%H:%M:%S')'"
 git_commit = "git commit -m 'Bump step commit from poe.'"
