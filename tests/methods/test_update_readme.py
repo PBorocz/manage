@@ -7,6 +7,15 @@ from manage.models import Configuration, Step
 from manage.methods.update_readme import Method as update_readme  # noqa: N813
 
 
+class Args:
+    """."""
+
+    def __init__(self):
+        """."""
+        self.verbose = False
+        self.debug = False
+
+
 test_readme_md = """
 # Release History
 
@@ -98,7 +107,7 @@ def test_md(path_pyproject, configuration, path_readme_md):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_md)))
 
     # Test
-    assert update_readme(configuration, step).run(path_pyproject=path_pyproject)
+    assert update_readme(configuration, step).run(Args(), path_pyproject=path_pyproject)
 
     # Confirm we still have a readme file..
     assert path_readme_md.exists()
@@ -115,7 +124,7 @@ def test_org(path_pyproject, configuration, path_readme_org):
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org)))
 
     # Test
-    assert update_readme(configuration, step).run(path_pyproject=path_pyproject)
+    assert update_readme(configuration, step).run(Args(), path_pyproject=path_pyproject)
 
     # Confirm
     assert path_readme_org.exists()
@@ -141,7 +150,7 @@ def test_no_unreleased_header(path_pyproject, configuration, path_readme_org_no_
     step = Step(method="aMethod", confirm=False, verbose=False, arguments=dict(readme=str(path_readme_org_no_header)))
 
     # Test
-    assert not update_readme(configuration, step).run(path_pyproject=path_pyproject)
+    assert not update_readme(configuration, step).run(Args(), path_pyproject=path_pyproject)
 
 
 #

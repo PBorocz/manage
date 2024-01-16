@@ -326,33 +326,35 @@ A detailed list of all the built-in methods available for your recipes can be fo
 
 ## Release History
 ### Unreleased
-### v0.3.5 - 2024-01-10
+- INTERNAL: Trialing use of [PoeThePoet](https://poethepoet.natn.io/) for this project's own "task" management (i.e. I'm not dog-fooding anymore ;-)) If this works, I'll probably update my standard approach and use [PoeThePoet](https://poethepoet.natn.io/) instead and mothball this project.
+
+### 0.3.5 - 2024-01-10
 
 - INTERNAL: Upgraded to pydantic 2.5.3 from 1.* version (well worth it!)
 
 - FIX: Address vulnerability of gitpython (based on inadequate previous fix): [CVE-2024-22190](https://github.com/advisories/GHSA-2mqj-m65w-jghx).
 
-### v0.3.4 - 2024-01-07
+### 0.3.4 - 2024-01-07
 
 - FIX: Bug in methods that use the "current" version of the project (eg. git\_create\_release). Now, we re-read the `pyproject.toml` file in case a previous step within the same execution might have updated the version (specifically, the `poetry_version` method). 
 
 - FIX: Bug in `sass` method that didn't support multiple paths on the method's pathspec argument. 
  
-### v0.3.3 - 2024-01-04
+### 0.3.3 - 2024-01-04
 
 - ADD: New command-line argument `--validate` to validate steps _all_ recipes defined (and exit).
 
-### v0.3.2 - 2024-01-03
+### 0.3.2 - 2024-01-03
 
 - ADD: New command-line argument `--version` to display current package version (and exit).
 
 - ADD: New method `poetry_version_sync` to keep `__version__` attribute of a python file (usually `<module>/__init__.py`) up to date with the version in `pyproject.toml` (without have to resort to `importlib.metadata` approach).
 
-### v0.3.1 - 2023-12-31
+### 0.3.1 - 2023-12-31
 
 - Miscellaneous updates to diagnostics and added method specific validation.
 
-### v0.3.0 - 2023-12-30
+### 0.3.0 - 2023-12-30
 
 - **BREAKING** CHANGE: Changed the name of the `pre-commit` method to `pre_commit` (previously was `run_pre_commit`).
 
@@ -370,11 +372,11 @@ A detailed list of all the built-in methods available for your recipes can be fo
 
 - ADD: New command-line flag `--debug` for more detailed/operational debugging output.
 
-### v0.2.1 - 2023-12-26
+### 0.2.1 - 2023-12-26
 
 - FIX: Minor updates to README.md file.
 
-### v0.2.0 - 2023-12-26
+### 0.2.0 - 2023-12-26
 
 - CHANGE: **BREAKING!** -> Move from standalone `manage.yaml` to reading targets & recipes directly into project's respective `pyproject.toml`. Conversion can be as easy as using ChatGPT (or ilk) to convert from yaml to toml and inserting the `tool.manage` prefix.
 
@@ -407,81 +409,81 @@ Note that there are several arguments that are COMMON across methods (e.g. paths
 - INTERNAL: Refactored ALL method implementations to class-based (didn't save as much code as expected but seems a bit cleaner).
 
 
-### v0.1.11 - 2023-09-06
+### 0.1.11 - 2023-09-06
 
 - FIX: Address vulnerability of gitpython (CVE-2023-40590).
 
-### v0.1.10 - 2023-08-17
+### 0.1.10 - 2023-08-17
 
 - FIX: Address removal of e-Tugra root certificate from certifi library (CVE-2023-37920).
 
-### v0.1.9 - 2023-07-20
+### 0.1.9 - 2023-07-20
 
 - FIX: Add missing "main" dependency on `gitpython` (was coming implicitly from pytest-git but we need it for releases explicitly).
 
-### v0.1.8 - 2023-07-19
+### 0.1.8 - 2023-07-19
 
 - CHANGE: Removed argument "pathspec" from `git_commit`, all staged items are now committed (only argument is optional commit message).
 - INTERNAL: Add more consistency obo use of `verbose` and `confirm` options.
 - INTERNAL: Added tests for `git_add` and `git_commit` methods.
 
-### v0.1.7 - 2023-07-18
+### 0.1.7 - 2023-07-18
 
 - CHANGE: Removed method `poetry-lock-refresh`. The underlying command `poetry lock --no-update` will be done automatically (net of confirmation) as part of the `poetry-lock-check` method.
 - CHANGE: Moved up to python 3.11 (specifically 3.11.3) to take advantage of built-in TOML support. Contact me if you think it's important to you that I support backwards compatibility with older python versions (that don't have tomllib built-in).
 - CHANGE: Pulled (limited) support for method-specific command-line argument setting until we deal with method meta-data better (was only used for 1 argument: `poetry_version` to bump).
 - INTERNAL: Incorporate use of [pytest-git](https://pypi.org/project/pytest-git/) to begin structured testing of git methods.
 
-### v0.1.6 - 2023-07-15
+### 0.1.6 - 2023-07-15
 
 - ADD: `sass` method to pre-process SCSS to CSS files.
 - ADD: General `git_add` method to stage file(s) to local repository.
 - FIX: Bug in identification of optionally-typed arguments (albeit not clear if used anywhere).
 
-### v0.1.5 - 2023-07-12
+### 0.1.5 - 2023-07-12
 
 - CHANGE: For method `update_readme`, we relaxed the requirement on finding README files. Specifically, by default, we search for either README.org or README.md and use the first one found. You can also specify a path to a README file directly with a `readme` argument to the method (ie, instead of `readme_format`).
 - CHANGE: We resolved difference between the built-in targets "show" and "print". It's not "print" consistently (no more "show" option).
 
-### v0.1.4 - 2023-07-10
+### 0.1.4 - 2023-07-10
 
 - ADD: "print" as a new built-in target (essentially just validates and prints the relevant manage.yaml command file to your terminal).
 - ADD: A simple "`git_add`" method that simply does a `git add {pathspec}` (or 'git add .' if pathspec is not provided).
 - ADD: A "`run_command`" method to run an arbitrary local command.
 - CHANGE: Missing either \[tool.poetry\].version or \[tool.poetry\].package is now allowed (for those projects that don't need formal package release/build management).
 
-### v0.1.3 - 2023-07-09
+### 0.1.3 - 2023-07-09
 
 - ADD: Two commands on behalf of poetry lock file management: `poetry_lock_check` and `poetry_lock_refresh` (meant to be used in that order) for good security practice.
 
-### v0.1.2 - 2023-02-18
+### 0.1.2 - 2023-02-18
 
 - ADD: Command-line argument to display package' version and quit.
 
-### v0.1.1 - 2023-02-16
+### 0.1.1 - 2023-02-16
 
-### v0.1.0 - 2023-02-16
+### 0.1.0 - 2023-02-16
 
 - ADD: Support for step-specific command-line overrides. For example, when "bumping" the version number of a package, while the recipe's step may default to **patch**, we can now specify **minor** (or any of the Poetry version labels) on the command-line instead, e.g. `--poetry-version`.
 - ADD: Ability to override "confirm" recipe step attribute with command-line flag: `--no-confirm` or `--confirm`.
 
-### v0.0.14 - 2023-02-06
+### 0.0.14 - 2023-02-06
 
 - ADD: Ability for `update_readme` to take an argument specifying what format the project's README file is in, ie. 'md' for markdown (default) or 'org'. Optional argument is `readme_format`.
 
-### v0.0.13 - 2023-02-02
+### 0.0.13 - 2023-02-02
 
 - ADD: Ability to pass general "arguments" into steps that might require `manage.yaml` time configuration. Example is a step to convert from org to markdown, arguments are used to pass the specific input & output paths.
 - CHANGE: Added ability for built-in "show" target to render nested recipes.
 
-### v0.0.12 - 2023-02-02
+### 0.0.12 - 2023-02-02
 
 - ADD: A step method that uses pandoc converter, for example to go from README.org to README.md.
 - ADD: The first draft of a better "show" target to document the current `manage.yaml` file.
 - CHANGED Corrected data model: instead of `method` or `step` for a recipe, it's now `method` or *recipe*.
 - CHANGE: Moved back to dynamically importing available step methods from manage.steps module.
 
-### v0.0.11 - 2023-01-29
+### 0.0.11 - 2023-01-29
 
 - ADD: A 'quiet-mode' step configuration option to remove all extraneous non-failure associated terminal output.
 - ADD: A command-line parameter to point to a specific manage recipe file (instead of default manage.toml)
@@ -490,7 +492,7 @@ Note that there are several arguments that are COMMON across methods (e.g. paths
 - CHANGE: To pydantic for stronger typing of Recipes and their associated steps.
 - CHANGE: Sample recipe toml files to match pydantic-based data models (in particular, recipes are a dict!).
 
-### v0.0.10 - 2023-01-26
+### 0.0.10 - 2023-01-26
 
 - ADD: A "check" recipe/option to simply run the setup & validation steps only.
 - ADD: A validation that the version in `pyproject.toml` is consistent with the last release in the Release History of `README.org`.
@@ -498,19 +500,19 @@ Note that there are several arguments that are COMMON across methods (e.g. paths
 - CHANGE: Steps to make them more "granular" and loaded from `steps` module.
 - CHANGE: Over to TOML (tomli) instead of YAML for recipe files.
 
-### v0.0.9 - 2023-01-25
+### 0.0.9 - 2023-01-25
 
 - CHANGE: To catch exception when manage.yaml can't be opened.
 
-### v0.0.8 - 2023-01-25
+### 0.0.8 - 2023-01-25
 
 - ADD: Missing /bin/manage script for execution after pip/poetry install.
 
-### v0.0.7 - 2023-01-25
+### 0.0.7 - 2023-01-25
 
 - ADD: Assumptions and example configurations to README.org.
 
-### v0.0.2 - 2023-01-25
+### 0.0.2 - 2023-01-25
 
 - Initial packaging.
 
@@ -601,24 +603,30 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 
 ### Unreleased
-### v0.3.5 - 2024-01-10
-### v0.3.4 - 2024-01-07
-### v0.3.2 - 2024-01-04
-### v0.3.2 - 2024-01-04
-### v0.3.2 - 2024-01-03
-### v0.3.2a0 - 2024-01-03
-### v0.3.1 - 2023-12-31
-### v1.9.11 - 2023-12-30
-### v1.9.11 - 2023-12-30
-### v1.9.11 - 2023-12-30
-### v0.3.0 - 2023-12-30
-### v0.2.1 - 2023-12-26
-### v0.2.0 - 2023-12-26
+
+### 0.3.6 - 2024-01-14
+
+### asdfasdf - 2024-01-14
+
+### 0.3.5 - 2024-01-14
+### 0.3.5 - 2024-01-10
+### 0.3.4 - 2024-01-07
+### 0.3.2 - 2024-01-04
+### 0.3.2 - 2024-01-04
+### 0.3.2 - 2024-01-03
+### 0.3.2a0 - 2024-01-03
+### 0.3.1 - 2023-12-31
+### 1.9.11 - 2023-12-30
+### 1.9.11 - 2023-12-30
+### 1.9.11 - 2023-12-30
+### 0.3.0 - 2023-12-30
+### 0.2.1 - 2023-12-26
+### 0.2.0 - 2023-12-26
     - FIX: Made the gizmo fit into the whatchamacallit.
     - ADD: Capability to make time go backwards (requires confirmation beforehand)
     - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 
-### v1.5.10 - 2023-05-15
+### 1.5.10 - 2023-05-15
     - FIX: blah blah..
     ....
 ```
@@ -634,26 +642,32 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
-### v0.3.5 - 2024-01-10
-### v0.3.4 - 2024-01-07
-### v0.3.2 - 2024-01-04
-### v0.3.2 - 2024-01-04
-### v0.3.2 - 2024-01-03
-### v0.3.2a0 - 2024-01-03
-### v0.3.1 - 2023-12-31
-### v1.9.11 - 2023-12-30
-### v1.9.11 - 2023-12-30
-### v1.9.11 - 2023-12-30
-### v0.3.0 - 2023-12-30
-### v0.2.1 - 2023-12-26
-### v0.2.0 - 2023-12-26
 
-### v1.5.11 - 2023-07-12
+### 0.3.6 - 2024-01-14
+
+### asdfasdf - 2024-01-14
+
+### 0.3.5 - 2024-01-14
+### 0.3.5 - 2024-01-10
+### 0.3.4 - 2024-01-07
+### 0.3.2 - 2024-01-04
+### 0.3.2 - 2024-01-04
+### 0.3.2 - 2024-01-03
+### 0.3.2a0 - 2024-01-03
+### 0.3.1 - 2023-12-31
+### 1.9.11 - 2023-12-30
+### 1.9.11 - 2023-12-30
+### 1.9.11 - 2023-12-30
+### 0.3.0 - 2023-12-30
+### 0.2.1 - 2023-12-26
+### 0.2.0 - 2023-12-26
+
+### 1.5.11 - 2023-07-12
     - FIX: Made the gizmo fit into the whatchamacallit.
     - ADD: Capability to make time go backwards (required confirmation beforehand)
     - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 
-### v1.5.10 - 2023-05-15
+### 1.5.10 - 2023-05-15
     - FIX: blah blah..
     ....
 ```

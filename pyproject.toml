@@ -23,6 +23,9 @@ pysnooper = "^1.1.1"
 pytest = "^7.2.1"
 pytest-git = "^1.7.0"
 
+# Automatically keeps manage/__init__.py in sync with pyproject.toml!
+[tool.poetry_bumpversion.file."manage/__init__.py"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -33,93 +36,127 @@ build-backend = "poetry.core.masonry.api"
 [tool.poe]
 verbosity = 2
 
-[tool.poe.executor]
-type = "virtualenv"
-
 [tool.poe.tasks]
+#-------------------------------------------------------------------------------
+# 0: GENERAL Task
+#-------------------------------------------------------------------------------
 test = "pytest"
 run = "poetry run manage"
 
-# Version update (aka "bump")
-poetry_version = "poetry version patch"
-git_add_pyproject_toml = "git add pyproject.toml"
-#git_commit = "git commit -m '$(date '+%Y-%m-%dT%H:%M:%S')'"
-git_commit = "git commit -m 'Bump step commit from poe.'"
-bump = ["poetry_version", "git_add_pyproject_toml", "git_commit"]
+#-------------------------------------------------------------------------------
+# 1: Version update (aka "bump")
+#-------------------------------------------------------------------------------
+# Still need:
+# - (?) ability to do other than "patch" bump_level.
+VERSION = [
+  "_poetry_version",
+  "_update_readme_version",
+  "_git_add_version",
+  "_git_commit",
+]
+_update_readme_version = "update_readme_version" # Uses pyproject.toml to update README.md
+_git_add_version	   = "git add pyproject.toml manage/__init__.py README.md"
+_git_commit			   = "git commit -m 'Bump step commit (from poe)'"
 
-# [tool.poe.tasks.poetry_version]
-# cmd = "poetry version "
-# args = ["bump_level"]
+#-------------------------------------------------------------------------------
+# 2: Build
+#-------------------------------------------------------------------------------
+BUILD = [
+  "_clean",
+  "_poetry_lock_check",
+  "_poetry_lock_update",
+  "_poetry_build",
+]
+_clean				= "rm -rf build *.egg-info"
+_poetry_lock_check	= "poetry lock --check"
+_poetry_lock_update	= "poetry lock --no-update"
+_poetry_build		= "poetry build"
 
-# [tool.poe.tasks.git_commit]
-# cmd = "git commit -m "
-# args = ["bump_level"]
+#-------------------------------------------------------------------------------
+# 3: Release
+#-------------------------------------------------------------------------------
+RELEASE	= [
+  "_git_create_tag",
+  "_git_push_to_github",
+  "_git_create_release",
+]
+_git_push_to_github	= "git push --follow-tags"
 
+#-------------------------------------------------------------------------------
+# Support targets.
+#-------------------------------------------------------------------------------
+[tool.poe.tasks._poetry_version]
+shell = "poetry version $bump_level"
+
+[[tool.poe.tasks._poetry_version.args]]
+  name    = "bump_level"
+  help    = "The semantic version to push new version to, eg. patch, minor, major etc."
+  default = "patch"
+
+[tool.poe.tasks._git_create_tag]
+interpreter = "fish"
+shell = """
+  set version (grep "version =" pyproject.toml | head -1 | awk -F'\"' '{print $2}')
+  git tag -a $version --message $version
+"""
+
+[tool.poe.tasks._git_create_release]
+interpreter = "fish"
+shell = """
+  set version (grep "version =" pyproject.toml | head -1 | awk -F'\"' '{print $2}')
+  gh release create "$version" --title "$version"
+"""
 
 # ##############################################################################
 # Manager Tool
 # ##############################################################################
-[tool.manage]
+# [tool.manage]
 
 # ------------------------------------------------------------------------------
-[tool.manage.recipes."1_bump"]
-description = "Bump the version number to the next /patch/ level and commit locally"
+# [tool.manage.recipes."1_bump"]
+# description = "Bump the version number to the next /patch/ level and commit locally"
 
-[[tool.manage.recipes."1_bump".steps]]
-  method = "poetry_version"
-  arguments = { bump_rule = "patch" }
+# [[tool.manage.recipes."1_bump".steps]]
+#   method = "poetry_version"
+#   arguments = { bump_rule = "patch" }
 
-[[tool.manage.recipes."1_bump".steps]]
-  method = "poetry_version_sync"
-  arguments = {init_path = "manage/__init__.py" }
+# [[tool.manage.recipes."1_bump".steps]]
+#   method = "poetry_version_sync"
+#   arguments = {init_path = "manage/__init__.py" }
 
-[[tool.manage.recipes."1_bump".steps]]
-  method = "update_readme"
+# [[tool.manage.recipes."1_bump".steps]]
+#   method = "update_readme"
 
-[[tool.manage.recipes."1_bump".steps]]
-  method = "git_add"
-  arguments = { pathspec = "README.md pyproject.toml manage/__init__.py" }
+# [[tool.manage.recipes."1_bump".steps]]
+#   method = "git_add"
+#   arguments = { pathspec = "README.md pyproject.toml manage/__init__.py" }
 
-[[tool.manage.recipes."1_bump".steps]]
-  method = "git_commit"
-
-
-# ------------------------------------------------------------------------------
-[tool.manage.recipes."2_build"]
-description = "Build our distribution(s)"
-
-[[tool.manage.recipes."2_build".steps]]
-  method = "poetry_lock_check"
-
-[[tool.manage.recipes."2_build".steps]]
-  method = "clean"
-  verbose = true
-
-[[tool.manage.recipes."2_build".steps]]
-  method = "poetry_build"
+# [[tool.manage.recipes."1_bump".steps]]
+#   method = "git_commit"
 
 # ------------------------------------------------------------------------------
-[tool.manage.recipes."3_release"]
-description = "Release current version's distribution to our github repository"
+# [tool.manage.recipes."2_build"]
+# description = "Build our distribution(s)"
 
-[[tool.manage.recipes."3_release".steps]]
-  method = "git_create_tag"
+# [[tool.manage.recipes."2_build".steps]]
+#   method = "poetry_lock_check"
 
-[[tool.manage.recipes."3_release".steps]]
-  method = "git_push_to_github"
+# [[tool.manage.recipes."2_build".steps]]
+#   method = "clean"
+#   verbose = true
 
-[[tool.manage.recipes."3_release".steps]]
-  method = "git_create_release"
+# [[tool.manage.recipes."2_build".steps]]
+#   method = "poetry_build"
 
 # ------------------------------------------------------------------------------
-[tool.manage.recipes.ALL]
-description = "Bump to next version, build *and* release!"
+# [tool.manage.recipes."3_release"]
+# description = "Release current version's distribution to our github repository"
 
-[[tool.manage.recipes.ALL.steps]]
-  recipe = "1_bump"
+# [[tool.manage.recipes."3_release".steps]]
+#   method = "git_create_tag"
 
-[[tool.manage.recipes.ALL.steps]]
-  recipe = "2_build"
+# [[tool.manage.recipes."3_release".steps]]
+#   method = "git_push_to_github"
 
-[[tool.manage.recipes.ALL.steps]]
-  recipe = "3_release"
+# [[tool.manage.recipes."3_release".steps]]
+#   method = "git_create_release"
