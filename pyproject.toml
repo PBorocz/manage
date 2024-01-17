@@ -68,7 +68,7 @@ BUILD = [
   "_poetry_build",
 ]
 _clean				= "rm -rf build *.egg-info"
-_poetry_lock_check	= "poetry lock --check"
+_poetry_lock_check	= "poetry check --lock"
 _poetry_lock_update	= "poetry lock --no-update"
 _poetry_build		= "poetry build"
 
