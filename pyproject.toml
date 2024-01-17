@@ -46,8 +46,6 @@ run = "poetry run manage"
 #-------------------------------------------------------------------------------
 # 1: Version update (aka "bump")
 #-------------------------------------------------------------------------------
-# Still need:
-# - (?) ability to do other than "patch" bump_level.
 VERSION = [
   "_poetry_version",
   "_update_readme_version",
@@ -106,57 +104,3 @@ shell = """
   set version (grep "version =" pyproject.toml | head -1 | awk -F'\"' '{print $2}')
   gh release create "$version" --title "$version"
 """
-
-# ##############################################################################
-# Manager Tool
-# ##############################################################################
-# [tool.manage]
-
-# ------------------------------------------------------------------------------
-# [tool.manage.recipes."1_bump"]
-# description = "Bump the version number to the next /patch/ level and commit locally"
-
-# [[tool.manage.recipes."1_bump".steps]]
-#   method = "poetry_version"
-#   arguments = { bump_rule = "patch" }
-
-# [[tool.manage.recipes."1_bump".steps]]
-#   method = "poetry_version_sync"
-#   arguments = {init_path = "manage/__init__.py" }
-
-# [[tool.manage.recipes."1_bump".steps]]
-#   method = "update_readme"
-
-# [[tool.manage.recipes."1_bump".steps]]
-#   method = "git_add"
-#   arguments = { pathspec = "README.md pyproject.toml manage/__init__.py" }
-
-# [[tool.manage.recipes."1_bump".steps]]
-#   method = "git_commit"
-
-# ------------------------------------------------------------------------------
-# [tool.manage.recipes."2_build"]
-# description = "Build our distribution(s)"
-
-# [[tool.manage.recipes."2_build".steps]]
-#   method = "poetry_lock_check"
-
-# [[tool.manage.recipes."2_build".steps]]
-#   method = "clean"
-#   verbose = true
-
-# [[tool.manage.recipes."2_build".steps]]
-#   method = "poetry_build"
-
-# ------------------------------------------------------------------------------
-# [tool.manage.recipes."3_release"]
-# description = "Release current version's distribution to our github repository"
-
-# [[tool.manage.recipes."3_release".steps]]
-#   method = "git_create_tag"
-
-# [[tool.manage.recipes."3_release".steps]]
-#   method = "git_push_to_github"
-
-# [[tool.manage.recipes."3_release".steps]]
-#   method = "git_create_release"
