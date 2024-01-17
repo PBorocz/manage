@@ -326,6 +326,8 @@ A detailed list of all the built-in methods available for your recipes can be fo
 
 ## Release History
 ### Unreleased
+
+### 0.3.6 - 2024-01-16
 - INTERNAL: Trialing use of [PoeThePoet](https://poethepoet.natn.io/) for this project's own "task" management (i.e. I'm not dog-fooding anymore ;-)) If this works, I'll probably update my standard approach and use [PoeThePoet](https://poethepoet.natn.io/) instead and mothball this project.
 
 ### 0.3.5 - 2024-01-10
@@ -601,15 +603,10 @@ Similarly, a README in Markdown format might look like the following (note that 
     ...
 
 ## Releases
-
 ### Unreleased
 
-### 0.3.6 - 2024-01-14
-
-### asdfasdf - 2024-01-14
-
-### 0.3.5 - 2024-01-14
-### 0.3.5 - 2024-01-10
+### 0.3.6 - 2024-01-16
+    - New fix..
 ### 0.3.4 - 2024-01-07
 ### 0.3.2 - 2024-01-04
 ### 0.3.2 - 2024-01-04
@@ -643,11 +640,9 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 
 ### Unreleased
 
-### 0.3.6 - 2024-01-14
-
-### asdfasdf - 2024-01-14
-
+### 0.3.6 - 2024-01-16
 ### 0.3.5 - 2024-01-14
+    - New fix..
 ### 0.3.5 - 2024-01-10
 ### 0.3.4 - 2024-01-07
 ### 0.3.2 - 2024-01-04
@@ -661,7 +656,9 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ### 0.3.0 - 2023-12-30
 ### 0.2.1 - 2023-12-26
 ### 0.2.0 - 2023-12-26
-
+    - FIX: Made the gizmo fit into the whatchamacallit.
+    - ADD: Capability to make time go backwards (requires confirmation beforehand)
+    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 ### 1.5.11 - 2023-07-12
     - FIX: Made the gizmo fit into the whatchamacallit.
     - ADD: Capability to make time go backwards (required confirmation beforehand)
