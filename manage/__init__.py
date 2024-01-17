@@ -5,4 +5,4 @@ from pathlib import Path
 PYPROJECT_PATH = Path.cwd() / "pyproject.toml"
 
 # DO NOT CHANGE: Version string here WILL be kept in-sync with pyproject.toml using poetry-bumpversion plugin!
-__version__ = "0.3.5"
+__version__ = "0.3.6"
