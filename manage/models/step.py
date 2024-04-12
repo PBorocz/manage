@@ -1,4 +1,5 @@
 """Core data types."""
+
 from copy import deepcopy
 from typing import Any, Dict, Self, TypeVar
 

@@ -1,4 +1,5 @@
 """Core data types."""
+
 from rich.console import Console
 from typing import Iterable, Self, TypeVar
 

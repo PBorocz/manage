@@ -1,4 +1,5 @@
 """Push/publish to PyPI using Poetry."""
+
 from manage.methods import AbstractMethod
 from manage.models import Configuration
 

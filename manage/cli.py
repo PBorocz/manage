@@ -1,4 +1,5 @@
 """'Manage' primary entry point."""
+
 import argparse
 import sys
 from typing import TypeVar

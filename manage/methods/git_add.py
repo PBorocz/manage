@@ -1,4 +1,5 @@
 """Method to perform a 'git add' (aka stage) command."""
+
 from pathlib import Path
 
 from git import Repo

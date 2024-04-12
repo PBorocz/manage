@@ -1,4 +1,5 @@
 """Convert an emacs org file into a markdown version using Pandoc."""
+
 from pathlib import Path
 
 from manage.methods import AbstractMethod

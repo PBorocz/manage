@@ -1,4 +1,5 @@
 """Run a generic (local) command."""
+
 from manage.methods import AbstractMethod
 from manage.models import Argument, Arguments, Configuration
 

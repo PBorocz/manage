@@ -1,4 +1,5 @@
 """Method to run SASS pre-processor."""
+
 from pathlib import Path
 
 from manage.methods import AbstractMethod

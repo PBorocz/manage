@@ -1,4 +1,5 @@
 """Core data types."""
+
 from argparse import Namespace
 from typing import Self, TypeVar
 

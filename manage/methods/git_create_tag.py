@@ -1,4 +1,5 @@
 """Create git tag, i.e. v<major>.<minor>.<patch>."""
+
 from manage.methods import AbstractMethod
 from manage.models import Configuration, PyProject
 

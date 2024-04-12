@@ -1,4 +1,5 @@
 """Change the local __version__.py file to reflect the version number from pyproject.toml."""
+
 from pathlib import Path
 
 from manage.methods import AbstractMethod

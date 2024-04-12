@@ -25,17 +25,17 @@ Here's an example of building and pushing a python package (specifically, this o
 
 - The `[tool.manage.recipes]` section contains:
 
-    - A set of *targets* aka recipes (terminology synonymous with Makefile/Justfile targets).
+	- A set of *targets* aka recipes (terminology synonymous with Makefile/Justfile targets).
 
-    - Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
+	- Each target consists of a set of steps, each of which is shorthand description of what needs to be accomplished.
 
-    - Each step can refer either to a built-in **method** (e.g. `clean`) or to the name of another *recipe*.
+	- Each step can refer either to a built-in **method** (e.g. `clean`) or to the name of another *recipe*.
 
 - Each step in a target is also configured by the following parameters:
 
-    - Steps that have a side-effect (ie. those that can *change* something) can have a user-confirmation before executing, e.g. "Are you sure? (`confirm`).
+	- Steps that have a side-effect (ie. those that can *change* something) can have a user-confirmation before executing, e.g. "Are you sure? (`confirm`).
 
-    - Each step can be configured control whether errors encountered are fatal or not (`allow_error`).
+	- Each step can be configured control whether errors encountered are fatal or not (`allow_error`).
 
 - For each command within the step, the contents of either `stdout` or `stderr`  man displayed based on the return code of the command's execution. Specifically, on a non-zero return status, `stderr` will always be displayed. For a return code of zero, `stdout` will be displayed if `verbose` mode is active for the respective step.
 
@@ -150,7 +150,7 @@ If you want to keep the installation local to your respective project, you can i
 ``` shell
 % poetry add git+https://github.com/PBorocz/manage --group dev
 ```
- 
+
 This will create a `manage` command into your virtual environment's /bin environment (your project *IS* running in a virtual environment...right? ;-).
 
 ## Confirmation
@@ -195,34 +195,34 @@ After which `manage --print` should print it's respective contents:
 
 build ≫ Build our distribution(s).
 [
-    {
-        'recipe': 'clean',
-        'confirm': False,
-        'verbose': False,
-        'debug': False,
-        'allow_error': None,
-        'arguments': {}
-    },
-    {
-        'method': 'poetry_build',
-        'confirm': False,
-        'verbose': False,
-        'debug': False,
-        'allow_error': False,
-        'arguments': {}
-    }
+	{
+		'recipe': 'clean',
+		'confirm': False,
+		'verbose': False,
+		'debug': False,
+		'allow_error': None,
+		'arguments': {}
+	},
+	{
+		'method': 'poetry_build',
+		'confirm': False,
+		'verbose': False,
+		'debug': False,
+		'allow_error': False,
+		'arguments': {}
+	}
 ]
 
 clean ≫ Clean out our temp files and ALL previous builds.
 [
-    {
-        'method': 'clean',
-        'confirm': False,
-        'verbose': False,
-        'debug': False,
-        'allow_error': True,
-        'arguments': {}
-    }
+	{
+		'method': 'clean',
+		'confirm': False,
+		'verbose': False,
+		'debug': False,
+		'allow_error': True,
+		'arguments': {}
+	}
 ]
 
 %
@@ -269,33 +269,33 @@ Run all steps in either `dry_run` or `live` mode, overriding any settings within
 ### --print
 
 Does a "pretty-print" of your recipe configuration either for either recipes or just the specific target if provided and exits. For example:
-	
+
 ``` shell
 % manage --print build
 
 build ≫ Build our distribution(s)
 [
-    {
-        'method': 'poetry_lock_check',
-        'confirm': False,
-        'verbose': False,
-        'allow_error': False,
-        'arguments': {}
-    },
-    {
-        'recipe': 'clean',
-        'confirm': False,
-        'verbose': False,
-        'allow_error': False,
-        'arguments': {}
-    },
-    {
-        'method': 'poetry_build',
-        'confirm': False,
-        'verbose': False,
-        'allow_error': False,
-        'arguments': {}
-    }
+	{
+		'method': 'poetry_lock_check',
+		'confirm': False,
+		'verbose': False,
+		'allow_error': False,
+		'arguments': {}
+	},
+	{
+		'recipe': 'clean',
+		'confirm': False,
+		'verbose': False,
+		'allow_error': False,
+		'arguments': {}
+	},
+	{
+		'method': 'poetry_build',
+		'confirm': False,
+		'verbose': False,
+		'allow_error': False,
+		'arguments': {}
+	}
 ]
 
 %
@@ -304,13 +304,13 @@ build ≫ Build our distribution(s)
 ### --<method\>:<argument\>
 
 Provide a method a specific argument value. For example, the `git_commit` method supports an optional git commit message. This can be either be supplied on a standardized basis in your `pyproject.toml` file like this:
-	
+
 ``` toml
 [[tool.manage.recipes.<aRecipeName>.steps]]
 	method = "git_commit"
 	confirm = true
 	arguments: {message = "Auto Commit"}
-```	
+```
 
 or overridden from the command-line:
 
@@ -327,6 +327,10 @@ A detailed list of all the built-in methods available for your recipes can be fo
 ## Release History
 ### Unreleased
 
+### 0.3.7 - 2024-04-12
+
+- SECURITY: Address vulnerability of idna package.
+
 ### 0.3.6 - 2024-01-16
 - INTERNAL: Trialing use of [PoeThePoet](https://poethepoet.natn.io/) for this project's own "task" management (i.e. I'm not dog-fooding anymore ;-)) If this works, I'll probably update my standard approach and use [PoeThePoet](https://poethepoet.natn.io/) instead and mothball this project.
 
@@ -338,10 +342,10 @@ A detailed list of all the built-in methods available for your recipes can be fo
 
 ### 0.3.4 - 2024-01-07
 
-- FIX: Bug in methods that use the "current" version of the project (eg. git\_create\_release). Now, we re-read the `pyproject.toml` file in case a previous step within the same execution might have updated the version (specifically, the `poetry_version` method). 
+- FIX: Bug in methods that use the "current" version of the project (eg. git\_create\_release). Now, we re-read the `pyproject.toml` file in case a previous step within the same execution might have updated the version (specifically, the `poetry_version` method).
 
-- FIX: Bug in `sass` method that didn't support multiple paths on the method's pathspec argument. 
- 
+- FIX: Bug in `sass` method that didn't support multiple paths on the method's pathspec argument.
+
 ### 0.3.3 - 2024-01-04
 
 - ADD: New command-line argument `--validate` to validate steps _all_ recipes defined (and exit).
@@ -369,7 +373,7 @@ A detailed list of all the built-in methods available for your recipes can be fo
 - CHANGE: Command-line overrides to method arguments are now _specific_ to the method. For example, if your `pyproject.toml` file contained the default argument to poetry\_version's bump\_level to be _patch_ (as that's your most common release), but you wanted to perform a _major_ release, simply override the bump_level on the command-line:
 
 ``` shell
-% manage 1_bump ... --poetry_version:bump_level major 
+% manage 1_bump ... --poetry_version:bump_level major
 ```
 
 - ADD: New command-line flag `--debug` for more detailed/operational debugging output.
@@ -600,13 +604,15 @@ Similarly, a README in Markdown format might look like the following (note that 
 # My Project
 
 ## Stuff
-    ...
+	...
 
 ## Releases
 ### Unreleased
 
+### 0.3.7 - 2024-04-12
+
 ### 0.3.6 - 2024-01-16
-    - New fix..
+	- New fix..
 ### 0.3.4 - 2024-01-07
 ### 0.3.2 - 2024-01-04
 ### 0.3.2 - 2024-01-04
@@ -619,13 +625,13 @@ Similarly, a README in Markdown format might look like the following (note that 
 ### 0.3.0 - 2023-12-30
 ### 0.2.1 - 2023-12-26
 ### 0.2.0 - 2023-12-26
-    - FIX: Made the gizmo fit into the whatchamacallit.
-    - ADD: Capability to make time go backwards (requires confirmation beforehand)
-    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+	- FIX: Made the gizmo fit into the whatchamacallit.
+	- ADD: Capability to make time go backwards (requires confirmation beforehand)
+	- CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 
 ### 1.5.10 - 2023-05-15
-    - FIX: blah blah..
-    ....
+	- FIX: blah blah..
+	....
 ```
 
 We use the `Unreleased` tag line and "create" a new release (using the current version number in `pyproject.toml` and today's date), transforming the file to look like the following:
@@ -640,9 +646,11 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 
 ### Unreleased
 
+### 0.3.7 - 2024-04-12
+
 ### 0.3.6 - 2024-01-16
 ### 0.3.5 - 2024-01-14
-    - New fix..
+	- New fix..
 ### 0.3.5 - 2024-01-10
 ### 0.3.4 - 2024-01-07
 ### 0.3.2 - 2024-01-04
@@ -656,16 +664,15 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ### 0.3.0 - 2023-12-30
 ### 0.2.1 - 2023-12-26
 ### 0.2.0 - 2023-12-26
-    - FIX: Made the gizmo fit into the whatchamacallit.
-    - ADD: Capability to make time go backwards (requires confirmation beforehand)
-    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+	- FIX: Made the gizmo fit into the whatchamacallit.
+	- ADD: Capability to make time go backwards (requires confirmation beforehand)
+	- CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 ### 1.5.11 - 2023-07-12
-    - FIX: Made the gizmo fit into the whatchamacallit.
-    - ADD: Capability to make time go backwards (required confirmation beforehand)
-    - CHG: Command-line argument ~--make-me~ is now ~--confirm~.
+	- FIX: Made the gizmo fit into the whatchamacallit.
+	- ADD: Capability to make time go backwards (required confirmation beforehand)
+	- CHG: Command-line argument ~--make-me~ is now ~--confirm~.
 
 ### 1.5.10 - 2023-05-15
-    - FIX: blah blah..
-    ....
+	- FIX: blah blah..
+	....
 ```
-

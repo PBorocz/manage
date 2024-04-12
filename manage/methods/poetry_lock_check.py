@@ -1,4 +1,5 @@
 """Verify that poetry.lock is consistent with pyproject.toml and update if not (good security practice)."""
+
 from manage.methods import AbstractMethod
 from manage.models import Configuration
 from manage.utilities import msg_warning, warning

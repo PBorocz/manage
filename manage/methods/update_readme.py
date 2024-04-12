@@ -1,4 +1,5 @@
 """Change the local README to update the version number (and date) for Unreleased changes."""
+
 from datetime import datetime
 from pathlib import Path
 

@@ -1,4 +1,5 @@
 """Build a poetry distribution."""
+
 from manage.methods import AbstractMethod
 from manage.models import Configuration
 

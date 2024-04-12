@@ -1,4 +1,5 @@
 """Manage step."""
+
 import sys
 from pathlib import Path
 

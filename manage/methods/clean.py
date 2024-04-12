@@ -1,4 +1,5 @@
 """Clean step."""
+
 from manage.methods import AbstractMethod
 from manage.models import Configuration
 
