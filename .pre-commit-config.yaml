@@ -5,7 +5,7 @@ repos:
 # Look for instances of unused imports.
 ################################################################################
 - repo: https://github.com/hakancelikdev/unimport
-  rev: 1.1.0
+  rev: 1.2.1
   hooks:
   - id: unimport
     name: Running check for unused imports
@@ -18,7 +18,7 @@ repos:
 # Run Ruff!
 ################################################################################
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.1.7
+  rev: v0.3.7
   hooks:
     - id: ruff
       name: Running ruff linter
