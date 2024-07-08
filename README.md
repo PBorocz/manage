@@ -327,6 +327,8 @@ A detailed list of all the built-in methods available for your recipes can be fo
 ## Release History
 ### Unreleased
 
+- SECURITY: Address removal of GLOBALTRUST as cert verifier in `certifi` package.
+
 ### 0.3.7 - 2024-04-12
 
 - SECURITY: Address vulnerability of idna package.
