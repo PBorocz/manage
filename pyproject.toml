@@ -94,13 +94,13 @@ shell = "poetry version $bump_level"
 [tool.poe.tasks._git_create_tag]
 interpreter = "fish"
 shell = """
-  set version (grep "version =" pyproject.toml | head -1 | awk -F'\"' '{print $2}')
-  git tag -a $version --message $version
+  set release_version (grep "version =" pyproject.toml | head -1 | awk -F'\"' '{print $2}')
+  git tag -a $release_version --message $release_version
 """
 
 [tool.poe.tasks._git_create_release]
 interpreter = "fish"
 shell = """
-  set version (grep "version =" pyproject.toml | head -1 | awk -F'\"' '{print $2}')
-  gh release create "$version" --title "$version"
+  set release_version (grep "version =" pyproject.toml | head -1 | awk -F'\"' '{print $2}')
+  gh release create "$release_version" --title "$release_version"
 """
