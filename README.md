@@ -327,6 +327,8 @@ A detailed list of all the built-in methods available for your recipes can be fo
 ## Release History
 ### Unreleased
 
+### 0.3.8 - 2024-07-07
+
 - SECURITY: Address removal of GLOBALTRUST as cert verifier in `certifi` package.
 
 ### 0.3.7 - 2024-04-12
@@ -611,6 +613,8 @@ Similarly, a README in Markdown format might look like the following (note that 
 ## Releases
 ### Unreleased
 
+### 0.3.8 - 2024-07-07
+
 ### 0.3.7 - 2024-04-12
 
 ### 0.3.6 - 2024-01-16
@@ -647,6 +651,8 @@ We use the `Unreleased` tag line and "create" a new release (using the current v
 ## Releases
 
 ### Unreleased
+
+### 0.3.8 - 2024-07-07
 
 ### 0.3.7 - 2024-04-12
 
